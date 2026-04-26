@@ -94,10 +94,10 @@ no-vain-years-app/
 
 | 类型 | 强度 | 工具 |
 |------|------|------|
-| 关键 hook（自定义业务 hook） | 🟢 **必须测**（先测后实现） | jest / vitest |
-| 工具函数（lib/utils 等纯函数） | 🟢 **必须测** | 同上 |
-| store（Zustand）的复杂状态机 | 🟢 **必须测**（关键流转） | 同上 |
-| API 调用层（含错误映射） | 🟡 推荐测 | 同上 + msw |
+| 关键 hook（自定义业务 hook） | 🟢 **必须测**（先测后实现） | vitest |
+| 工具函数（lib/utils 等纯函数） | 🟢 **必须测** | vitest |
+| store（Zustand）的复杂状态机 | 🟢 **必须测**（关键流转） | vitest |
+| API 调用层（含错误映射） | 🟡 推荐测 | vitest + msw |
 | UI 组件（视觉 + 交互） | ⏸ **不强制 TDD**（业内争议大），但鼓励 visual regression（M2 后） | 视情况：playwright / detox |
 | Expo Router 页面 | ⏸ 不强制 | E2E 覆盖即可 |
 
@@ -121,9 +121,11 @@ no-vain-years-app/
 后端 OpenAPI spec → 前端 TS 客户端**自动生成**，不手写：
 
 ```bash
-# 重新生成（详见 [meta /sync-api-types](https://github.com/xiaocaishen-michael/no-vain-years/blob/main/.claude/commands/sync-api-types.md)）
+# 重新生成 API 客户端
 pnpm run gen:api
 ```
+
+详见 [meta `/sync-api-types` 命令文档](https://github.com/xiaocaishen-michael/no-vain-years/blob/main/.claude/commands/sync-api-types.md)。
 
 - 生成产物落到 `lib/api/`
 - **禁止**手改产物
