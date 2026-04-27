@@ -1,0 +1,70 @@
+# OS
+.DS_Store
+Thumbs.db
+
+# Editors
+.idea/
+.vscode/
+*.swp
+
+# Node
+node_modules/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnp.*
+
+# pnpm
+.pnpm-store/
+
+# Build outputs
+dist/
+build/
+.next/
+
+# Expo
+.expo/
+.expo-shared/
+web-build/
+
+# React Native / EAS
+*.jks
+*.p8
+*.p12
+*.key
+*.mobileprovision
+*.orig.*
+
+# iOS
+ios/Pods/
+ios/build/
+
+# Android
+android/.gradle/
+android/build/
+android/app/build/
+android/app/src/main/assets/
+
+# Metro
+.metro-health-check*
+
+# Coverage / test artifacts
+coverage/
+*.lcov
+
+# TypeScript
+*.tsbuildinfo
+
+# Tamagui cache
+.tamagui/
+
+# Env / secrets
+.env
+.env.*
+!.env.example
+.envrc
+*.local
+
+# Claude local settings
+.claude/settings.local.json
