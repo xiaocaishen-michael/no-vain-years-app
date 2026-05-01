@@ -1,0 +1,12 @@
+node_modules
+pnpm-lock.yaml
+dist
+build
+coverage
+.expo
+.expo-shared
+.next
+.turbo
+**/.tamagui
+packages/api-client/src/generated
+LICENSE

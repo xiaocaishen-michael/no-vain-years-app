@@ -9,3 +9,39 @@ pre-commit:
       run: gitleaks protect --staged --redact --verbose
       tags:
         - security
+    lint-staged:
+      # Run prettier on staged TS / MD / JSON / YAML files.
+      # ESLint integrates here once added (planned PR #6 alongside CI).
+      glob: '*.{ts,tsx,md,json,yaml,yml}'
+      run: pnpm exec lint-staged
+      tags:
+        - format
+
+# Conventional Commits enforcement at commit time.
+# Regex-based check (no Node dependency) — full ruleset runs in CI via
+# wagoid/commitlint-github-action. PR title also validated by
+# amannn/action-semantic-pull-request (load-bearing for release-please
+# since we squash merge with PR title as commit message).
+commit-msg:
+  commands:
+    conventional-format:
+      # Header total length ≤ 100 (matches CI commitlint header-max-length).
+      run: |
+        header=$(head -1 "{1}")
+        len=${#header}
+        if [ "$len" -gt 100 ]; then
+          echo "❌ Commit message header too long: $len chars (max 100)"
+          echo "   header: $header"
+          exit 1
+        fi
+        echo "$header" | grep -qE '^(feat|fix|docs|chore|refactor|style|test|perf|build|ci|revert)(\(.+\))?!?: .+$' \
+          || (echo "❌ Commit message must follow Conventional Commits:" \
+              && echo "   <type>(<scope>): <subject>   (e.g. feat(account): add login page)" \
+              && echo "   types: feat fix docs chore refactor style test perf build ci revert" \
+              && exit 1)
+
+# pre-push intentionally NOT configured.
+# Rationale (mirrors my-beloved-server lefthook.yml): AI-augmented dev generates
+# most code; pre-commit covers gitleaks + lint-staged; pre-push's value is
+# `pnpm test`, but suite is small in M1.2; 30s+ push wait per push not worth it.
+# CI is final defense. Re-evaluate as test suite grows.

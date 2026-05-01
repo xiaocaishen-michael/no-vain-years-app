@@ -1,0 +1,21 @@
+{
+  "name": "@nvy/types",
+  "version": "0.0.0",
+  "private": true,
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "lint": "echo 'no lint config yet (PR #6)'",
+    "lint:fix": "echo 'no lint config yet (PR #6)'",
+    "test": "echo 'no tests yet'",
+    "test:watch": "echo 'no tests yet'"
+  },
+  "devDependencies": {
+    "@nvy/tsconfig": "workspace:*",
+    "typescript": "~5.9.0"
+  }
+}

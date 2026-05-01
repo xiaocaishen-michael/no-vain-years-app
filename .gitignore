@@ -22,6 +22,10 @@ yarn-error.log*
 dist/
 build/
 .next/
+out/
+.turbo/
+.swc/
+.eslintcache
 
 # Expo
 .expo/
@@ -68,3 +72,7 @@ coverage/
 
 # Claude local settings
 .claude/settings.local.json
+
+# Personal daily work logs (optional, mirror meta repo convention)
+docs/daily/*.md
+!docs/daily/README.md
