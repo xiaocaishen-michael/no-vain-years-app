@@ -1,0 +1,4 @@
+# OpenAPI generator metadata (re-generated each `pnpm api:gen` run).
+# The generated TypeScript output in src/generated/ IS committed
+# (per docs/conventions/api-contract.md — frontend reviewers see API diffs in PRs).
+.openapi-generator/
