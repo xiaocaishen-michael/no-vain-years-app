@@ -11,8 +11,8 @@
     "api:gen": "openapi-generator-cli generate -i https://api.xiaocaishen.me/v3/api-docs -g typescript-fetch -o src/generated --skip-validate-spec",
     "api:gen:dev": "openapi-generator-cli generate -i http://localhost:8080/v3/api-docs -g typescript-fetch -o src/generated --skip-validate-spec",
     "typecheck": "tsc --noEmit",
-    "lint": "echo 'no lint config yet (PR #6)'",
-    "lint:fix": "echo 'no lint config yet (PR #6)'",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
     "test": "echo 'no tests yet'",
     "test:watch": "echo 'no tests yet'"
   },
