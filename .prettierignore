@@ -9,4 +9,8 @@ coverage
 .turbo
 **/.tamagui
 packages/api-client/src/generated
+
+# Auto-generated, hands-off
+CHANGELOG.md
+**/CHANGELOG.md
 LICENSE
