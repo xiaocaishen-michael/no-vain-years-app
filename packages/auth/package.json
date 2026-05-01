@@ -9,8 +9,8 @@
   },
   "scripts": {
     "typecheck": "tsc --noEmit",
-    "lint": "echo 'no lint config yet (PR #6)'",
-    "lint:fix": "echo 'no lint config yet (PR #6)'",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
     "test": "echo 'no tests yet'",
     "test:watch": "echo 'no tests yet'"
   },
