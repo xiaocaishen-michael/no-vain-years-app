@@ -1,0 +1,24 @@
+{
+  "extends": "expo/tsconfig.base",
+  "compilerOptions": {
+    "strict": true,
+    "noUncheckedIndexedAccess": true,
+    "noFallthroughCasesInSwitch": true,
+    "noImplicitOverride": true,
+    "forceConsistentCasingInFileNames": true,
+    "skipLibCheck": true,
+    "baseUrl": ".",
+    "paths": {
+      "@nvy/ui": ["../../packages/ui/src/index.ts"],
+      "@nvy/ui/*": ["../../packages/ui/src/*"],
+      "@nvy/api-client": ["../../packages/api-client/src/index.ts"],
+      "@nvy/api-client/*": ["../../packages/api-client/src/*"],
+      "@nvy/auth": ["../../packages/auth/src/index.ts"],
+      "@nvy/auth/*": ["../../packages/auth/src/*"],
+      "@nvy/types": ["../../packages/types/src/index.ts"],
+      "@nvy/types/*": ["../../packages/types/src/*"]
+    }
+  },
+  "include": ["**/*.ts", "**/*.tsx"],
+  "exclude": ["node_modules", "dist", ".expo"]
+}
