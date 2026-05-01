@@ -1,6 +1,8 @@
 # no-vain-years-app
 
-「不虚此生」跨端前端。**一套代码** 同步交付 iOS / Android / Web；M5 阶段 Tauri 包装 Web bundle 补 Desktop。对外消费 [my-beloved-server](https://github.com/xiaocaishen-michael/my-beloved-server) 的 REST API。
+「不虚此生」跨端前端 **monorepo**（pnpm workspace）。M1 ~ M2 早期 `apps/native`（Expo + RN Web）一份代码同步交付 iOS / Android / Web；M2 PKM 启动时引入 `apps/web`（Next.js）处理大屏画布 / 知识图谱 / dashboard 等 paradigm 与移动端不同的场景；M5 Tauri 包装 web bundle 补 Desktop。对外消费 [my-beloved-server](https://github.com/xiaocaishen-michael/my-beloved-server) 的 REST API。
+
+**核心架构原则**：业务逻辑 / 数据层 / 共享 UI 抽到 `packages/*`；platform-specific 代码（routes / 大屏画布等）落在对应 `apps/<target>`。两 apps 对等，不存在主从。
 
 ## 关于本文件
 
@@ -14,79 +16,143 @@
 
 | 维度 | 选型 |
 |------|------|
-| 框架 | Expo（最新 stable）+ React Native |
-| Web 渲染 | React Native Web |
-| 语言 | TypeScript（`strict: true`） |
-| 路由 | Expo Router（file-based） |
-| UI 库 | **Tamagui**（iOS / Android / Web 三端一致） |
-| 状态管理 | **Zustand** |
+| **Monorepo** | **pnpm workspace**（apps/* + packages/*）；可选 turborepo（M2 后引入收益更大）|
+| 框架（apps/native）| Expo（最新 stable）+ React Native |
+| Web 渲染（apps/native 出 web bundle）| React Native Web |
+| 框架（apps/web，M2 加入）| Next.js（App Router）+ Tailwind / shadcn — 处理大屏画布 / 知识图谱 / dashboard |
+| 语言 | TypeScript（`strict: true` + `noUncheckedIndexedAccess: true`） |
+| 路由（native）| Expo Router（file-based） |
+| 路由（web M2+）| Next.js App Router（可选 Solito 桥接共享导航逻辑）|
+| UI 库 | **Tamagui**（packages/ui，跨端编译 div+CSS / RN View）；apps/web 大屏专属 UI 可直用 Tailwind / shadcn |
+| 状态管理 | **Zustand**（packages/auth + 各 feature 内部）|
 | 数据请求 / 缓存 | TanStack Query |
 | 表单 | React Hook Form + zod |
-| 本地存储 | MMKV（mobile）+ localStorage（web），自封统一 API |
-| API 客户端 | OpenAPI Generator 从后端 `/v3/api-docs` 自动生成（**不手写**） |
+| 本地存储 — token | **expo-secure-store**（mobile，走 iOS Keychain / Android Keystore）+ localStorage（web，M3 前升级 HttpOnly cookie）|
+| 本地存储 — 业务 state | MMKV（mobile）+ localStorage（web），自封统一 API |
+| API 客户端 | OpenAPI Generator 从后端 `/v3/api-docs` 自动生成到 `packages/api-client/src/generated/`（**不手写**） |
 | **包管理器** | **pnpm**（不用 npm / yarn / bun） |
-| 构建 / 发布 | EAS Build + EAS Submit + EAS Update |
-| Desktop（M5） | Tauri 2.x 包装 Web bundle |
+| 构建 / 发布（native）| EAS Build + EAS Submit + EAS Update |
+| 构建 / 发布（web）| Cloudflare Pages（M1.2 起）|
+| Desktop（M5） | Tauri 2.x 包装 web bundle |
 
 > **包管理器纪律**：项目仅支持 pnpm。提交前禁止出现 `package-lock.json` / `yarn.lock` / `bun.lockb`，CI 会拦截。
+>
+> **Storage 安全纪律**：refresh token 等敏感凭证走 `expo-secure-store`（native）/ localStorage（M1 web 测试期，M3 前升级 HttpOnly cookie）；业务 state 走 MMKV / localStorage。**禁止**把 token 写进 MMKV / AsyncStorage。
 
-## 二、目录约定（脚手架时落地，规则先定）
+## 二、目录约定（monorepo 结构）
 
-```
-no-vain-years-app/
-├── app/                     ← Expo Router file-based 路由（页面）
-│   ├── (auth)/              ← 路由组：登录 / 注册
-│   ├── (main)/              ← 路由组：登录后主流程
-│   └── _layout.tsx          ← 根 layout
-├── features/                ← 业务模块（与后端 mbw-<module> 一一对应）
-│   ├── account/             ← 对应后端 mbw-account
-│   ├── pkm/                 ← 对应后端 mbw-pkm（M2 引入）
-│   └── ...
-├── components/              ← 跨业务通用 UI 组件（基于 Tamagui）
-├── lib/
-│   ├── api/                 ← OpenAPI Generator 产物（不手写、不手改）
-│   ├── storage/             ← MMKV / localStorage 封装
-│   ├── auth/                ← token 持久化、自动刷新
-│   └── utils/               ← 通用工具
-├── hooks/                   ← 跨业务通用 hook
-├── theme/                   ← Tamagui token 配置
+```text
+no-vain-years-app/                          ← root（pnpm workspace）
+├── apps/
+│   ├── native/                             ← Expo（iOS + Android + RN Web 出 web bundle）
+│   │   ├── app/                            ← Expo Router file-based 路由
+│   │   │   ├── (auth)/                     ← 路由组：登录 / 注册
+│   │   │   ├── (app)/                      ← 路由组：登录后主流程
+│   │   │   └── _layout.tsx
+│   │   ├── features/                       ← native 业务模块（与后端 mbw-<module> 一一对应）
+│   │   │   ├── account/                    ← 对应后端 mbw-account
+│   │   │   └── pkm/                        ← 对应后端 mbw-pkm（M2 引入；含 mobile 触摸版 PKM）
+│   │   ├── spec/                           ← 各页面 SDD 三件套（spec.md / plan.md / tasks.md）
+│   │   ├── package.json
+│   │   ├── tsconfig.json
+│   │   ├── app.json
+│   │   └── eas.json
+│   └── web/                                ← Next.js（M2 PKM 启动时新建）
+│       ├── app/                            ← Next.js App Router
+│       │   ├── (auth)/
+│       │   ├── (app)/
+│       │   └── pkm/                        ← 大屏画布 / 知识图谱（用 tldraw / xyflow，不通过 Tamagui）
+│       ├── features/                       ← web 大屏专属业务模块
+│       └── package.json
+│
+├── packages/
+│   ├── ui/                                 ← Tamagui 组件 + design tokens（跨 apps 共享）
+│   │   ├── src/
+│   │   │   ├── tamagui.config.ts
+│   │   │   ├── Button.tsx
+│   │   │   ├── PhoneInput.tsx
+│   │   │   ├── PasswordInput.tsx
+│   │   │   ├── SmsCodeInput.tsx
+│   │   │   ├── TabSwitcher.tsx
+│   │   │   └── index.ts
+│   │   └── package.json                    ← name: "@nvy/ui"
+│   ├── api-client/                         ← OpenAPI generator 输出 + fetch wrapper
+│   │   ├── src/
+│   │   │   ├── generated/                  ← openapi-generator 产物（不手改，commit 入 git）
+│   │   │   ├── client.ts                   ← fetch interceptor + 401 → refresh
+│   │   │   └── index.ts
+│   │   └── package.json                    ← name: "@nvy/api-client"
+│   ├── auth/                               ← Zustand store + token 管理 + 高层登录函数
+│   │   ├── src/
+│   │   │   ├── store.ts
+│   │   │   ├── usecases.ts                 ← loginByPassword / loginByPhoneSms / refreshToken / logoutAll
+│   │   │   └── index.ts
+│   │   └── package.json                    ← name: "@nvy/auth"
+│   ├── types/                              ← 共享 TS types
+│   │   └── package.json                    ← name: "@nvy/types"
+│   └── tsconfig/                           ← 共享 TS config
+│       └── base.json
+│
+├── pnpm-workspace.yaml
+├── package.json                            ← root（仅 workspace devDeps + scripts）
+├── tsconfig.json                           ← root（references + paths）
 ├── .claude/
-│   └── tamagui-mapping.md   ← UI 工作流映射规则
-└── tamagui.config.ts        ← Tamagui 主配置
+│   ├── settings.json
+│   ├── settings.local.json                 ← gitignored
+│   └── tamagui-mapping.md                  ← UI/UX → Tamagui 翻译规则（≥ 5 条）
+├── .github/
+│   └── workflows/                          ← CI / release-please / deploy-web
+└── docs/
+    └── plans/                              ← Claude Code plans 落盘目录
 ```
 
-**业务模块字符串约束**：`features/<module>/` 中的 `<module>` 与后端 `mbw-<module>` 中的 `<module>` 必须严格一致（`account / pkm / billing / work / wealth / health / inspire`）。详见 [meta CLAUDE.md § 业务命名](https://github.com/xiaocaishen-michael/no-vain-years/blob/main/CLAUDE.md#业务命名)。
+### 业务模块字符串约束
+
+`apps/<target>/features/<module>/` 中的 `<module>` 与后端 `mbw-<module>` 必须严格一致：`account / pkm / billing / work / wealth / health / inspire`。详见 [meta CLAUDE.md § 业务命名](https://github.com/xiaocaishen-michael/no-vain-years/blob/main/CLAUDE.md#业务命名)。
+
+### 代码归属判断（怎么决定放 packages/* 还是 apps/<target>/）
+
+| 类型 | 例子 | 放哪 |
+|---|---|---|
+| **业务逻辑 / 数据层**（必跨端共享）| auth store / api client / validation schema | `packages/auth` / `packages/api-client` / `packages/types` |
+| **可共享 UI**（简单页面通用组件）| Button / Input / TabSwitcher / Form 原语 | `packages/ui`（Tamagui，跨栈编译）|
+| **平台特定 UI**（paradigm 不同）| PKM 大屏画布 / 知识图谱（web）/ mobile 触摸版 PKM | 直接写在对应 `apps/<target>/`，**不进 packages**（强行共享反而增加复杂度）|
+| **平台特定能力**（only-native / only-web）| EAS deeplink / web SEO meta / Service Worker | 对应 `apps/<target>/` |
 
 ## 三、跨端差异处理
 
-### 优先级
+### 决策树
 
-1. **优先**：写同一份代码跑三端
-2. **样式必须**：用 Tamagui token + 跨端原语（`<XStack>` / `<YStack>` 等），**禁止** 直接 `StyleSheet.create` 含平台特定值
-3. **必须分端时**：用文件后缀
+1. **优先**：写到 `packages/ui`，Tamagui 跨栈编译，三端共用
+2. **样式必须**：用 Tamagui token + 跨端原语（`<XStack>` / `<YStack>` 等），**禁止** 直接 `StyleSheet.create` 含平台特定值；**禁止** inline hex / px 字面量
+3. **小幅 paradigm 差异**：`apps/native` 内用文件后缀（见下表）
+4. **大幅 paradigm 差异**（M2 PKM 大屏画布 / 知识图谱）：在 `apps/web` 重写，**不**勉强共享 — 此时 packages/api-client + packages/auth 仍跨享，仅 UI 层各写各的
 
-### 文件后缀约定
+### 文件后缀约定（apps/native 内）
 
 | 后缀 | 加载平台 |
 |------|---------|
-| `foo.tsx` | 三端通用（默认） |
-| `foo.web.tsx` | 仅 Web |
+| `foo.tsx` | apps/native 通用（iOS + Android + RN Web 出的 web bundle） |
+| `foo.web.tsx` | 仅 RN Web bundle |
 | `foo.native.tsx` | iOS + Android |
 | `foo.ios.tsx` | 仅 iOS |
 | `foo.android.tsx` | 仅 Android |
 
 加载优先级由 Metro / Expo Router 决定：平台特定 > native > 通用。
 
+`apps/web`（M2+）由 Next.js 管理，不走 Metro 后缀分发；大屏页面直接独立文件实现。
+
 ## 四、UI/UX 工作流
 
 详见 [docs/ui-ux-workflow.md](https://github.com/xiaocaishen-michael/no-vain-years/blob/main/docs/ui-ux-workflow.md)。要点：
 
-- M1.1~M1.3 用 **A 路径**：Claude Code + UI UX Pro Max skill；不引入 Claude Design
+- M1.1 ~ M1.3 用 **A 路径**：Claude Code + `UI UX Pro Max` skill；**不引入** Claude Design
 - M2 PKM 类 1 页面（笔记列表 / 编辑器等）用 **B 路径**：Claude Design 出原型 → 翻译为 Tamagui
 - 类 2（自由画布）/ 类 3（图表）由专用库决定主体（tldraw / react-native-skia + d3-force / Victory Native）
-- **Token 优先**：`tamagui.config.ts` 用命名 token；hex / px 字面量禁入业务代码
-- 配套 skill：`/plugin marketplace add nextlevelbuilder/ui-ux-pro-max-skill`
-- `.claude/tamagui-mapping.md` 写下至少 5 条翻译规则
+- **Token 优先**：`packages/ui/src/tamagui.config.ts` 用命名 token；hex / px 字面量禁入业务代码
+- 配套 skill 安装：`/plugin marketplace add nextlevelbuilder/ui-ux-pro-max-skill` + `/plugin install ui-ux-pro-max@ui-ux-pro-max-skill`
+- skill 在 SDD `/plan` + `/implement` 阶段**自动激活**（不是独立阶段）；plan.md 内必含 `## UI 结构` 段
+- `.claude/tamagui-mapping.md` 写下至少 5 条翻译规则（间距走 token / 颜色走 token / inline style 不超 3 行 / 复用既有组件优先 / RN-Web 兼容写法）
 
 ## 五、测试约定
 
@@ -121,14 +187,16 @@ no-vain-years-app/
 后端 OpenAPI spec → 前端 TS 客户端**自动生成**，不手写：
 
 ```bash
-# 重新生成 API 客户端
-pnpm run gen:api
+# 重新生成 API 客户端（root 命令委托给 @nvy/api-client）
+pnpm api:gen          # 拉 prod spec
+pnpm api:gen:dev      # 拉 localhost:8080 spec
 ```
 
 详见 [meta `/sync-api-types` 命令文档](https://github.com/xiaocaishen-michael/no-vain-years/blob/main/.claude/commands/sync-api-types.md)。
 
-- 生成产物落到 `lib/api/`
+- 生成产物落到 `packages/api-client/src/generated/`
 - **禁止**手改产物
+- consumer（apps/native / apps/web / 其他 packages）通过 `@nvy/api-client` 入口 import，**禁止**直接 deep-import `@nvy/api-client/src/generated/...`
 - 后端 spec 变更后必须重新生成 + 适配调用方
 - 详见 [meta CLAUDE.md § API 契约](https://github.com/xiaocaishen-michael/no-vain-years/blob/main/CLAUDE.md#api-契约)
 
@@ -145,38 +213,45 @@ CI 拦截：lint / type 错误必须修才能合并。
 
 ## 八、构建 / 测试 / 启动命令
 
+所有命令在仓 root 跑（`no-vain-years-app/`）；跨包操作走 `pnpm -r ...`，单包定向走 `pnpm --filter <name> ...`。
+
 ```bash
-# 安装依赖
+# 安装依赖（链接整个 workspace）
 pnpm install
 
-# 启动开发服务（默认 metro）
-pnpm start
+# 启动 apps/native dev 服务（默认 metro）
+pnpm dev                 # = pnpm --filter native dev
+pnpm web                 # = pnpm --filter native web，浏览器
+pnpm ios                 # = pnpm --filter native ios，iOS 模拟器
+pnpm android             # = pnpm --filter native android，Android 模拟器
 
-# 跑特定平台
-pnpm web                 # 浏览器
-pnpm ios                 # iOS 模拟器
-pnpm android             # Android 模拟器
+# 启动 apps/web dev 服务（M2 启用后）
+pnpm web:next            # = pnpm --filter web dev
 
-# 类型检查
-pnpm tsc --noEmit
+# 类型检查（全 packages）
+pnpm typecheck           # = pnpm -r typecheck
 
-# Lint
-pnpm lint
-pnpm lint --fix
+# Lint（全 packages）
+pnpm lint                # = pnpm -r lint
+pnpm lint:fix            # = pnpm -r lint:fix
 
-# 单元测试
-pnpm test                # 跑一遍
-pnpm test --watch        # 监听模式
+# 单元测试（全 packages）
+pnpm test                # = pnpm -r test
+pnpm test:watch          # = pnpm -r test --watch
 
 # 重新生成 API client
-pnpm run gen:api
+pnpm api:gen
+pnpm api:gen:dev
 
-# EAS 构建（M1.2 接入后）
-pnpm eas build --platform ios
-pnpm eas build --platform android
+# EAS 构建（M2 接入后）
+pnpm --filter native exec eas build --platform ios
+pnpm --filter native exec eas build --platform android
+
+# Web export（Cloudflare Pages 部署用）
+pnpm --filter native exec expo export -p web   # 输出到 apps/native/dist/
 ```
 
-具体命令在 `package.json#scripts` 落地，M1.1 第一周敲定。
+具体命令在 root `package.json#scripts` 落地。
 
 ## 九、git / commit
 
@@ -193,12 +268,15 @@ pnpm eas build --platform android
 ## 十、AI 协作（Claude Code）
 
 1. **改任何文件前先读它**：避免 Claude 默认覆盖既有内容
-2. **禁止越过 OpenAPI 客户端**：不要手写 fetch 调用业务接口；通过 `lib/api/` 走
-3. **跨业务模块改动慎重**：业务边界 features/<module>/ 之间不该相互依赖；违反时必须解释为什么
-4. **引入新依赖时主动询问**：避免无意识扩大依赖面；尤其 native 模块（要 prebuild）必报告
-5. **生成的代码必须遵守本文件全部约定**
-6. **样式规范**：`tamagui.config.ts` 的 token + Tamagui 原语优先，避免 inline 样式 / hex 字面量
-7. **不确定时停下来问**：宁可多问一次，不要凭推测改架构关键点
+2. **禁止越过 OpenAPI 客户端**：不要手写 fetch 调用业务接口；通过 `@nvy/api-client` 走
+3. **跨业务模块改动慎重**：业务边界 `features/<module>/` 之间不该相互依赖；违反时必须解释为什么
+4. **跨包依赖纪律**：apps/* 可依赖 packages/*；packages/* 之间允许（按 ui ↔ api-client ↔ auth 三角依赖图）；packages/* **不可**反向依赖 apps/*
+5. **package import 走 entry**：从 `@nvy/<pkg>` 入口 import，**禁止** deep-import 内部路径（`@nvy/api-client/src/generated/...`）
+6. **引入新依赖时主动询问**：避免无意识扩大依赖面；尤其 native 模块（要 prebuild）必报告；区分 root devDep / per-package runtime dep
+7. **生成的代码必须遵守本文件全部约定**
+8. **样式规范**：`packages/ui/src/tamagui.config.ts` 的 token + Tamagui 原语优先，避免 inline 样式 / hex / px 字面量
+9. **token 安全**：refresh token 等敏感凭证只走 `expo-secure-store` (native) / localStorage (web 测试期)；**禁止** 写进 MMKV / AsyncStorage
+10. **不确定时停下来问**：宁可多问一次，不要凭推测改架构关键点
 
 ---
 
