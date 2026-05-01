@@ -14,26 +14,26 @@
 
 ## 一、技术栈
 
-| 维度 | 选型 |
-|------|------|
-| **Monorepo** | **pnpm workspace**（apps/* + packages/*）；可选 turborepo（M2 后引入收益更大）|
-| 框架（apps/native）| Expo（最新 stable）+ React Native |
-| Web 渲染（apps/native 出 web bundle）| React Native Web |
-| 框架（apps/web，M2 加入）| Next.js（App Router）+ Tailwind / shadcn — 处理大屏画布 / 知识图谱 / dashboard |
-| 语言 | TypeScript（`strict: true` + `noUncheckedIndexedAccess: true`） |
-| 路由（native）| Expo Router（file-based） |
-| 路由（web M2+）| Next.js App Router（可选 Solito 桥接共享导航逻辑）|
-| UI 库 | **Tamagui**（packages/ui，跨端编译 div+CSS / RN View）；apps/web 大屏专属 UI 可直用 Tailwind / shadcn |
-| 状态管理 | **Zustand**（packages/auth + 各 feature 内部）|
-| 数据请求 / 缓存 | TanStack Query |
-| 表单 | React Hook Form + zod |
-| 本地存储 — token | **expo-secure-store**（mobile，走 iOS Keychain / Android Keystore）+ localStorage（web，M3 前升级 HttpOnly cookie）|
-| 本地存储 — 业务 state | MMKV（mobile）+ localStorage（web），自封统一 API |
-| API 客户端 | OpenAPI Generator 从后端 `/v3/api-docs` 自动生成到 `packages/api-client/src/generated/`（**不手写**） |
-| **包管理器** | **pnpm**（不用 npm / yarn / bun） |
-| 构建 / 发布（native）| EAS Build + EAS Submit + EAS Update |
-| 构建 / 发布（web）| Cloudflare Pages（M1.2 起）|
-| Desktop（M5） | Tauri 2.x 包装 web bundle |
+| 维度                                  | 选型                                                                                                                |
+| ------------------------------------- | ------------------------------------------------------------------------------------------------------------------- |
+| **Monorepo**                          | **pnpm workspace**（`apps/*` + `packages/*`）；可选 turborepo（M2 后引入收益更大）                                  |
+| 框架（apps/native）                   | Expo（最新 stable）+ React Native                                                                                   |
+| Web 渲染（apps/native 出 web bundle） | React Native Web                                                                                                    |
+| 框架（apps/web，M2 加入）             | Next.js（App Router）+ Tailwind / shadcn — 处理大屏画布 / 知识图谱 / dashboard                                      |
+| 语言                                  | TypeScript（`strict: true` + `noUncheckedIndexedAccess: true`）                                                     |
+| 路由（native）                        | Expo Router（file-based）                                                                                           |
+| 路由（web M2+）                       | Next.js App Router（可选 Solito 桥接共享导航逻辑）                                                                  |
+| UI 库                                 | **Tamagui**（packages/ui，跨端编译 div+CSS / RN View）；apps/web 大屏专属 UI 可直用 Tailwind / shadcn               |
+| 状态管理                              | **Zustand**（packages/auth + 各 feature 内部）                                                                      |
+| 数据请求 / 缓存                       | TanStack Query                                                                                                      |
+| 表单                                  | React Hook Form + zod                                                                                               |
+| 本地存储 — token                      | **expo-secure-store**（mobile，走 iOS Keychain / Android Keystore）+ localStorage（web，M3 前升级 HttpOnly cookie） |
+| 本地存储 — 业务 state                 | MMKV（mobile）+ localStorage（web），自封统一 API                                                                   |
+| API 客户端                            | OpenAPI Generator 从后端 `/v3/api-docs` 自动生成到 `packages/api-client/src/generated/`（**不手写**）               |
+| **包管理器**                          | **pnpm**（不用 npm / yarn / bun）                                                                                   |
+| 构建 / 发布（native）                 | EAS Build + EAS Submit + EAS Update                                                                                 |
+| 构建 / 发布（web）                    | Cloudflare Pages（M1.2 起）                                                                                         |
+| Desktop（M5）                         | Tauri 2.x 包装 web bundle                                                                                           |
 
 > **包管理器纪律**：项目仅支持 pnpm。提交前禁止出现 `package-lock.json` / `yarn.lock` / `bun.lockb`，CI 会拦截。
 >
@@ -110,14 +110,14 @@ no-vain-years-app/                          ← root（pnpm workspace）
 
 `apps/<target>/features/<module>/` 中的 `<module>` 与后端 `mbw-<module>` 必须严格一致：`account / pkm / billing / work / wealth / health / inspire`。详见 [meta CLAUDE.md § 业务命名](https://github.com/xiaocaishen-michael/no-vain-years/blob/main/CLAUDE.md#业务命名)。
 
-### 代码归属判断（怎么决定放 packages/* 还是 apps/<target>/）
+### 代码归属判断（怎么决定放 packages/\* 还是 apps/<target>/）
 
-| 类型 | 例子 | 放哪 |
-|---|---|---|
-| **业务逻辑 / 数据层**（必跨端共享）| auth store / api client / validation schema | `packages/auth` / `packages/api-client` / `packages/types` |
-| **可共享 UI**（简单页面通用组件）| Button / Input / TabSwitcher / Form 原语 | `packages/ui`（Tamagui，跨栈编译）|
-| **平台特定 UI**（paradigm 不同）| PKM 大屏画布 / 知识图谱（web）/ mobile 触摸版 PKM | 直接写在对应 `apps/<target>/`，**不进 packages**（强行共享反而增加复杂度）|
-| **平台特定能力**（only-native / only-web）| EAS deeplink / web SEO meta / Service Worker | 对应 `apps/<target>/` |
+| 类型                                       | 例子                                              | 放哪                                                                       |
+| ------------------------------------------ | ------------------------------------------------- | -------------------------------------------------------------------------- |
+| **业务逻辑 / 数据层**（必跨端共享）        | auth store / api client / validation schema       | `packages/auth` / `packages/api-client` / `packages/types`                 |
+| **可共享 UI**（简单页面通用组件）          | Button / Input / TabSwitcher / Form 原语          | `packages/ui`（Tamagui，跨栈编译）                                         |
+| **平台特定 UI**（paradigm 不同）           | PKM 大屏画布 / 知识图谱（web）/ mobile 触摸版 PKM | 直接写在对应 `apps/<target>/`，**不进 packages**（强行共享反而增加复杂度） |
+| **平台特定能力**（only-native / only-web） | EAS deeplink / web SEO meta / Service Worker      | 对应 `apps/<target>/`                                                      |
 
 ## 三、跨端差异处理
 
@@ -130,13 +130,13 @@ no-vain-years-app/                          ← root（pnpm workspace）
 
 ### 文件后缀约定（apps/native 内）
 
-| 后缀 | 加载平台 |
-|------|---------|
-| `foo.tsx` | apps/native 通用（iOS + Android + RN Web 出的 web bundle） |
-| `foo.web.tsx` | 仅 RN Web bundle |
-| `foo.native.tsx` | iOS + Android |
-| `foo.ios.tsx` | 仅 iOS |
-| `foo.android.tsx` | 仅 Android |
+| 后缀              | 加载平台                                                   |
+| ----------------- | ---------------------------------------------------------- |
+| `foo.tsx`         | apps/native 通用（iOS + Android + RN Web 出的 web bundle） |
+| `foo.web.tsx`     | 仅 RN Web bundle                                           |
+| `foo.native.tsx`  | iOS + Android                                              |
+| `foo.ios.tsx`     | 仅 iOS                                                     |
+| `foo.android.tsx` | 仅 Android                                                 |
 
 加载优先级由 Metro / Expo Router 决定：平台特定 > native > 通用。
 
@@ -158,23 +158,23 @@ no-vain-years-app/                          ← root（pnpm workspace）
 
 ### 测试范围（**不与 backend 同等强度的 TDD**）
 
-| 类型 | 强度 | 工具 |
-|------|------|------|
-| 关键 hook（自定义业务 hook） | 🟢 **必须测**（先测后实现） | vitest |
-| 工具函数（lib/utils 等纯函数） | 🟢 **必须测** | vitest |
-| store（Zustand）的复杂状态机 | 🟢 **必须测**（关键流转） | vitest |
-| API 调用层（含错误映射） | 🟡 推荐测 | vitest + msw |
-| UI 组件（视觉 + 交互） | ⏸ **不强制 TDD**（业内争议大），但鼓励 visual regression（M2 后） | 视情况：playwright / detox |
-| Expo Router 页面 | ⏸ 不强制 | E2E 覆盖即可 |
+| 类型                           | 强度                                                              | 工具                       |
+| ------------------------------ | ----------------------------------------------------------------- | -------------------------- |
+| 关键 hook（自定义业务 hook）   | 🟢 **必须测**（先测后实现）                                       | vitest                     |
+| 工具函数（lib/utils 等纯函数） | 🟢 **必须测**                                                     | vitest                     |
+| store（Zustand）的复杂状态机   | 🟢 **必须测**（关键流转）                                         | vitest                     |
+| API 调用层（含错误映射）       | 🟡 推荐测                                                         | vitest + msw               |
+| UI 组件（视觉 + 交互）         | ⏸ **不强制 TDD**（业内争议大），但鼓励 visual regression（M2 后） | 视情况：playwright / detox |
+| Expo Router 页面               | ⏸ 不强制                                                          | E2E 覆盖即可               |
 
 **核心原则**：**有明确输入输出 / 业务规则的代码必须 TDD；纯展示型组件可不 TDD**。
 
 ### 命名约定
 
-| 类型 | 文件命名 |
-|------|---------|
-| 单元测试 | `<name>.test.ts(x)` 与被测文件同目录 |
-| 集成 / E2E | `e2e/<feature>.spec.ts`（M2 之后） |
+| 类型       | 文件命名                             |
+| ---------- | ------------------------------------ |
+| 单元测试   | `<name>.test.ts(x)` 与被测文件同目录 |
+| 集成 / E2E | `e2e/<feature>.spec.ts`（M2 之后）   |
 
 ### 工具链（M1.1 第一周敲定具体配置）
 
@@ -202,12 +202,12 @@ pnpm api:gen:dev      # 拉 localhost:8080 spec
 
 ## 七、Lint / 格式化 / 类型检查
 
-| 工具 | 用途 | 配置文件 |
-|------|------|---------|
-| **TypeScript** | `strict: true` + `noUncheckedIndexedAccess: true` | `tsconfig.json` |
-| **ESLint** | 代码静态检查 | `.eslintrc.cjs`（M1.1 第一周敲定具体规则集） |
-| **Prettier** | 自动格式化 | `.prettierrc` |
-| **husky + lint-staged** | pre-commit 阻止 lint 错误 | `.husky/` |
+| 工具                    | 用途                                              | 配置文件                                     |
+| ----------------------- | ------------------------------------------------- | -------------------------------------------- |
+| **TypeScript**          | `strict: true` + `noUncheckedIndexedAccess: true` | `tsconfig.json`                              |
+| **ESLint**              | 代码静态检查                                      | `.eslintrc.cjs`（M1.1 第一周敲定具体规则集） |
+| **Prettier**            | 自动格式化                                        | `.prettierrc`                                |
+| **husky + lint-staged** | pre-commit 阻止 lint 错误                         | `.husky/`                                    |
 
 CI 拦截：lint / type 错误必须修才能合并。
 
@@ -255,12 +255,12 @@ pnpm --filter native exec expo export -p web   # 输出到 apps/native/dist/
 
 ## 九、git / commit
 
-| 项 | 约定 |
-|----|------|
-| 分支命名 | 见 [meta CLAUDE.md § Git 工作流](https://github.com/xiaocaishen-michael/no-vain-years/blob/main/CLAUDE.md#git-工作流) |
-| Commit 消息 | Conventional Commits |
-| Commit scope | 业务模块名（`feat(account): ...`），跨模块用 `core`，全局用 `repo` |
-| PR 合入 | Squash merge，删 feature 分支 |
+| 项             | 约定                                                                                                                                                    |
+| -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 分支命名       | 见 [meta CLAUDE.md § Git 工作流](https://github.com/xiaocaishen-michael/no-vain-years/blob/main/CLAUDE.md#git-工作流)                                   |
+| Commit 消息    | Conventional Commits                                                                                                                                    |
+| Commit scope   | 业务模块名（`feat(account): ...`），跨模块用 `core`，全局用 `repo`                                                                                      |
+| PR 合入        | Squash merge，删 feature 分支                                                                                                                           |
 | Release 自动化 | release-please（M1.2 接入），见 [meta CLAUDE.md § 版本号 / 发版](https://github.com/xiaocaishen-michael/no-vain-years/blob/main/CLAUDE.md#版本号--发版) |
 
 **禁止**提交：`package-lock.json` / `yarn.lock` / `bun.lockb`、`.expo/`、`node_modules/`、`.env*`（除 `.env.example`）。
@@ -270,7 +270,7 @@ pnpm --filter native exec expo export -p web   # 输出到 apps/native/dist/
 1. **改任何文件前先读它**：避免 Claude 默认覆盖既有内容
 2. **禁止越过 OpenAPI 客户端**：不要手写 fetch 调用业务接口；通过 `@nvy/api-client` 走
 3. **跨业务模块改动慎重**：业务边界 `features/<module>/` 之间不该相互依赖；违反时必须解释为什么
-4. **跨包依赖纪律**：apps/* 可依赖 packages/*；packages/* 之间允许（按 ui ↔ api-client ↔ auth 三角依赖图）；packages/* **不可**反向依赖 apps/*
+4. **跨包依赖纪律**：`apps/*` 可依赖 `packages/*`；`packages/*` 之间允许（按 ui ↔ api-client ↔ auth 三角依赖图）；`packages/*` **不可**反向依赖 `apps/*`
 5. **package import 走 entry**：从 `@nvy/<pkg>` 入口 import，**禁止** deep-import 内部路径（`@nvy/api-client/src/generated/...`）
 6. **引入新依赖时主动询问**：避免无意识扩大依赖面；尤其 native 模块（要 prebuild）必报告；区分 root devDep / per-package runtime dep
 7. **生成的代码必须遵守本文件全部约定**
