@@ -16,10 +16,15 @@
     "test:watch": "echo 'no tests yet'"
   },
   "dependencies": {
-    "@nvy/types": "workspace:*"
+    "@nvy/types": "workspace:*",
+    "@tamagui/config": "2.0.0-rc.41",
+    "tamagui": "2.0.0-rc.41"
   },
   "devDependencies": {
     "@nvy/tsconfig": "workspace:*",
+    "@types/react": "~19.1.0",
+    "react": "19.1.0",
+    "react-native": "0.81.5",
     "typescript": "~5.9.0"
   }
 }
