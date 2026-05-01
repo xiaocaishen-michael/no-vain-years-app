@@ -1,4 +1,7 @@
-// Auth state + token management + high-level login functions.
-// Phase 3 (next PR) fills in src/store.ts (Zustand) and src/usecases.ts.
-// At scaffold time the package is intentionally empty.
-export {};
+// Public surface of @nvy/auth.
+//
+// Phase 3 (this PR): exports the Zustand store + session types only.
+// Phase 4 will add high-level use case helpers (loginByPassword,
+// loginByPhoneSms, refreshToken, logoutAll) wired to @nvy/api-client.
+export type { AuthState, Session } from './store';
+export { useAuthStore } from './store';
