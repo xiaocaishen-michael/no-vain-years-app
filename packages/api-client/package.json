@@ -22,6 +22,6 @@
   "devDependencies": {
     "@nvy/tsconfig": "workspace:*",
     "@openapitools/openapi-generator-cli": "^2.16.4",
-    "typescript": "~5.9.0"
+    "typescript": "~6.0.3"
   }
 }

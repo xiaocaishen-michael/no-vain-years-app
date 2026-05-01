@@ -10,7 +10,7 @@ importers:
     devDependencies:
       '@commitlint/cli':
         specifier: ^19.6.0
-        version: 19.8.1(@types/node@22.19.17)(typescript@5.9.3)
+        version: 19.8.1(@types/node@22.19.17)(typescript@6.0.3)
       '@commitlint/config-conventional':
         specifier: ^19.6.0
         version: 19.8.1
@@ -24,8 +24,8 @@ importers:
         specifier: ^3.3.3
         version: 3.8.3
       typescript:
-        specifier: ~5.9.0
-        version: 5.9.3
+        specifier: ~6.0.3
+        version: 6.0.3
 
   packages/api-client:
     dependencies:
@@ -40,8 +40,8 @@ importers:
         specifier: ^2.16.4
         version: 2.32.0
       typescript:
-        specifier: ~5.9.0
-        version: 5.9.3
+        specifier: ~6.0.3
+        version: 6.0.3
 
   packages/auth:
     dependencies:
@@ -56,8 +56,8 @@ importers:
         specifier: workspace:*
         version: link:../tsconfig
       typescript:
-        specifier: ~5.9.0
-        version: 5.9.3
+        specifier: ~6.0.3
+        version: 6.0.3
 
   packages/tsconfig: {}
 
@@ -67,8 +67,8 @@ importers:
         specifier: workspace:*
         version: link:../tsconfig
       typescript:
-        specifier: ~5.9.0
-        version: 5.9.3
+        specifier: ~6.0.3
+        version: 6.0.3
 
   packages/ui:
     dependencies:
@@ -80,8 +80,8 @@ importers:
         specifier: workspace:*
         version: link:../tsconfig
       typescript:
-        specifier: ~5.9.0
-        version: 5.9.3
+        specifier: ~6.0.3
+        version: 6.0.3
 
 packages:
 
@@ -1106,8 +1106,8 @@ packages:
     resolution: {integrity: sha512-t0rzBq87m3fVcduHDUFhKmyyX+9eo6WQjZvf51Ea/M0Q7+T374Jp1aUiyUl0GKxp8M/OETVHSDvmkyPgvX+X2w==}
     engines: {node: '>=10'}
 
-  typescript@5.9.3:
-    resolution: {integrity: sha512-jl1vZzPDinLr9eUt3J/t7V6FgNEw9QjvBPdysz9KfQDD41fQrC2Y4vKQdiaUpFT4bXlb1RHhLpp8wtm6M5TgSw==}
+  typescript@6.0.3:
+    resolution: {integrity: sha512-y2TvuxSZPDyQakkFRPZHKFm+KKVqIisdg9/CZwm9ftvKXLP8NRWj38/ODjNbr43SsoXqNuAisEf1GdCxqWcdBw==}
     engines: {node: '>=14.17'}
     hasBin: true
 
@@ -1189,11 +1189,11 @@ snapshots:
 
   '@borewit/text-codec@0.2.2': {}
 
-  '@commitlint/cli@19.8.1(@types/node@22.19.17)(typescript@5.9.3)':
+  '@commitlint/cli@19.8.1(@types/node@22.19.17)(typescript@6.0.3)':
     dependencies:
       '@commitlint/format': 19.8.1
       '@commitlint/lint': 19.8.1
-      '@commitlint/load': 19.8.1(@types/node@22.19.17)(typescript@5.9.3)
+      '@commitlint/load': 19.8.1(@types/node@22.19.17)(typescript@6.0.3)
       '@commitlint/read': 19.8.1
       '@commitlint/types': 19.8.1
       tinyexec: 1.1.2
@@ -1240,15 +1240,15 @@ snapshots:
       '@commitlint/rules': 19.8.1
       '@commitlint/types': 19.8.1
 
-  '@commitlint/load@19.8.1(@types/node@22.19.17)(typescript@5.9.3)':
+  '@commitlint/load@19.8.1(@types/node@22.19.17)(typescript@6.0.3)':
     dependencies:
       '@commitlint/config-validator': 19.8.1
       '@commitlint/execute-rule': 19.8.1
       '@commitlint/resolve-extends': 19.8.1
       '@commitlint/types': 19.8.1
       chalk: 5.6.2
-      cosmiconfig: 9.0.1(typescript@5.9.3)
-      cosmiconfig-typescript-loader: 6.3.0(@types/node@22.19.17)(cosmiconfig@9.0.1(typescript@5.9.3))(typescript@5.9.3)
+      cosmiconfig: 9.0.1(typescript@6.0.3)
+      cosmiconfig-typescript-loader: 6.3.0(@types/node@22.19.17)(cosmiconfig@9.0.1(typescript@6.0.3))(typescript@6.0.3)
       lodash.isplainobject: 4.0.6
       lodash.merge: 4.6.2
       lodash.uniq: 4.5.0
@@ -1583,21 +1583,21 @@ snapshots:
       meow: 12.1.1
       split2: 4.2.0
 
-  cosmiconfig-typescript-loader@6.3.0(@types/node@22.19.17)(cosmiconfig@9.0.1(typescript@5.9.3))(typescript@5.9.3):
+  cosmiconfig-typescript-loader@6.3.0(@types/node@22.19.17)(cosmiconfig@9.0.1(typescript@6.0.3))(typescript@6.0.3):
     dependencies:
       '@types/node': 22.19.17
-      cosmiconfig: 9.0.1(typescript@5.9.3)
+      cosmiconfig: 9.0.1(typescript@6.0.3)
       jiti: 2.6.1
-      typescript: 5.9.3
+      typescript: 6.0.3
 
-  cosmiconfig@9.0.1(typescript@5.9.3):
+  cosmiconfig@9.0.1(typescript@6.0.3):
     dependencies:
       env-paths: 2.2.1
       import-fresh: 3.3.1
       js-yaml: 4.1.1
       parse-json: 5.2.0
     optionalDependencies:
-      typescript: 5.9.3
+      typescript: 6.0.3
 
   cross-spawn@7.0.6:
     dependencies:
@@ -2198,7 +2198,7 @@ snapshots:
 
   type-fest@0.21.3: {}
 
-  typescript@5.9.3: {}
+  typescript@6.0.3: {}
 
   uid@2.0.2:
     dependencies:
