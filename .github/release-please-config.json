@@ -21,8 +21,7 @@
   "packages": {
     ".": {
       "package-name": "no-vain-years-app",
-      "release-type": "node",
-      "release-as": "0.1.0"
+      "release-type": "node"
     }
   }
 }
