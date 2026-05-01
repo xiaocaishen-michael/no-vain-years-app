@@ -1,0 +1,117 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+# Ruleset binding: each job's `name:` below is wired into the
+# main-protection ruleset's required_status_checks contexts.
+# Renaming any of them MUST update the ruleset in the SAME PR
+# (gh api -X PUT /repos/.../rulesets/<id>), or PRs are permanently
+# blocked. See meta docs/conventions/git-workflow.md (server PR #25/#26 incident).
+jobs:
+  build:
+    name: Build & Test # ruleset-required
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - name: Set up Node.js 22
+        uses: actions/setup-node@v5
+        with:
+          node-version: '22'
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Typecheck (all packages)
+        run: pnpm -r typecheck
+
+      - name: Lint (all packages)
+        run: pnpm -r lint
+
+      - name: Test (all packages)
+        run: pnpm -r test
+
+      - name: Format check
+        run: pnpm format:check
+
+  gitleaks:
+    name: Gitleaks # ruleset-required
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Run gitleaks
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  trivy-fs:
+    name: Trivy fs scan # ruleset-required
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Run Trivy fs scan
+        uses: aquasecurity/trivy-action@v0.36.0
+        with:
+          scan-type: 'fs'
+          scan-ref: '.'
+          severity: 'CRITICAL,HIGH'
+          exit-code: '1'
+          ignore-unfixed: true
+          skip-dirs: 'docs,.claude,packages/api-client/src/generated'
+
+  actionlint:
+    name: Actionlint (workflow YAML) # ruleset-required
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: raven-actions/actionlint@v2
+
+  markdownlint:
+    name: Markdownlint (docs) # ruleset-required
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: DavidAnson/markdownlint-cli2-action@v18
+        with:
+          config: .markdownlint-cli2.jsonc
+          globs: '**/*.md'
+
+  commitlint:
+    name: Commitlint (conventional commits) # ruleset-required
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+      - uses: wagoid/commitlint-github-action@v6
+        with:
+          configFile: commitlint.config.mjs
+
+  pr-title:
+    name: PR title (conventional commits) # ruleset-required
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    permissions:
+      pull-requests: read
+    steps:
+      - uses: amannn/action-semantic-pull-request@v5
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

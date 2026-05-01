@@ -1,0 +1,50 @@
+version: 2
+updates:
+  - package-ecosystem: 'npm'
+    directory: '/'
+    schedule:
+      interval: 'weekly'
+      day: 'monday'
+    open-pull-requests-limit: 10
+    commit-message:
+      prefix: 'chore'
+      include: 'scope'
+    # Reduce PR noise by grouping related dependencies into single PRs.
+    groups:
+      expo:
+        patterns:
+          - 'expo'
+          - 'expo-*'
+          - '@expo/*'
+          - 'react-native'
+          - 'react-native-*'
+      tamagui:
+        patterns:
+          - 'tamagui'
+          - '@tamagui/*'
+      tanstack:
+        patterns:
+          - '@tanstack/*'
+      lint-tools:
+        patterns:
+          - 'eslint'
+          - 'eslint-*'
+          - '@typescript-eslint/*'
+          - 'prettier'
+          - 'lint-staged'
+      types:
+        patterns:
+          - '@types/*'
+
+  - package-ecosystem: 'github-actions'
+    directory: '/'
+    schedule:
+      interval: 'weekly'
+      day: 'monday'
+    commit-message:
+      prefix: 'chore'
+      include: 'scope'
+    groups:
+      github-actions:
+        patterns:
+          - '*'

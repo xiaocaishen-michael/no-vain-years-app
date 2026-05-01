@@ -7,18 +7,18 @@ If you discover a security vulnerability in this project, please **do not** open
 Use **GitHub Security Advisories** (private disclosure):
 
 - Navigate to the repository's `Security` tab → `Advisories` → `Report a vulnerability`
-- Or open this URL directly: https://github.com/xiaocaishen-michael/no-vain-years-app/security/advisories/new
+- Or open this URL directly: <https://github.com/xiaocaishen-michael/no-vain-years-app/security/advisories/new>
 
 This channel is private until the maintainer publishes the advisory.
 
 ## Response SLO
 
-| Stage | Target |
-|-------|--------|
-| Initial acknowledgement | Within 3 business days |
-| Severity assessment | Within 7 business days |
-| Fix or mitigation plan | Within 30 business days for High/Critical; best-effort for Medium/Low |
-| Public disclosure | Coordinated; default 90 days from initial report unless agreed otherwise |
+| Stage                   | Target                                                                   |
+| ----------------------- | ------------------------------------------------------------------------ |
+| Initial acknowledgement | Within 3 business days                                                   |
+| Severity assessment     | Within 7 business days                                                   |
+| Fix or mitigation plan  | Within 30 business days for High/Critical; best-effort for Medium/Low    |
+| Public disclosure       | Coordinated; default 90 days from initial report unless agreed otherwise |
 
 ## Scope
 
