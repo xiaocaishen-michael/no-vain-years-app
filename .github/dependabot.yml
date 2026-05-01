@@ -9,6 +9,23 @@ updates:
     commit-message:
       prefix: 'chore'
       include: 'scope'
+    # Day-1 majors flooded the queue (PR #7-#12). Pin major lines to
+    # what we deliberately chose; Dependabot proposes patch/minor only.
+    # Re-evaluate majors manually when:
+    # - Node bumps a new LTS (Node 22 → 24 in late 2026)
+    # - TypeScript hits 6.x stable + ecosystem catches up
+    # - tooling bumps known to break (e.g. setup-node v6 dropped pnpm cache)
+    ignore:
+      - dependency-name: 'typescript'
+        update-types: ['version-update:semver-major']
+      - dependency-name: '@types/node'
+        update-types: ['version-update:semver-major']
+      - dependency-name: '@commitlint/cli'
+        update-types: ['version-update:semver-major']
+      - dependency-name: '@commitlint/config-conventional'
+        update-types: ['version-update:semver-major']
+      - dependency-name: 'lint-staged'
+        update-types: ['version-update:semver-major']
     # Reduce PR noise by grouping related dependencies into single PRs.
     groups:
       expo:
@@ -44,6 +61,11 @@ updates:
     commit-message:
       prefix: 'chore'
       include: 'scope'
+    # Same rationale as npm — actions/setup-node v6 dropped pnpm cache;
+    # action-semantic-pull-request v6 is Node 24 + ESM. Manually evaluate.
+    ignore:
+      - dependency-name: '*'
+        update-types: ['version-update:semver-major']
     groups:
       github-actions:
         patterns:
