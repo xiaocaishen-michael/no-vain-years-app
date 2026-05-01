@@ -1,6 +1,6 @@
 {
   "name": "no-vain-years-app",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "private": true,
   "description": "「不虚此生」跨端前端 monorepo（pnpm workspace + Expo + Tamagui）",
   "license": "Apache-2.0",
