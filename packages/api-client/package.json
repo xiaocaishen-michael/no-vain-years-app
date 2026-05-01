@@ -17,6 +17,7 @@
     "test:watch": "echo 'no tests yet'"
   },
   "dependencies": {
+    "@nvy/auth": "workspace:*",
     "@nvy/types": "workspace:*"
   },
   "devDependencies": {
