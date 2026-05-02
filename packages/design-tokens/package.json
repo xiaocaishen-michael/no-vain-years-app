@@ -1,5 +1,5 @@
 {
-  "name": "@nvy/ui",
+  "name": "@nvy/design-tokens",
   "version": "0.0.0",
   "private": true,
   "main": "./src/index.ts",
@@ -14,20 +14,8 @@
     "test": "echo 'no tests yet'",
     "test:watch": "echo 'no tests yet'"
   },
-  "dependencies": {
-    "@nvy/design-tokens": "workspace:*",
-    "@nvy/types": "workspace:*"
-  },
-  "peerDependencies": {
-    "nativewind": "^4.2.3",
-    "react": "19.1.0",
-    "react-native": "0.81.5"
-  },
   "devDependencies": {
     "@nvy/tsconfig": "workspace:*",
-    "@types/react": "~19.1.0",
-    "react": "19.1.0",
-    "react-native": "0.81.5",
     "typescript": "~5.9.0"
   }
 }

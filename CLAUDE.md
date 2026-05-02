@@ -14,26 +14,26 @@
 
 ## 一、技术栈
 
-| 维度                                  | 选型                                                                                                                |
-| ------------------------------------- | ------------------------------------------------------------------------------------------------------------------- |
-| **Monorepo**                          | **pnpm workspace**（`apps/*` + `packages/*`）；可选 turborepo（M2 后引入收益更大）                                  |
-| 框架（apps/native）                   | Expo（最新 stable）+ React Native                                                                                   |
-| Web 渲染（apps/native 出 web bundle） | React Native Web                                                                                                    |
-| 框架（apps/web，M2 加入）             | Next.js（App Router）+ Tailwind / shadcn — 处理大屏画布 / 知识图谱 / dashboard                                      |
-| 语言                                  | TypeScript（`strict: true` + `noUncheckedIndexedAccess: true`）                                                     |
-| 路由（native）                        | Expo Router（file-based）                                                                                           |
-| 路由（web M2+）                       | Next.js App Router（可选 Solito 桥接共享导航逻辑）                                                                  |
-| UI 库                                 | **Tamagui**（packages/ui，跨端编译 div+CSS / RN View）；apps/web 大屏专属 UI 可直用 Tailwind / shadcn               |
-| 状态管理                              | **Zustand**（packages/auth + 各 feature 内部）                                                                      |
-| 数据请求 / 缓存                       | TanStack Query                                                                                                      |
-| 表单                                  | React Hook Form + zod                                                                                               |
-| 本地存储 — token                      | **expo-secure-store**（mobile，走 iOS Keychain / Android Keystore）+ localStorage（web，M3 前升级 HttpOnly cookie） |
-| 本地存储 — 业务 state                 | MMKV（mobile）+ localStorage（web），自封统一 API                                                                   |
-| API 客户端                            | OpenAPI Generator 从后端 `/v3/api-docs` 自动生成到 `packages/api-client/src/generated/`（**不手写**）               |
-| **包管理器**                          | **pnpm**（不用 npm / yarn / bun）                                                                                   |
-| 构建 / 发布（native）                 | EAS Build + EAS Submit + EAS Update                                                                                 |
-| 构建 / 发布（web）                    | Cloudflare Pages（M1.2 起）                                                                                         |
-| Desktop（M5）                         | Tauri 2.x 包装 web bundle                                                                                           |
+| 维度                                  | 选型                                                                                                                                       |
+| ------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
+| **Monorepo**                          | **pnpm workspace**（`apps/*` + `packages/*`）；可选 turborepo（M2 后引入收益更大）                                                         |
+| 框架（apps/native）                   | Expo（最新 stable）+ React Native                                                                                                          |
+| Web 渲染（apps/native 出 web bundle） | React Native Web                                                                                                                           |
+| 框架（apps/web，M2 加入）             | Next.js（App Router）+ Tailwind / shadcn — 处理大屏画布 / 知识图谱 / dashboard                                                             |
+| 语言                                  | TypeScript（`strict: true` + `noUncheckedIndexedAccess: true`）                                                                            |
+| 路由（native）                        | Expo Router（file-based）                                                                                                                  |
+| 路由（web M2+）                       | Next.js App Router（可选 Solito 桥接共享导航逻辑）                                                                                         |
+| UI 库                                 | **NativeWind v4 + Tailwind**（per ADR-0014，packages/ui 自封装）；tokens 单源 `@nvy/design-tokens`；apps/web (M2) 用同一份 tailwind preset |
+| 状态管理                              | **Zustand**（packages/auth + 各 feature 内部）                                                                                             |
+| 数据请求 / 缓存                       | TanStack Query                                                                                                                             |
+| 表单                                  | React Hook Form + zod                                                                                                                      |
+| 本地存储 — token                      | **expo-secure-store**（mobile，走 iOS Keychain / Android Keystore）+ localStorage（web，M3 前升级 HttpOnly cookie）                        |
+| 本地存储 — 业务 state                 | MMKV（mobile）+ localStorage（web），自封统一 API                                                                                          |
+| API 客户端                            | OpenAPI Generator 从后端 `/v3/api-docs` 自动生成到 `packages/api-client/src/generated/`（**不手写**）                                      |
+| **包管理器**                          | **pnpm**（不用 npm / yarn / bun）                                                                                                          |
+| 构建 / 发布（native）                 | EAS Build + EAS Submit + EAS Update                                                                                                        |
+| 构建 / 发布（web）                    | Cloudflare Pages（M1.2 起）                                                                                                                |
+| Desktop（M5）                         | Tauri 2.x 包装 web bundle                                                                                                                  |
 
 > **包管理器纪律**：项目仅支持 pnpm。提交前禁止出现 `package-lock.json` / `yarn.lock` / `bun.lockb`，CI 会拦截。
 >
@@ -61,20 +61,23 @@ no-vain-years-app/                          ← root（pnpm workspace）
 │       ├── app/                            ← Next.js App Router
 │       │   ├── (auth)/
 │       │   ├── (app)/
-│       │   └── pkm/                        ← 大屏画布 / 知识图谱（用 tldraw / xyflow，不通过 Tamagui）
+│       │   └── pkm/                        ← 大屏画布 / 知识图谱（用 tldraw / xyflow 自带样式；容器布局走 Tailwind className）
 │       ├── features/                       ← web 大屏专属业务模块
 │       └── package.json
 │
 ├── packages/
-│   ├── ui/                                 ← Tamagui 组件 + design tokens（跨 apps 共享）
+│   ├── design-tokens/                      ← Tailwind tokens 单一来源（被 native 现在 + web M2 共用）
 │   │   ├── src/
-│   │   │   ├── tamagui.config.ts
-│   │   │   ├── Button.tsx
+│   │   │   └── index.ts                    ← export colors / spacing / fontSize / borderRadius / boxShadow
+│   │   └── package.json                    ← name: "@nvy/design-tokens"
+│   ├── ui/                                 ← NativeWind 自封装组件（跨 apps 共享）
+│   │   ├── src/
+│   │   │   ├── Button.tsx                  ← className 风格
 │   │   │   ├── PhoneInput.tsx
 │   │   │   ├── PasswordInput.tsx
 │   │   │   ├── SmsCodeInput.tsx
 │   │   │   ├── TabSwitcher.tsx
-│   │   │   └── index.ts
+│   │   │   └── index.ts                    ← re-export 组件 + tokens
 │   │   └── package.json                    ← name: "@nvy/ui"
 │   ├── api-client/                         ← OpenAPI generator 输出 + fetch wrapper
 │   │   ├── src/
@@ -99,7 +102,7 @@ no-vain-years-app/                          ← root（pnpm workspace）
 ├── .claude/
 │   ├── settings.json
 │   ├── settings.local.json                 ← gitignored
-│   └── tamagui-mapping.md                  ← UI/UX → Tamagui 翻译规则（≥ 5 条）
+│   └── nativewind-mapping.md               ← UI/UX → NativeWind className 翻译规则（≥ 5 条）
 ├── .github/
 │   └── workflows/                          ← CI / release-please / deploy-web
 └── docs/
@@ -115,7 +118,7 @@ no-vain-years-app/                          ← root（pnpm workspace）
 | 类型                                       | 例子                                              | 放哪                                                                       |
 | ------------------------------------------ | ------------------------------------------------- | -------------------------------------------------------------------------- |
 | **业务逻辑 / 数据层**（必跨端共享）        | auth store / api client / validation schema       | `packages/auth` / `packages/api-client` / `packages/types`                 |
-| **可共享 UI**（简单页面通用组件）          | Button / Input / TabSwitcher / Form 原语          | `packages/ui`（Tamagui，跨栈编译）                                         |
+| **可共享 UI**（简单页面通用组件）          | Button / Input / TabSwitcher / Form 原语          | `packages/ui`（NativeWind className，跨栈共享）                            |
 | **平台特定 UI**（paradigm 不同）           | PKM 大屏画布 / 知识图谱（web）/ mobile 触摸版 PKM | 直接写在对应 `apps/<target>/`，**不进 packages**（强行共享反而增加复杂度） |
 | **平台特定能力**（only-native / only-web） | EAS deeplink / web SEO meta / Service Worker      | 对应 `apps/<target>/`                                                      |
 
@@ -123,8 +126,8 @@ no-vain-years-app/                          ← root（pnpm workspace）
 
 ### 决策树
 
-1. **优先**：写到 `packages/ui`，Tamagui 跨栈编译，三端共用
-2. **样式必须**：用 Tamagui token + 跨端原语（`<XStack>` / `<YStack>` 等），**禁止** 直接 `StyleSheet.create` 含平台特定值；**禁止** inline hex / px 字面量
+1. **优先**：写到 `packages/ui`，NativeWind className 跨栈共用（native 现在 + web M2）
+2. **样式必须**：用 NativeWind className（如 `bg-brand-500 px-md py-sm rounded-md`），**禁止** 直接 `StyleSheet.create` 含平台特定值；**禁止** inline hex / px 字面量
 3. **小幅 paradigm 差异**：`apps/native` 内用文件后缀（见下表）
 4. **大幅 paradigm 差异**（M2 PKM 大屏画布 / 知识图谱）：在 `apps/web` 重写，**不**勉强共享 — 此时 packages/api-client + packages/auth 仍跨享，仅 UI 层各写各的
 
@@ -147,12 +150,12 @@ no-vain-years-app/                          ← root（pnpm workspace）
 详见 [docs/ui-ux-workflow.md](https://github.com/xiaocaishen-michael/no-vain-years/blob/main/docs/ui-ux-workflow.md)。要点：
 
 - M1.1 ~ M1.3 用 **A 路径**：Claude Code + `UI UX Pro Max` skill；**不引入** Claude Design
-- M2 PKM 类 1 页面（笔记列表 / 编辑器等）用 **B 路径**：Claude Design 出原型 → 翻译为 Tamagui
+- M2 PKM 类 1 页面（笔记列表 / 编辑器等）用 **B 路径**：Claude Design 出原型 → 翻译为 NativeWind className
 - 类 2（自由画布）/ 类 3（图表）由专用库决定主体（tldraw / react-native-skia + d3-force / Victory Native）
-- **Token 优先**：`packages/ui/src/tamagui.config.ts` 用命名 token；hex / px 字面量禁入业务代码
+- **Token 优先**：`packages/design-tokens/src/index.ts` 是单源，apps/native/tailwind.config.ts 引用；hex / px 字面量禁入业务代码
 - 配套 skill 安装：`/plugin marketplace add nextlevelbuilder/ui-ux-pro-max-skill` + `/plugin install ui-ux-pro-max@ui-ux-pro-max-skill`
 - skill 在 SDD `/plan` + `/implement` 阶段**自动激活**（不是独立阶段）；plan.md 内必含 `## UI 结构` 段
-- `.claude/tamagui-mapping.md` 写下至少 5 条翻译规则（间距走 token / 颜色走 token / inline style 不超 3 行 / 复用既有组件优先 / RN-Web 兼容写法）
+- `.claude/nativewind-mapping.md` 写下至少 5 条翻译规则（间距走 className / 颜色走 design-tokens / className ≤ 4 原子 / 复用既有组件优先 / RN-Web 兼容写法）
 
 ## 五、测试约定
 
@@ -178,7 +181,7 @@ no-vain-years-app/                          ← root（pnpm workspace）
 
 ### 工具链（M1.1 第一周敲定具体配置）
 
-- 单元测试：**vitest**（与 Tamagui / Expo 生态兼容性最好）
+- 单元测试：**vitest**（与 NativeWind / Expo 生态兼容性最好）
 - API mock：**msw**
 - E2E（M2+）：候选 playwright（web）+ detox（native）
 
@@ -278,7 +281,7 @@ pnpm --filter native exec expo export -p web   # 输出到 apps/native/dist/
    - **版本漂移修复**：`cd apps/native && pnpm exec expo install --fix`
    - 不确定包属哪类时，停下来问
 7. **生成的代码必须遵守本文件全部约定**
-8. **样式规范**：`packages/ui/src/tamagui.config.ts` 的 token + Tamagui 原语优先，避免 inline 样式 / hex / px 字面量
+8. **样式规范**：`@nvy/design-tokens` 的 token + NativeWind className（`bg-brand-500` / `p-md` 等）优先，避免 inline style / hex / px 字面量
 9. **token 安全**：refresh token 等敏感凭证只走 `expo-secure-store` (native) / localStorage (web 测试期)；**禁止** 写进 MMKV / AsyncStorage
 10. **不确定时停下来问**：宁可多问一次，不要凭推测改架构关键点
 
