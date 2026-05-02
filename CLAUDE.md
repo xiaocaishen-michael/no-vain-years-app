@@ -149,9 +149,12 @@ no-vain-years-app/                          ← root（pnpm workspace）
 
 详见 [docs/ui-ux-workflow.md](https://github.com/xiaocaishen-michael/no-vain-years/blob/main/docs/ui-ux-workflow.md)。要点：
 
-- M1.1 ~ M1.3 用 **A 路径**：Claude Code + `UI UX Pro Max` skill；**不引入** Claude Design
-- M2 PKM 类 1 页面（笔记列表 / 编辑器等）用 **B 路径**：Claude Design 出原型 → 翻译为 NativeWind className
+- **M1.1 server**（无 UI 工作）走 **A 路径**：Claude Code + `UI UX Pro Max` skill
+- **M1.2 ~ M1.3 前端账号中心**起走 **B 路径**：Claude Design 出 mockup → Claude Code 翻译为 NativeWind className（per [ADR-0015](https://github.com/xiaocaishen-michael/no-vain-years/blob/main/docs/adr/0015-claude-design-from-m1-2.md)，由 [ADR-0014](https://github.com/xiaocaishen-michael/no-vain-years/blob/main/docs/adr/0014-nativewind-tailwind-universal.md) NativeWind 切换 enable，handoff 翻译成本近 0）
+- M2 PKM 类 1 页面（笔记列表 / 编辑器等）继续 B 路径
 - 类 2（自由画布）/ 类 3（图表）由专用库决定主体（tldraw / react-native-skia + d3-force / Victory Native）
+- **Mockup 留迹位置**：`apps/native/spec/<page>/design/`（与 spec.md / plan.md / tasks.md 同位）；存 PNG / handoff bundle / 设计 notes。**代码是真相源**，mockup drift 不算 bug
+- **SDD 工作流嵌入 mockup**：spec → mockup（design/）→ /plan（吸收 mockup 决策出 UI 结构段）→ /tasks → /implement，不增步骤数
 - **Token 优先**：`packages/design-tokens/src/index.ts` 是单源，apps/native/tailwind.config.ts 引用；hex / px 字面量禁入业务代码
 - 配套 skill 安装：`/plugin marketplace add nextlevelbuilder/ui-ux-pro-max-skill` + `/plugin install ui-ux-pro-max@ui-ux-pro-max-skill`
 - skill 在 SDD `/plan` + `/implement` 阶段**自动激活**（不是独立阶段）；plan.md 内必含 `## UI 结构` 段
