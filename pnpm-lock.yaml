@@ -123,8 +123,8 @@ importers:
         specifier: ^4.16.0
         version: 4.16.0(react-native@0.81.5(@babel/core@7.29.0)(@react-native/metro-config@0.85.2(@babel/core@7.29.0))(@types/react@19.1.17)(react@19.1.0))(react@19.1.0)
       zod:
-        specifier: ^4.4.1
-        version: 4.4.1
+        specifier: ^4.4.2
+        version: 4.4.2
       zustand:
         specifier: ^5.0.12
         version: 5.0.12(@types/react@19.1.17)(react@19.1.0)(use-sync-external-store@1.6.0(react@19.1.0))
@@ -5253,8 +5253,8 @@ packages:
     peerDependencies:
       zod: ^3.25.0 || ^4.0.0
 
-  zod@4.4.1:
-    resolution: {integrity: sha512-a6ENMBBGZBsnlSebQ/eKCguSBeGKSf4O7BPnqVPmYGtpBYI7VSqoVqw+QcB7kPRjbqPwhYTpFbVj/RqNz/CT0Q==}
+  zod@4.4.2:
+    resolution: {integrity: sha512-IynmDyxsEsb9RKzO3J9+4SxXnl2FTFSzNBaKKaMV6tsSk0rw9gYw9gs+JFCq/qk2LCZ78KDwyj+Z289TijSkUw==}
 
   zustand@5.0.12:
     resolution: {integrity: sha512-i77ae3aZq4dhMlRhJVCYgMLKuSiZAaUPAct2AksxQ+gOtimhGMdXljRT21P5BNpeT4kXlLIckvkPM029OljD7g==}
@@ -8196,8 +8196,8 @@ snapshots:
       '@babel/parser': 7.29.3
       eslint: 10.2.1(jiti@2.6.1)
       hermes-parser: 0.25.1
-      zod: 4.4.1
-      zod-validation-error: 4.0.2(zod@4.4.1)
+      zod: 4.4.2
+      zod-validation-error: 4.0.2(zod@4.4.2)
     transitivePeerDependencies:
       - supports-color
 
@@ -11420,11 +11420,11 @@ snapshots:
 
   yocto-queue@1.2.2: {}
 
-  zod-validation-error@4.0.2(zod@4.4.1):
+  zod-validation-error@4.0.2(zod@4.4.2):
     dependencies:
-      zod: 4.4.1
+      zod: 4.4.2
 
-  zod@4.4.1: {}
+  zod@4.4.2: {}
 
   zustand@5.0.12(@types/react@19.1.17)(react@19.1.0)(use-sync-external-store@1.6.0(react@19.1.0)):
     optionalDependencies:
