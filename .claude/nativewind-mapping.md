@@ -3,7 +3,7 @@
 UI/UX 设计意图 → NativeWind className 翻译规则。本文件由 Claude Code 在 SDD `/plan` + `/implement` 阶段自动加载，约束 UI 代码生成行为。
 
 > 配套：`UI UX Pro Max` skill（`/plugin marketplace add nextlevelbuilder/ui-ux-pro-max-skill`）— 在描述匹配 UI/UX 任务时自动激活，配合本规则集生成 token-mapped 代码。
-
+>
 > **底座**：NativeWind v4 + Tailwind + `@nvy/design-tokens`（plain TS object，被 `apps/native/tailwind.config.ts` 与未来 `apps/web/tailwind.config.ts` 共同 import）。所有 token 命名走 Tailwind 标准（`brand-500` / `spacing.md` / `text-base` 等），新增 token 必须改 `packages/design-tokens/src/index.ts`，禁止在业务代码内写字面量。
 
 ## 强约束（必遵循）
