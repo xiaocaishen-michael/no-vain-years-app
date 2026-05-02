@@ -35,10 +35,10 @@ updates:
           - '@expo/*'
           - 'react-native'
           - 'react-native-*'
-      tamagui:
+      nativewind:
         patterns:
-          - 'tamagui'
-          - '@tamagui/*'
+          - 'nativewind'
+          - 'tailwindcss'
       tanstack:
         patterns:
           - '@tanstack/*'

@@ -60,9 +60,6 @@ coverage/
 # TypeScript
 *.tsbuildinfo
 
-# Tamagui cache
-.tamagui/
-
 # Env / secrets
 .env
 .env.*
