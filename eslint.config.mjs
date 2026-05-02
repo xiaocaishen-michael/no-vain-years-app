@@ -33,7 +33,7 @@ export default tseslint.config(
   ...tseslint.configs.recommended,
 
   // CommonJS config files (babel.config.js, metro.config.js, etc.) need
-  // node globals (module, require, __dirname).
+  // node globals (module, require, __dirname) + require()-style imports.
   {
     files: ['**/*.{cjs,js}'],
     languageOptions: {
@@ -41,6 +41,9 @@ export default tseslint.config(
       globals: {
         ...globals.node,
       },
+    },
+    rules: {
+      '@typescript-eslint/no-require-imports': 'off',
     },
   },
 

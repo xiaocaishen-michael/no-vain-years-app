@@ -1,7 +1,15 @@
-// Cross-platform UI: design tokens + Tamagui-based primitives.
+// Cross-platform UI: re-exports design tokens + (future) NativeWind primitives.
 //
-// PR feat/tamagui-tokens introduces the design token config; component
-// primitives (Button, PhoneInput, etc.) land in subsequent PRs as
+// Tokens come from @nvy/design-tokens (single source of truth, also imported
+// by apps/native/tailwind.config.ts and future apps/web/tailwind.config.ts).
+// Component primitives (Button, PhoneInput, etc.) land in subsequent PRs as
 // Phase 4 pages drive their need (TDD-style emergence per CLAUDE.md).
-export { tamaguiConfig } from './tamagui.config';
-export type { AppConfig } from './tamagui.config';
+export {
+  colors,
+  spacing,
+  fontSize,
+  borderRadius,
+  boxShadow,
+  tokens,
+  type Tokens,
+} from '@nvy/design-tokens';
