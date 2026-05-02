@@ -1,7 +1,27 @@
 // Public surface of @nvy/api-client.
-//
-// Phase 3 (this PR): low-level fetch wrapper + ApiClientError.
-// Phase 4 will populate src/generated/ via openapi-generator-cli and re-export
-// typed APIs from here (consumers MUST NOT deep-import generated paths).
-export { apiFetch, apiJson, ApiClientError, DEFAULT_BASE_URL } from './client';
+
+export {
+  apiFetch,
+  apiJson,
+  ApiClientError,
+  DEFAULT_BASE_URL,
+  getAccountRegisterApi,
+  getAuthApi,
+  resetClientForTests,
+  setTokenGetter,
+  setTokenRefresher,
+} from './client';
 export type { ApiErrorBody } from './client';
+
+// Typed APIs and request/response models from the generated client.
+// Consumers MUST import from this entry point — no deep imports into generated/.
+export type {
+  LoginByPasswordRequest,
+  LoginByPhoneSmsRequest,
+  LoginResponse,
+  RefreshTokenRequest,
+  RegisterByPhoneRequest,
+  RegisterByPhoneResponse,
+  RequestSmsCodeRequest,
+} from './generated';
+export { ResponseError } from './generated';

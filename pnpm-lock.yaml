@@ -141,9 +141,6 @@ importers:
 
   packages/api-client:
     dependencies:
-      '@nvy/auth':
-        specifier: workspace:*
-        version: link:../auth
       '@nvy/types':
         specifier: workspace:*
         version: link:../types
@@ -160,6 +157,9 @@ importers:
 
   packages/auth:
     dependencies:
+      '@nvy/api-client':
+        specifier: workspace:*
+        version: link:../api-client
       '@nvy/types':
         specifier: workspace:*
         version: link:../types
