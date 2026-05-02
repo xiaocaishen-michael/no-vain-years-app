@@ -8,8 +8,9 @@
     ".": "./src/index.ts"
   },
   "scripts": {
-    "api:gen": "openapi-generator-cli generate -i https://api.xiaocaishen.me/v3/api-docs -g typescript-fetch -o src/generated --skip-validate-spec",
-    "api:gen:dev": "openapi-generator-cli generate -i http://localhost:8080/v3/api-docs -g typescript-fetch -o src/generated --skip-validate-spec",
+    "api:gen": "openapi-generator-cli generate -i https://api.xiaocaishen.me/v3/api-docs -g typescript-fetch -o src/generated --skip-validate-spec && pnpm api:postgen",
+    "api:gen:dev": "openapi-generator-cli generate -i http://localhost:8080/v3/api-docs -g typescript-fetch -o src/generated --skip-validate-spec && pnpm api:postgen",
+    "api:postgen": "node ./scripts/inject-ts-nocheck.mjs",
     "typecheck": "tsc --noEmit",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
@@ -17,7 +18,6 @@
     "test:watch": "echo 'no tests yet'"
   },
   "dependencies": {
-    "@nvy/auth": "workspace:*",
     "@nvy/types": "workspace:*"
   },
   "devDependencies": {

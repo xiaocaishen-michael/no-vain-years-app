@@ -47,6 +47,18 @@ export default tseslint.config(
     },
   },
 
+  // ES module Node scripts — distinguished by .mjs and run by node directly
+  // (not bundled). Need node globals like `console` / `process`.
+  {
+    files: ['**/*.mjs'],
+    languageOptions: {
+      sourceType: 'module',
+      globals: {
+        ...globals.node,
+      },
+    },
+  },
+
   // TypeScript / React shared rules.
   {
     files: ['**/*.{ts,tsx}'],
