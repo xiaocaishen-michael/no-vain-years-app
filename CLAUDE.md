@@ -273,6 +273,10 @@ pnpm --filter native exec expo export -p web   # 输出到 apps/native/dist/
 4. **跨包依赖纪律**：`apps/*` 可依赖 `packages/*`；`packages/*` 之间允许（按 ui ↔ api-client ↔ auth 三角依赖图）；`packages/*` **不可**反向依赖 `apps/*`
 5. **package import 走 entry**：从 `@nvy/<pkg>` 入口 import，**禁止** deep-import 内部路径（`@nvy/api-client/src/generated/...`）
 6. **引入新依赖时主动询问**：避免无意识扩大依赖面；尤其 native 模块（要 prebuild）必报告；区分 root devDep / per-package runtime dep
+   - **Expo SDK / RN ecosystem 包**（任何 `expo-*` / `react-native` / `react-native-*`）必须 `cd apps/native && pnpm exec expo install <pkg>`；**不要** 用 `pnpm add` —— 后者拉 npm latest，可能超出当前 SDK 兼容版本（5/2 PR #22 撞过 SDK 55 vs 54 的版本错位）
+   - **非 Expo 包**（`zustand` / `@tanstack/react-query` / `react-hook-form` / `zod` / 等纯 JS lib）走普通 `pnpm add --filter <pkg>` 或 `pnpm add -Dw`
+   - **版本漂移修复**：`cd apps/native && pnpm exec expo install --fix`
+   - 不确定包属哪类时，停下来问
 7. **生成的代码必须遵守本文件全部约定**
 8. **样式规范**：`packages/ui/src/tamagui.config.ts` 的 token + Tamagui 原语优先，避免 inline 样式 / hex / px 字面量
 9. **token 安全**：refresh token 等敏感凭证只走 `expo-secure-store` (native) / localStorage (web 测试期)；**禁止** 写进 MMKV / AsyncStorage
