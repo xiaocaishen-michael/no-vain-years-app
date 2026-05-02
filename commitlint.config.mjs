@@ -8,5 +8,11 @@ export default {
     'scope-enum': [0],
     'header-max-length': [2, 'always', 100],
     'subject-case': [0],
+    // Disable body / footer line length — Dependabot generates auto-bodies
+    // with long release-note URLs / dep tables that exceed 100 chars and the
+    // bot's commit-message format can't be reconfigured. Header (PR title)
+    // length is still enforced; that's the part developers actually write.
+    'body-max-line-length': [0],
+    'footer-max-line-length': [0],
   },
 };
