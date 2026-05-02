@@ -7,7 +7,6 @@ coverage
 .expo-shared
 .next
 .turbo
-**/.tamagui
 packages/api-client/src/generated
 
 # Auto-generated, hands-off

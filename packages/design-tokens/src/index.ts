@@ -8,6 +8,10 @@
 // Token naming follows Tailwind conventions (brand-{50..900} / spacing.md / text-base etc.).
 // Phase 4 design system 定调 后扩展色阶 / 间距 / 字号；M1.2 起手只放最小集，避免"先造没用上的 token"。
 
+// Tokens are typed loosely (no `as const`) so Tailwind v3's mutable
+// `KeyValuePair<string, ...>` types accept them via `theme.extend`.
+// `fontSize` tuples must be mutable arrays, not readonly.
+
 export const colors = {
   brand: {
     50: '#eff6ff',
@@ -25,7 +29,7 @@ export const colors = {
   text: '#111827',
   border: '#e5e7eb',
   muted: '#6b7280',
-} as const;
+};
 
 export const spacing = {
   xs: '4px',
@@ -34,9 +38,9 @@ export const spacing = {
   lg: '24px',
   xl: '32px',
   '2xl': '48px',
-} as const;
+};
 
-export const fontSize = {
+export const fontSize: Record<string, [string, { lineHeight: string }]> = {
   xs: ['12px', { lineHeight: '16px' }],
   sm: ['14px', { lineHeight: '20px' }],
   base: ['16px', { lineHeight: '24px' }],
@@ -44,20 +48,20 @@ export const fontSize = {
   xl: ['20px', { lineHeight: '28px' }],
   '2xl': ['24px', { lineHeight: '32px' }],
   '3xl': ['30px', { lineHeight: '36px' }],
-} as const;
+};
 
 export const borderRadius = {
   sm: '4px',
   md: '8px',
   lg: '12px',
   full: '9999px',
-} as const;
+};
 
 export const boxShadow = {
   sm: '0 1px 2px 0 rgb(0 0 0 / 0.05)',
   md: '0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1)',
   lg: '0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1)',
-} as const;
+};
 
 export const tokens = {
   colors,
@@ -65,6 +69,6 @@ export const tokens = {
   fontSize,
   borderRadius,
   boxShadow,
-} as const;
+};
 
 export type Tokens = typeof tokens;
