@@ -26,6 +26,16 @@ updates:
         update-types: ['version-update:semver-major']
       - dependency-name: 'lint-staged'
         update-types: ['version-update:semver-major']
+      # Expo SDK majors require coordinated smoke-test (web + iOS + Android
+      # + NativeWind compat). 5/2 PR #22 hit SDK 54 vs 55 mismatch +
+      # PR #29 (54→55) closed pending dedicated upgrade session at M2
+      # PKM start. Pin SDK 54 line until then.
+      - dependency-name: 'expo'
+        update-types: ['version-update:semver-major']
+      # Tailwind v4 incompatible with NativeWind v4 (per ADR-0014).
+      # Pinned at ~3.4.x until NativeWind ships Tailwind v4 support.
+      - dependency-name: 'tailwindcss'
+        update-types: ['version-update:semver-major']
     # Reduce PR noise by grouping related dependencies into single PRs.
     groups:
       expo:
