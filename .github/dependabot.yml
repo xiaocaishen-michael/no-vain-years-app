@@ -39,8 +39,13 @@ updates:
         update-types: ['version-update:semver-major']
       - dependency-name: '@expo/*'
         update-types: ['version-update:semver-major']
+      # react-native core sits on 0.x.y — RN team treats every 0.x minor as
+      # breaking and pairs it 1:1 with an Expo SDK line (SDK 54 ↔ RN 0.81.x).
+      # PR #44 hit 0.81→0.85 with expo still 54, slipping past the
+      # major-only ignore. Pin RN core to its current minor; bump it via
+      # `expo install --fix` during the dedicated SDK upgrade session.
       - dependency-name: 'react-native'
-        update-types: ['version-update:semver-major']
+        update-types: ['version-update:semver-minor', 'version-update:semver-major']
       - dependency-name: 'react-native-*'
         update-types: ['version-update:semver-major']
       # Tailwind v4 incompatible with NativeWind v4 (per ADR-0014).
