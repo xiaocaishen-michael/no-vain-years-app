@@ -10,7 +10,19 @@ module.exports = function (api) {
   api.cache(true);
   return {
     presets: [
-      ['babel-preset-expo', { jsxImportSource: 'nativewind' }],
+      [
+        'babel-preset-expo',
+        {
+          jsxImportSource: 'nativewind',
+          // Transform `import.meta` references at compile time so Metro web
+          // bundle (served as a non-module <script>) doesn't choke. SDK 56
+          // defaults this to true; on SDK 54 we must opt in manually.
+          // Triggered by Zustand v5 middleware bundle which uses
+          // `import.meta.env.MODE` even when only `persist` is imported
+          // (devtools middleware co-located in monolithic middleware.js).
+          unstable_transformImportMeta: true,
+        },
+      ],
       'nativewind/babel',
     ],
     plugins: ['react-native-worklets/plugin'],

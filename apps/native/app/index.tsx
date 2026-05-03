@@ -1,11 +1,9 @@
-import { Redirect } from 'expo-router';
-
-import { useAuthStore } from '@nvy/auth';
-
-// Root index — explicit fallback so accessing `/` doesn't render an empty
-// Stack while AuthGate's effect is still pending. Sends user to login or home
-// based on auth state; AuthGate in _layout.tsx handles subsequent transitions.
+// Root `/` route — renders nothing. AuthGate in _layout.tsx redirects to
+// either /(auth)/login or /(app) once the navigation container is ready.
+// We previously used <Redirect> here but it triggered Expo Router's
+// "Attempted to navigate before mounting" error by competing with AuthGate.
+// Keeping a placeholder file so Expo Router has *some* root match instead of
+// rendering an empty Stack on first paint.
 export default function Index() {
-  const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
-  return <Redirect href={isAuthenticated ? '/(app)' : '/(auth)/login'} />;
+  return null;
 }
