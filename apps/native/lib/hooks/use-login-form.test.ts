@@ -36,7 +36,7 @@ vi.mock('@nvy/api-client', () => {
     }
   }
   class FetchError extends Error {
-    public readonly cause: Error;
+    public override readonly cause: Error;
     constructor(cause: Error, message?: string) {
       super(message);
       this.name = 'FetchError';
