@@ -32,11 +32,11 @@
 
 ### User Story 2 - 已注册用户短信登录（Priority: P1，并列）
 
-切到短信登录 tab，输入手机号 + 6 位验证码完成登录；验证码通过 `requestSmsCode(phone, purpose='login')` 触发后端发送（per [server login-by-phone-sms spec](../../../my-beloved-server/spec/account/login-by-phone-sms/spec.md) FR-001）。
+切到短信登录 tab，输入手机号 + 6 位验证码完成登录；验证码通过 `requestSmsCode(phone, purpose='LOGIN')` 触发后端发送（per [server login-by-phone-sms spec](../../../my-beloved-server/spec/account/login-by-phone-sms/spec.md) FR-001）。
 
 **Why this priority**: 用户忘记密码或新设备首登场景下唯一可用路径；短信登录是 register 路径的对偶（注册时即可用密码不需要时下次靠短信回访）。
 
-**Independent Test**: jest mock `@nvy/api-client.getAccountApi().requestSmsCode` + `@nvy/auth.loginByPhoneSms`，渲染 → fireEvent 切换 tab 到 "短信登录" → 输入手机号 → press "获取验证码" → 断言 requestSmsCode 调用且 purpose='login' → 输入 6 位码 + press "登录" → 断言 loginByPhoneSms 调用 + store.setSession + router.replace。
+**Independent Test**: jest mock `@nvy/api-client.getAccountRegisterApi().requestSmsCode` + `@nvy/auth.loginByPhoneSms`，渲染 → fireEvent 切换 tab 到 "短信登录" → 输入手机号 → press "获取验证码" → 断言 requestSmsCode 调用且 purpose='LOGIN' → 输入 6 位码 + press "登录" → 断言 loginByPhoneSms 调用 + store.setSession + router.replace。
 
 **Acceptance Scenarios**:
 
@@ -86,8 +86,8 @@
 | FR-001 | 默认 tab = "密码登录"（per Open Question 4）；切换 tab 不丢失 phone state（共享）；切换时 errorToast 清空                                                                                                                                                                               |
 | FR-002 | 手机号格式校验：客户端用 zod regex `/^\+861[3-9]\d{9}$/`；不合法 form invalid，submit 按钮 disabled                                                                                                                                                                                     |
 | FR-003 | 密码登录调 `@nvy/auth.loginByPassword(phone, password)`；密码无客户端强度校验（强度只在 register 设密时校验，per [server login-by-password FR-006](../../../my-beloved-server/spec/account/login-by-password/spec.md)）；空密码 form invalid                                            |
-| FR-004 | 短信登录路径：先 `@nvy/api-client.getAccountApi().requestSmsCode(phone, purpose='login')` → 60s 倒计时 → 用户输入 6 位数字码 → `@nvy/auth.loginByPhoneSms(phone, code)`                                                                                                                 |
-| FR-005 | 提交成功后：store.setSession({accountId, accessToken, refreshToken}) → `router.replace('/(app)/')`；不调 `router.push`（避免回退能回到 login 页）                                                                                                                                       |
+| FR-004 | 短信登录路径：先 `@nvy/api-client.getAccountRegisterApi().requestSmsCode(phone, purpose='LOGIN')` → 60s 倒计时 → 用户输入 6 位数字码 → `@nvy/auth.loginByPhoneSms(phone, code)`                                                                                                         |
+| FR-005 | 提交成功后：`@nvy/auth.loginBy*` 内部已调 `store.setSession({accountId, accessToken, refreshToken})`；`AuthGate` (apps/native/app/\_layout.tsx) 监听 `isAuthenticated` 自动 `router.replace('/(app)')`。Hook **不直调** router；"注册"按钮 push 由页面层 `useRouter` 处理               |
 | FR-006 | 错误统一映射（per `mapApiError` util，详 plan.md）：401 → "手机号或验证码/密码错误"；429 → "请求过于频繁，请稍后再试"；网络错 / 5xx → "网络异常，请检查网络后重试"；未知错 → "登录失败，请稍后再试"；**不区分 401 子码**（INVALID_CREDENTIALS / SMS_FAILED 等）以维持防枚举字节级一致   |
 | FR-007 | OAuth (微信 / 微博 / Google) + 忘记密码按钮存在但 placeholder：press 后 toast "Coming in M1.3"；不调任何后端                                                                                                                                                                            |
 | FR-008 | "注册" 按钮 → `router.push('/(auth)/register')`                                                                                                                                                                                                                                         |
@@ -127,7 +127,7 @@
 ## Assumptions & Dependencies
 
 - `@nvy/auth.loginByPassword` / `loginByPhoneSms` 已在 PR #42 落地（packages/auth/src/usecases.ts）
-- `@nvy/api-client.getAccountApi().requestSmsCode` typed 客户端已在 PR #42 落地（packages/api-client/src/generated/）
+- `@nvy/api-client.getAccountRegisterApi().requestSmsCode` typed 客户端已在 PR #42 落地（packages/api-client/src/generated/）
 - auth guard middleware 已在 PR #42 落地（apps/native/app/\_layout.tsx）
 - `expo-router` v6+ + `useRouter().replace()` 可用
 - 后端 4 个 endpoint 已在 server PRs #98 / #101 落地

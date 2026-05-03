@@ -11,14 +11,14 @@
 
 ### 本次 — 业务逻辑层（不依赖 mockup）
 
-| #   | 层级     | 任务                                               | 文件                                                     | TDD 节奏                                                        |
-| --- | -------- | -------------------------------------------------- | -------------------------------------------------------- | --------------------------------------------------------------- |
-| T0  | [Schema] | zod schema + 错误映射工具函数                      | `apps/native/lib/validation/login.ts`                    | 单测先红 → 实现 → 绿                                            |
-| T0t | [Test]   | T0 单测                                            | `apps/native/lib/validation/__tests__/login.test.ts`     | 同 T0                                                           |
-| T1  | [Hook]   | useLoginForm 状态机 hook                           | `apps/native/lib/hooks/use-login-form.ts`                | 单测先红 → 实现 → 绿                                            |
-| T1t | [Test]   | T1 单测                                            | `apps/native/lib/hooks/__tests__/use-login-form.test.ts` | 同 T1                                                           |
-| T2  | [App]    | login.tsx 接 useLoginForm，最小占位                | `apps/native/app/(auth)/login.tsx`                       | 改后跑 typecheck + lint + expo dev server 浏览器肉眼验 tab 切换 |
-| T3  | [Verify] | 跑 `pnpm --filter native test/typecheck/lint` 全绿 | —                                                        | —                                                               |
+| #   | 层级     | 任务                                               | 文件                                           | TDD 节奏                                                        |
+| --- | -------- | -------------------------------------------------- | ---------------------------------------------- | --------------------------------------------------------------- |
+| T0  | [Schema] | zod schema + 错误映射工具函数                      | `apps/native/lib/validation/login.ts`          | 单测先红 → 实现 → 绿                                            |
+| T0t | [Test]   | T0 单测                                            | `apps/native/lib/validation/login.test.ts`     | 同 T0                                                           |
+| T1  | [Hook]   | useLoginForm 状态机 hook                           | `apps/native/lib/hooks/use-login-form.ts`      | 单测先红 → 实现 → 绿                                            |
+| T1t | [Test]   | T1 单测                                            | `apps/native/lib/hooks/use-login-form.test.ts` | 同 T1                                                           |
+| T2  | [App]    | login.tsx 接 useLoginForm，最小占位                | `apps/native/app/(auth)/login.tsx`             | 改后跑 typecheck + lint + expo dev server 浏览器肉眼验 tab 切换 |
+| T3  | [Verify] | 跑 `pnpm --filter native test/typecheck/lint` 全绿 | —                                              | —                                                               |
 
 ### 下次 — UI 渲染层（等 mockup 落地）
 
@@ -66,7 +66,7 @@ export function mapApiError(error: unknown): MappedApiError {
 }
 ```
 
-**新建** 单测 `apps/native/lib/validation/__tests__/login.test.ts`，覆盖：
+**新建** 单测 `apps/native/lib/validation/login.test.ts`，覆盖：
 
 - loginPasswordSchema：合法 / 短手机号 / 非大陆号 / 空密码
 - loginSmsSchema：合法 / 短码 / 非数字码 / 空码
@@ -88,7 +88,7 @@ pnpm --filter native test -- --testPathPattern='lib/validation/login'
 ```ts
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useRouter } from 'expo-router';
-import { getAccountApi } from '@nvy/api-client';
+import { getAccountRegisterApi } from '@nvy/api-client';
 import { loginByPassword, loginByPhoneSms } from '@nvy/auth';
 import { mapApiError, type MappedApiError } from '../validation/login';
 
@@ -117,7 +117,7 @@ export function useLoginForm(): UseLoginFormResult {
   const router = useRouter();
 
   // ... clearError + setTab(切换时清错) + submit*（state machine + mapApiError）
-  // ... requestSms（调 getAccountApi().requestSmsCode + 60s 倒计时 + cleanup）
+  // ... requestSms（调 getAccountRegisterApi().requestSmsCode + 60s 倒计时 + cleanup）
   // ... showPlaceholderToast（FR-007）
   // ... useEffect cleanup（unmount 时 clear timer）
 }
@@ -135,28 +135,28 @@ pnpm --filter native test -- --testPathPattern='lib/hooks/use-login-form'
 
 ## T2 — useLoginForm 单测
 
-**新建** `apps/native/lib/hooks/__tests__/use-login-form.test.ts`：
+**新建** `apps/native/lib/hooks/use-login-form.test.ts`：
 
-| 场景                                                                      | mock                                          | 期望                                                                                          |
-| ------------------------------------------------------------------------- | --------------------------------------------- | --------------------------------------------------------------------------------------------- |
-| `submitPassword` happy                                                    | `loginByPassword` resolve                     | state idle → submitting → success；`router.replace` called w/ `/(app)/`；errorToast null      |
-| `submitPassword` 401                                                      | `loginByPassword` reject `ResponseError(401)` | state error；errorToast = "手机号或验证码/密码错误"；router 未调                              |
-| `submitPassword` 429                                                      | `loginByPassword` reject `ResponseError(429)` | state error；errorToast = "请求过于频繁，请稍后再试"                                          |
-| `submitPassword` 网络错                                                   | `loginByPassword` reject `TypeError`          | state error；errorToast = "网络异常，请检查网络后重试"                                        |
-| `submitSms` happy                                                         | `loginByPhoneSms` resolve                     | 同 password happy                                                                             |
-| `submitSms` 401（已注册号 + 错码）vs `submitSms` 401（未注册号 + 任意码） | 两次都 reject `ResponseError(401)`            | 两次结果 `{state, errorToast}` 完全相等（SC-002 防枚举字节级一致）                            |
-| `setTab('sms')` after error                                               | —                                             | errorToast 清空；state 回 idle                                                                |
-| `requestSms(phone)`                                                       | `getAccountApi().requestSmsCode` resolve      | api 调用 1 次且 args 含 `purpose: 'login'`；smsCountdown 60 → 0 倒计时（用 jest fake timers） |
-| `requestSms` 倒计时未到再次调用                                           | smsCountdown > 0                              | api 不再调；不抛错（按钮层 disabled 阻止用户）                                                |
-| `showPlaceholderToast('wechat')`                                          | —                                             | errorToast = "微信登录 - Coming in M1.3"；state idle 不变；api 全部未调                       |
-| unmount 时倒计时未结束                                                    | jest cleanup                                  | timer 已 clear，无 leak warning                                                               |
+| 场景                                                                      | mock                                             | 期望                                                                                        |
+| ------------------------------------------------------------------------- | ------------------------------------------------ | ------------------------------------------------------------------------------------------- |
+| `submitPassword` happy                                                    | `loginByPassword` resolve                        | state idle → submitting → success；`router.replace` called w/ `/(app)/`；errorToast null    |
+| `submitPassword` 401                                                      | `loginByPassword` reject `ResponseError(401)`    | state error；errorToast = "手机号或验证码/密码错误"；router 未调                            |
+| `submitPassword` 429                                                      | `loginByPassword` reject `ResponseError(429)`    | state error；errorToast = "请求过于频繁，请稍后再试"                                        |
+| `submitPassword` 网络错                                                   | `loginByPassword` reject `TypeError`             | state error；errorToast = "网络异常，请检查网络后重试"                                      |
+| `submitSms` happy                                                         | `loginByPhoneSms` resolve                        | 同 password happy                                                                           |
+| `submitSms` 401（已注册号 + 错码）vs `submitSms` 401（未注册号 + 任意码） | 两次都 reject `ResponseError(401)`               | 两次结果 `{state, errorToast}` 完全相等（SC-002 防枚举字节级一致）                          |
+| `setTab('sms')` after error                                               | —                                                | errorToast 清空；state 回 idle                                                              |
+| `requestSms(phone)`                                                       | `getAccountRegisterApi().requestSmsCode` resolve | api 调用 1 次且 args 含 `purpose: 'LOGIN'`；smsCountdown 60 → 0 倒计时（用 vi fake timers） |
+| `requestSms` 倒计时未到再次调用                                           | smsCountdown > 0                                 | api 不再调；不抛错（按钮层 disabled 阻止用户）                                              |
+| `showPlaceholderToast('wechat')`                                          | —                                                | errorToast = "微信登录 - Coming in M1.3"；state idle 不变；api 全部未调                     |
+| unmount 时倒计时未结束                                                    | jest cleanup                                     | timer 已 clear，无 leak warning                                                             |
 
 mock 方式：
 
 ```ts
-jest.mock('@nvy/auth');
-jest.mock('@nvy/api-client', () => ({
-  getAccountApi: jest.fn(() => ({ requestSmsCode: jest.fn() })),
+vi.mock('@nvy/auth');
+vi.mock('@nvy/api-client', () => ({
+  getAccountRegisterApi: vi.fn(() => ({ requestSmsCode: vi.fn() })),
   ResponseError: class ResponseError extends Error {
     constructor(
       public response: { status: number },
@@ -167,10 +167,10 @@ jest.mock('@nvy/api-client', () => ({
   },
   ApiClientError: class ApiClientError extends Error {},
 }));
-jest.mock('expo-router', () => ({ useRouter: () => ({ replace: jest.fn(), push: jest.fn() }) }));
+vi.mock('expo-router', () => ({ useRouter: () => ({ replace: vi.fn(), push: vi.fn() }) }));
 ```
 
-参考：`packages/auth/src/__tests__/usecases.test.ts`（PR #42 已落地的 mock pattern）。
+参考：`packages/auth/src/usecases.test.ts`（PR #42 已落地的 mock pattern）。
 
 ### 验证
 

@@ -21,8 +21,8 @@
    │     ├─ form state machine   : idle → submitting → (success | error)
    │     ├─ submitPassword(p, pw) ──→ @nvy/auth.loginByPassword
    │     ├─ submitSms(p, code)    ──→ @nvy/auth.loginByPhoneSms
-   │     ├─ requestSms(p)         ──→ @nvy/api-client.getAccountApi().requestSmsCode (purpose='login')
-   │     └─ navigation            : success → expo-router useRouter().replace('/(app)/')
+   │     ├─ requestSms(p)         ──→ @nvy/api-client.getAccountRegisterApi().requestSmsCode (purpose='LOGIN')
+   │     └─ navigation            : success → @nvy/auth.setSession (内部); AuthGate 自动 redirect (hook 不直调 router)
    │
    ├─ login schemas (apps/native/lib/validation/login.ts)
    │     ├─ loginPasswordSchema  : z.object({ phone: z.string().regex(PHONE_RE), password: z.string().min(1) })
@@ -45,10 +45,10 @@ idle
   │ submitPassword / submitSms invoked + form valid
   ▼
 submitting
-  │     ├─ api success → setSession + router.replace('/(app)/')
+  │     ├─ api success → @nvy/auth.setSession; state success
   │     │                                               │
   │     │                                               ▼
-  │     │                                          success (terminal — page unmounts)
+  │     │                                          success (AuthGate 监测 isAuthenticated → router.replace('/(app)') → page unmounts)
   │     │
   │     └─ api throws → mapApiError → setErrorToast
   │                                                     │
@@ -75,15 +75,15 @@ submitting
 
 ## 复用既有代码（PR #42）
 
-| 来源                                                                                                     | 用法                                                                                                                                 |
-| -------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
-| `@nvy/auth.loginByPassword(phone, password)`                                                             | US1 提交路径                                                                                                                         |
-| `@nvy/auth.loginByPhoneSms(phone, smsCode)`                                                              | US2 提交路径                                                                                                                         |
-| `@nvy/auth.useAuthStore`（Zustand store + persist）                                                      | `useAuthStore.getState().setSession(...)` 由 useLoginForm 间接通过上面 use case 调用（store 写入是 use case 内部副作用，本页不直调） |
-| `@nvy/api-client.getAccountApi().requestSmsCode({ requestSmsCodeRequest: { phone, purpose: 'login' } })` | US2 短信触发；purpose enum 'login' / 'register' 二选一（per server FR-001）                                                          |
-| `@nvy/api-client.ResponseError` / `ApiClientError`                                                       | mapApiError 入参类型                                                                                                                 |
-| `expo-router.useRouter()`                                                                                | router.replace / router.push                                                                                                         |
-| auth guard middleware（apps/native/app/\_layout.tsx，PR #42）                                            | 已 mount 全局，本页不重复实现                                                                                                        |
+| 来源                                                                                                             | 用法                                                                                                                                 |
+| ---------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
+| `@nvy/auth.loginByPassword(phone, password)`                                                                     | US1 提交路径                                                                                                                         |
+| `@nvy/auth.loginByPhoneSms(phone, smsCode)`                                                                      | US2 提交路径                                                                                                                         |
+| `@nvy/auth.useAuthStore`（Zustand store + persist）                                                              | `useAuthStore.getState().setSession(...)` 由 useLoginForm 间接通过上面 use case 调用（store 写入是 use case 内部副作用，本页不直调） |
+| `@nvy/api-client.getAccountRegisterApi().requestSmsCode({ requestSmsCodeRequest: { phone, purpose: 'LOGIN' } })` | US2 短信触发；purpose enum 'login' / 'register' 二选一（per server FR-001）                                                          |
+| `@nvy/api-client.ResponseError` / `ApiClientError`                                                               | mapApiError 入参类型                                                                                                                 |
+| `expo-router.useRouter()`                                                                                        | router.replace / router.push                                                                                                         |
+| auth guard middleware（apps/native/app/\_layout.tsx，PR #42）                                                    | 已 mount 全局，本页不重复实现                                                                                                        |
 
 **非依赖**（已确认）：
 
