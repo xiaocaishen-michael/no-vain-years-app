@@ -4,8 +4,8 @@
 **Branch**: `feat/account-login-page`
 **Created**: 2026-05-03
 
-> **本次 PR 范围**：T0 + T1 + T2 + T3（业务逻辑层 + 最小 UI 占位，全部不依赖 mockup）
-> **下次 PR 范围**：T4-T8（等 Claude Design mockup 落地，packages/ui 组件 TDD-emerge + className 1:1 paste）
+> **当前 feat/account-login-page 分支已完成**：T0 + T1 + T2 + T3（业务逻辑 + 最小 UI 占位）+ T4 + T5（mockup 落地 + spec/plan drift 修订）
+> **下次 PR 范围**：T6 + T7（packages/ui 组件 TDD-emerge + login.tsx className 1:1 paste mockup）；T8 E2E 在 dev server 实际运行后单测 + 手测合并入下次 PR 验收
 
 ## 任务清单
 
@@ -22,13 +22,13 @@
 
 ### 下次 — UI 渲染层（等 mockup 落地）
 
-| #   | 层级        | 任务                                                                                                          | 文件                               | 状态                               |
-| --- | ----------- | ------------------------------------------------------------------------------------------------------------- | ---------------------------------- | ---------------------------------- |
-| T4  | [Mockup]    | Claude Design 出 mockup-v1.png + handoff.md                                                                   | `apps/native/spec/login/design/`   | TBD（用户在 Claude Design 单独跑） |
-| T5  | [Plan 回填] | plan.md `## UI 结构` 段从 TBD 改为吸收 mockup 后的完整结构（含 token 映射 / 状态视觉 / a11y / RN Web gotcha） | `apps/native/spec/login/plan.md`   | TBD                                |
-| T6  | [UI 组件]   | packages/ui TDD-emerge：TabSwitcher / PhoneInput / PasswordInput / SmsCodeInput / Button + 单测 + variants    | `packages/ui/src/<Component>.tsx`  | TBD                                |
-| T7  | [App]       | login.tsx 替换占位为真实组件 + className 1:1 paste mockup                                                     | `apps/native/app/(auth)/login.tsx` | TBD                                |
-| T8  | [E2E]       | expo dev server 浏览器手测完整 5 条 acceptance scenario；iOS / Android 真机 → M2.1                            | —                                  | TBD                                |
+| #   | 层级        | 任务                                                                                                                                                                                                                                            | 文件                                         | 状态                                    |
+| --- | ----------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------- | --------------------------------------- |
+| T4  | [Mockup]    | Claude Design v2 bundle 落地（LoginScreen.tsx + 子组件全套 + handoff.md + token mirror 到 design-tokens）                                                                                                                                       | `apps/native/spec/login/design/`             | ✅ 完成（commit `3f2cddd`，2026-05-03） |
+| T5  | [Plan 回填] | plan.md `## UI 结构` 段从 TBD 改为吸收 mockup 后的完整结构 + spec.md 4 处 drift 修订（D1-D4）+ 翻译期硬约束 5 条                                                                                                                                | `apps/native/spec/login/plan.md` + `spec.md` | ✅ 完成（本 PR 内）                     |
+| T6  | [UI 组件]   | packages/ui TDD-emerge：TabSwitcher / PhoneInput / PasswordField / SmsInput / PrimaryButton / SuccessCheck / Spinner / ErrorRow / GoogleButton / LogoMark / SuccessOverlay + 单测（**注**：mockup 含 TopBar / AgreeRow per D2/D3 删除，不抽出） | `packages/ui/src/<Component>.tsx`            | TBD（下次 PR）                          |
+| T7  | [App]       | login.tsx 替换占位为真实组件 + className 1:1 paste mockup（注意翻译期硬约束 5 条：w-18→w-16/w-[72px] / reanimated install / +86 静态 / SMS CTA "登录" / 默认 mode password）                                                                    | `apps/native/app/(auth)/login.tsx`           | TBD（下次 PR）                          |
+| T8  | [E2E]       | expo dev server 浏览器手测完整 5 条 acceptance scenario；iOS / Android 真机 → M2.1                                                                                                                                                              | —                                            | TBD                                     |
 
 ---
 

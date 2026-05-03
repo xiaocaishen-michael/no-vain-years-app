@@ -2,7 +2,7 @@
 
 **Feature Branch**: `feat/account-login-page`
 **Created**: 2026-05-03
-**Status**: Draft（业务段完整，UI 结构段待 Claude Design mockup 落地后补；详 plan.md）
+**Status**: Mockup landed (Claude Design v2 bundle, 2026-05-03 commit `3f2cddd`)；spec 4 处 drift 适配修订（D1-D4，详变更记录段）
 **Module**: `apps/native/app/(auth)/login`
 **Input**: User description: "未登录用户进 app 看到的第一个页面，含密码 / 短信双 tab 登录 + 跳注册 + OAuth/忘记密码占位；定调本仓 design system（间距 / 颜色 / 字号 / 圆角 / a11y / RN Web 兼容）后再开 register / home。"
 
@@ -47,18 +47,18 @@
 
 ---
 
-### User Story 3 - 跳转：注册 / OAuth / 忘记密码占位（Priority: P2）
+### User Story 3 - 跳转：注册 / Google OAuth / 忘记密码占位（Priority: P2）
 
-用户从 login 页跳到 register 页；OAuth（微信 / 微博 / Google）+ 忘记密码按钮**存在但 placeholder**，press 后弹"M1.3 上线"toast，避免空 dead-end。
+用户从 login 页跳到 register 页；Google OAuth + 忘记密码按钮**存在但 placeholder**，press 后弹"Coming in M1.3"toast，避免空 dead-end。微信 / 微博 / Apple OAuth M1.2 **不出现**（推到 M1.3，per D1 决议 2026-05-03）。
 
-**Why this priority**: M1.2 不实现 OAuth + 密码重置，但 design system 必须为它们留位（mockup 阶段一并定调，避免 M1.3 加入时撞原有布局）。
+**Why this priority**: M1.2 不实现 OAuth 真实流程 + 密码重置，但 design system 必须为它们留位（mockup 阶段一并定调，避免 M1.3 加入时撞原有布局）。
 
-**Independent Test**: jest mock `expo-router`，渲染 → press "注册" → 断言 `router.push('/(auth)/register')`；press OAuth / 忘记密码占位按钮 → 断言 toast "Coming in M1.3"。
+**Independent Test**: jest mock `expo-router`，渲染 → press footer "创建一个" → 断言 `router.push('/(auth)/register')`；press Google OAuth 圆形按钮 / 忘记密码占位按钮 → 断言 toast "Coming in M1.3"。
 
 **Acceptance Scenarios**:
 
-1. **Given** login 页任意 tab，**When** press "注册" 按钮，**Then** `router.push('/(auth)/register')`（页面已存在 placeholder，per Phase 2 PR #22）
-2. **Given** 任意 tab，**When** press 微信 / 微博 / Google OAuth 占位按钮，**Then** errorToast = "微信/微博/Google 登录 - Coming in M1.3"，state 不变
+1. **Given** login 页任意 tab，**When** press footer "创建一个" 链接（per mockup 文案，等同 spec FR-008 "注册"），**Then** `router.push('/(auth)/register')`（页面已存在 placeholder，per Phase 2 PR #22）
+2. **Given** 任意 tab，**When** press Google OAuth 圆形按钮，**Then** errorToast = "Google 登录 - Coming in M1.3"，state 不变
 3. **Given** 密码 tab，**When** press "忘记密码"，**Then** errorToast = "密码重置 - Coming in M1.3"，state 不变
 
 ---
@@ -81,20 +81,20 @@
 
 ## Functional Requirements _(mandatory)_
 
-| ID     | 需求                                                                                                                                                                                                                                                                                    |
-| ------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| FR-001 | 默认 tab = "密码登录"（per Open Question 4）；切换 tab 不丢失 phone state（共享）；切换时 errorToast 清空                                                                                                                                                                               |
-| FR-002 | 手机号格式校验：客户端用 zod regex `/^\+861[3-9]\d{9}$/`；不合法 form invalid，submit 按钮 disabled                                                                                                                                                                                     |
-| FR-003 | 密码登录调 `@nvy/auth.loginByPassword(phone, password)`；密码无客户端强度校验（强度只在 register 设密时校验，per [server login-by-password FR-006](../../../my-beloved-server/spec/account/login-by-password/spec.md)）；空密码 form invalid                                            |
-| FR-004 | 短信登录路径：先 `@nvy/api-client.getAccountRegisterApi().requestSmsCode(phone, purpose='LOGIN')` → 60s 倒计时 → 用户输入 6 位数字码 → `@nvy/auth.loginByPhoneSms(phone, code)`                                                                                                         |
-| FR-005 | 提交成功后：`@nvy/auth.loginBy*` 内部已调 `store.setSession({accountId, accessToken, refreshToken})`；`AuthGate` (apps/native/app/\_layout.tsx) 监听 `isAuthenticated` 自动 `router.replace('/(app)')`。Hook **不直调** router；"注册"按钮 push 由页面层 `useRouter` 处理               |
-| FR-006 | 错误统一映射（per `mapApiError` util，详 plan.md）：401 → "手机号或验证码/密码错误"；429 → "请求过于频繁，请稍后再试"；网络错 / 5xx → "网络异常，请检查网络后重试"；未知错 → "登录失败，请稍后再试"；**不区分 401 子码**（INVALID_CREDENTIALS / SMS_FAILED 等）以维持防枚举字节级一致   |
-| FR-007 | OAuth (微信 / 微博 / Google) + 忘记密码按钮存在但 placeholder：press 后 toast "Coming in M1.3"；不调任何后端                                                                                                                                                                            |
-| FR-008 | "注册" 按钮 → `router.push('/(auth)/register')`                                                                                                                                                                                                                                         |
-| FR-009 | 短信"获取验证码"按钮：成功 / 失败均不区分 toast（成功静默 + 60s 倒计时；失败也只 toast "请求过于频繁..." 等通用错，**不暴露**"未注册"或"已注册"信号）                                                                                                                                   |
-| FR-010 | 状态机 4 态 idle / submitting / success / error；submitting 期间 submit 按钮 disabled + loading 视觉；success 不展示（立即 router.replace 切走）；error 展示 errorToast；error 状态下任意 input change OR tab 切换清空 errorToast 回 idle                                               |
-| FR-011 | 401 → refresh：本页已 mount auth guard middleware（PR #42），未登录态进 `/(app)/*` 自动跳 `/(auth)/login`；本页 access token 过期场景由 `@nvy/api-client.client` 拦截器透明 refresh，不在本 spec 责任范围                                                                               |
-| FR-012 | a11y：所有交互 component（tab / input / button / OAuth / 忘记密码 / 注册 / 获取验证码）必有 `accessibilityLabel`；submit 按钮 disabled 时 `accessibilityState.disabled = true`；错误 toast 使用 `accessibilityLiveRegion='polite'`（Android）/ `accessibilityRole='alert'`（iOS / Web） |
+| ID     | 需求                                                                                                                                                                                                                                                                                                    |
+| ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| FR-001 | 默认 tab = "密码登录"（per Open Question 4）；切换 tab 不丢失 phone state（共享）；切换时 errorToast 清空                                                                                                                                                                                               |
+| FR-002 | 手机号格式校验：客户端用 zod regex `/^\+861[3-9]\d{9}$/`；不合法 form invalid，submit 按钮 disabled                                                                                                                                                                                                     |
+| FR-003 | 密码登录调 `@nvy/auth.loginByPassword(phone, password)`；密码无客户端强度校验（强度只在 register 设密时校验，per [server login-by-password FR-006](../../../my-beloved-server/spec/account/login-by-password/spec.md)）；空密码 form invalid                                                            |
+| FR-004 | 短信登录路径：先 `@nvy/api-client.getAccountRegisterApi().requestSmsCode(phone, purpose='LOGIN')` → 60s 倒计时 → 用户输入 6 位数字码 → `@nvy/auth.loginByPhoneSms(phone, code)`                                                                                                                         |
+| FR-005 | 提交成功后：`@nvy/auth.loginBy*` 内部已调 `store.setSession({accountId, accessToken, refreshToken})`；`AuthGate` (apps/native/app/\_layout.tsx) 监听 `isAuthenticated` 自动 `router.replace('/(app)')`。Hook **不直调** router；"注册"按钮 push 由页面层 `useRouter` 处理                               |
+| FR-006 | 错误统一映射（per `mapApiError` util，详 plan.md）：401 → "手机号或验证码/密码错误"；429 → "请求过于频繁，请稍后再试"；网络错 / 5xx → "网络异常，请检查网络后重试"；未知错 → "登录失败，请稍后再试"；**不区分 401 子码**（INVALID_CREDENTIALS / SMS_FAILED 等）以维持防枚举字节级一致                   |
+| FR-007 | Google OAuth 圆形按钮 + 忘记密码链接存在但 placeholder：press 后 toast "Coming in M1.3"；不调任何后端。微信 / 微博 / Apple 推到 M1.3（per D1 决议 2026-05-03）                                                                                                                                          |
+| FR-008 | footer "创建一个" 链接（per mockup 文案，语义等同 "注册"）→ `router.push('/(auth)/register')`                                                                                                                                                                                                           |
+| FR-009 | 短信"获取验证码"按钮：成功 / 失败均不区分 toast（成功静默 + 60s 倒计时；失败也只 toast "请求过于频繁..." 等通用错，**不暴露**"未注册"或"已注册"信号）                                                                                                                                                   |
+| FR-010 | 状态机 4 态 idle / submitting / success / error；submitting 期间 submit 按钮 disabled + loading 视觉；success 短动画 ≤ 800ms（绿色对勾 reanimated scale-in + 骨架屏过渡）后 router.replace 切走（per D8 决议）；error 展示 errorToast；error 状态下任意 input change OR tab 切换清空 errorToast 回 idle |
+| FR-011 | 401 → refresh：本页已 mount auth guard middleware（PR #42），未登录态进 `/(app)/*` 自动跳 `/(auth)/login`；本页 access token 过期场景由 `@nvy/api-client.client` 拦截器透明 refresh，不在本 spec 责任范围                                                                                               |
+| FR-012 | a11y：所有交互 component（tab / input / button / OAuth / 忘记密码 / 注册 / 获取验证码）必有 `accessibilityLabel`；submit 按钮 disabled 时 `accessibilityState.disabled = true`；错误 toast 使用 `accessibilityLiveRegion='polite'`（Android）/ `accessibilityRole='alert'`（iOS / Web）                 |
 
 ---
 
@@ -114,13 +114,16 @@
 
 ## Out of Scope（M1.2 显式不做，per [meta plan § 不在本 plan 范围](../../../docs/plans/sdd-github-spec-kit-https-github-com-gi-drifting-rossum.md)）
 
-- 微信 / 微博 / Google OAuth 真实流程（M1.3）
+- Google OAuth 真实流程（M1.3）；M1.2 仅 placeholder 圆形按钮，press 弹 "Coming in M1.3" toast
+- **微信 / 微博 / Apple OAuth 整体推到 M1.3**（M1.2 mockup 不出现这些按钮，避免占位影响视觉节奏；per D1 决议 2026-05-03）
 - 忘记密码 / 密码重置（M1.3）
 - 二维码扫码登录（M2+ 移动端真机时）
 - 多端会话管理（"踢掉其他设备"等）
 - iOS / Android 真机渲染验证（M2.1）
 - 国际化 / 多语言（M3+）
-- spec.md 内的视觉决策（mockup 落地时由 Claude Design 输出 → plan.md UI 段吸收）
+- 视觉细节（精确 px / hex / 阴影偏移 / 字重值）— 走 mockup → plan.md UI 段吸收
+- **TopBar（close `×` / `跳过` 按钮）**：mockup 含但 spec 无对应需求；login 是 auth guard 入口，无上层可关，"跳过"与强制登录冲突；M1.2 不渲染（per D2 决议）
+- **显式 协议同意 checkbox（AgreeRow）**：footer 已有"登录即表示同意服务协议与隐私政策"隐式声明，业界 login 通用做法；不再额外加显式 checkbox（per D3 决议）
 
 ---
 
@@ -143,4 +146,4 @@
 | 2   | 切换 tab 时 phone input 是否保留？                        | ✅ 保留（提升 UX，避免重复输入；FR-001）                                                                                         |
 | 3   | OAuth / 忘记密码空 dead-end vs placeholder？              | ✅ placeholder + toast "Coming in M1.3"（FR-007，避免空按钮假死）                                                                |
 | 4   | 错误码是否区分 INVALID_CREDENTIALS vs SMS_FAILED 等子码？ | ❌ 不区分，统一 401 → "手机号或验证码/密码错误"（防枚举字节级一致，FR-006 + SC-002）                                             |
-| 5   | 短信"获取验证码"按钮 disabled 时倒计时显示位置？          | TBD：plan.md UI 段 / mockup 决定                                                                                                 |
+| 5   | 短信"获取验证码"按钮 disabled 时倒计时显示位置？          | ✅ inline 在 SmsInput 右侧（`{countdown}s 后重发` + 小 spinner），不另起 toast / footer（per mockup 2026-05-03）                 |

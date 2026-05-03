@@ -3,7 +3,7 @@
 **Branch**: `feat/account-login-page`
 **Spec**: [spec.md](./spec.md)
 **Created**: 2026-05-03
-**Status**: 业务段完整；UI 结构段待 mockup 落地后补；tasks.md T0-T3 完整 / T4-T8 待 mockup 后补
+**Status**: 业务段完整；UI 结构段已吸收 mockup（Claude Design v2，2026-05-03 commit `3f2cddd`）；tasks.md T0-T3 完成 / T4-T5 完成 / T6-T8 进下次 PR 走 implement
 **Depends**: PR #42（@nvy/auth + @nvy/api-client + auth guard 落地）+ server PRs #98 / #101（4 endpoint）
 
 > 本 plan 切成两个回合：
@@ -29,13 +29,18 @@
    │     ├─ loginSmsSchema       : z.object({ phone: z.string().regex(PHONE_RE), smsCode: z.string().regex(/^\d{6}$/) })
    │     └─ mapApiError(e)       : (ApiClientError | ResponseError | TypeError | unknown) → { kind, toast }
    │
-   └─ UI 渲染（本次仅占位；TBD：mockup 落地后 packages/ui 组件实现）
-         ├─ <TabSwitcher> (TBD)
-         ├─ <PhoneInput>   (TBD)
-         ├─ <PasswordInput>(TBD)
-         ├─ <SmsCodeInput> (TBD)
-         ├─ <Button>       (TBD)
-         └─ <Toast>        (TBD)
+   └─ UI 渲染（mockup-driven，per apps/native/spec/login/design/source/LoginScreen.tsx）
+         ├─ <LogoMark>          : "不"字 mark，brand-500 圆角矩形 w-11 h-11
+         ├─ <TabSwitcher>       : B 站风格下划线 bar（"短信登录" / "密码登录"）
+         ├─ <PhoneInput>        : +86 静态 prefix（per D7 chevron 改静态）+ 下划线分隔
+         ├─ <PasswordField>     : 密码输入 + 显示/隐藏 toggle（mockup 命名，spec 原称 PasswordInput）
+         ├─ <SmsInput>          : SMS 6 位输入 + 右侧"获取验证码"/"60s 后重发"内联（mockup 命名，spec 原称 SmsCodeInput）
+         ├─ <PrimaryButton>     : 登录 CTA（圆角胶囊，shadow-cta；loading 变 brand-300 + spinner）
+         ├─ <GoogleButton>      : Google OAuth 圆形按钮（M1.2 placeholder，per D1 仅此一个）
+         ├─ <ErrorRow>          : input 下方错误提示（红圆点 ! + err 色文字）
+         ├─ <SuccessCheck>      : reanimated scale-in 绿色对勾
+         ├─ <SuccessOverlay>    : success 短动画 ≤ 800ms（含 SuccessCheck + 骨架屏过渡）后 router.replace（per D8）
+         └─ <Spinner>           : reanimated rotation，3 tone（white / muted / brand）
 ```
 
 ## 状态机
@@ -73,6 +78,16 @@ submitting
 
 **关键不变性**（per spec FR-006 + SC-002 防枚举）：401 不细分子码，**所有 401 路径返回完全相同的 `kind`/`toast`**。这保证 "已注册号 + 错码" vs "未注册号 + 任意码" 两个场景在前端可见的字节级一致。
 
+### Mockup state prop ↔ spec/hook state 映射（per D6）
+
+mockup 的 `LoginScreen` 接受 `state` prop 取值 `default / loading / success / error`（Claude Design preview 命名）；spec / hook 内部使用 `idle / submitting / success / error`。login.tsx 渲染时一行 mapping：
+
+```ts
+const visualState = state === 'idle' ? 'default' : state === 'submitting' ? 'loading' : state; // success / error 同名
+```
+
+不改 spec 内部命名（idle/submitting 是 React form 业界惯例）；不改 mockup（来自 frozen bundle）。
+
 ## 复用既有代码（PR #42）
 
 | 来源                                                                                                             | 用法                                                                                                                                 |
@@ -100,23 +115,95 @@ submitting
 | accessibilityLiveRegion | Android only；iOS / Web 用 `accessibilityRole='alert'`                          |
 | KeyboardAvoidingView    | 必须包裹 form 区域，避免 iOS 软键盘遮 input；Web 端无影响（noop）               |
 
-## UI 结构
+## UI 结构（mockup-driven）
 
-> **TBD：等 Claude Design mockup 落地（参见 `apps/native/spec/login/design/mockup-v1.png` + `handoff.md`）。**
->
-> mockup 出后回本段，由 UI UX Pro Max skill 跑一遍 review，含：
->
-> | 子段                          | 内容（mockup 落地后回填）                                                        |
-> | ----------------------------- | -------------------------------------------------------------------------------- |
-> | 布局                          | 单列 / 双列 / 栅格；最大宽度（含 desktop 大屏不铺满）                            |
-> | 区域                          | header / form / action / footer + 每区域用 `@nvy/ui` 哪些组件                    |
-> | 间距 / 颜色 / 字号 token 映射 | 全部 Tailwind class（`p-md` / `bg-brand-500` / `text-base`）；禁 inline px / hex |
-> | 状态机                        | idle / submitting / error 视觉转移（loading spinner 位置 / error toast 位置）    |
-> | 边缘 case                     | 长手机号 / 国际号兼容（M1.2 仅大陆）/ 软键盘弹出布局                             |
-> | RN Web 兼容点                 | 同上节，落到具体组件 prop                                                        |
-> | a11y                          | accessibilityLabel / role / focus 顺序 / tab order                               |
->
-> **禁入**（mockup 落地时）：精确 px / hex 颜色 / 阴影偏移 / 字重绝对值 — 全部走 design-tokens（"换皮"零成本）。
+参考源码：[`./design/source/LoginScreen.tsx`](./design/source/LoginScreen.tsx) + [`./design/handoff.md`](./design/handoff.md)。
+
+### 布局
+
+单列移动端，container `flex-1 bg-surface px-lg pb-lg`；mockup 测试宽度 360px。无栅格 / 无 desktop 适配（M1.2 mobile-only，desktop 走 RN Web 时由根 layout 处理）。
+
+### 区域分块
+
+```text
+LoginScreen (flex-1 bg-surface px-lg pb-lg)
+├── Header           (mt-3 items-start gap-2)
+│   ├── LogoMark            (w-11 h-11 rounded-xl bg-brand-500，"不"字)
+│   ├── h1: "欢迎回来"      (text-3xl font-bold text-ink mt-3.5)
+│   └── subtitle           "把这一段日子，过得不虚此生。"  (text-sm text-ink-muted)
+│
+├── Tabs             (mt-7 mb-4)
+│   └── TabSwitcher        (flex-row gap-7，按下下划线 bar 跟随)
+│
+├── Inputs           (gap-3)
+│   ├── PhoneInput         (always 渲染，含 +86 静态前缀 — per D7 chevron 改静态)
+│   └── conditional:
+│       ├── SmsInput       (mode === 'sms')
+│       └── PasswordField  (mode === 'password')
+│
+├── HelperRow        (mt-3.5 flex-row justify-between)
+│   └── 仅密码 tab：       "忘记密码"链接 (text-sm text-brand-500，placeholder)
+│   ✗ AgreeRow            (mockup 此处含但 per D3 删除；只保留 footer 隐式同意)
+│
+├── CTA              (mt-5)
+│   └── PrimaryButton      (h-12 rounded-full shadow-cta；loading 变 brand-300 + spinner)
+│                          SMS 模式文案 "登录"（per D4，非 mockup 原文 "登录 / 注册"）
+│
+├── Divider          (mt-6 flex-row gap-3)
+│   └── "其他登录方式"    (line-soft 横线 + 中文 11px text-ink-subtle)
+│
+├── OAuth row        (mt-4 flex-row justify-center gap-6)
+│   └── GoogleButton       (w-12 h-12 rounded-full border border-line) — M1.2 仅此一个，per D1
+│
+├── flex spacer
+│
+└── Footer
+    ├── "还没账号？创建一个"  (text-sm text-ink-muted；"创建一个" text-brand-500 → router.push register)
+    └── "登录即表示同意 服务协议 与 隐私政策" (text-[11px] text-ink-subtle；隐式同意，per D3)
+
+✗ TopBar (× / 跳过)        (mockup 顶部含但 per D2 删除整个 TopBar — login 是 auth guard 入口，无上层可关)
+```
+
+### Token 映射
+
+bundle className 100% 在 `packages/design-tokens` 内已定义；详 [`./design/handoff.md`](./design/handoff.md) § 4 + § 5.4。**禁** inline `style={{}}` 使用 px / hex（reanimated 的复合 style 例外）。
+
+### 状态视觉转移
+
+| 状态 (spec / hook) | mockup state prop | 视觉变化                                                                                 |
+| ------------------ | ----------------- | ---------------------------------------------------------------------------------------- |
+| idle               | default           | inputs editable / CTA enabled                                                            |
+| submitting         | loading           | inputs disabled / opacity-60 / CTA bg-brand-300 + spinner / SMS 模式 countdown inline    |
+| error              | error             | input border `border-err` / ErrorRow 出现 / errorToast                                   |
+| success            | success           | 切到 SuccessOverlay（SuccessCheck reanimated scale-in + 骨架屏）≤ 800ms → router.replace |
+
+### RN Web 兼容点
+
+| 维度                    | 约束                                                                         |
+| ----------------------- | ---------------------------------------------------------------------------- |
+| hover / focus 视觉      | 只在 `<Pressable>` 上 fire；`<View>` 上的 hover className 不生效             |
+| borderRadius            | 不用 `%` 单位；用 `rounded-{xs,sm,md,lg,full}` Tailwind class                |
+| boxShadow               | 用 design-tokens 的 `shadow-card` / `shadow-cta`，不写 `shadow-[...]` 任意值 |
+| accessibilityLiveRegion | Android only；iOS / Web 用 `accessibilityRole='alert'`                       |
+| KeyboardAvoidingView    | 必须包裹 form 区域；Web 端 noop                                              |
+
+### a11y 落点
+
+每个交互组件必有 `accessibilityLabel`：
+
+- TabSwitcher 两 tab：`accessibilityRole='tab'` + `accessibilityState.selected`
+- PhoneInput / SmsInput / PasswordField：`accessibilityLabel='手机号' / '验证码' / '密码'`
+- PrimaryButton：`accessibilityRole='button'` + `accessibilityState.disabled` 跟 loading 联动
+- GoogleButton / 忘记密码 / 创建一个：分别 `accessibilityLabel='Google 登录' / '忘记密码（即将上线）' / '前往注册'`
+- ErrorRow：`accessibilityRole='alert'`（iOS / Web）+ `accessibilityLiveRegion='polite'`（Android）
+
+### 翻译期硬约束（per [`./design/handoff.md`](./design/handoff.md) § 5）
+
+1. `w-18 h-18`（mockup line 100，SuccessCheck 圆圈）→ 替换为 `w-16 h-16` 或 `w-[72px] h-[72px]`（Tailwind 默认 spacing 无 18 档）
+2. reanimated v3 装包走 `pnpm exec expo install react-native-reanimated`
+3. PhoneInput 的 +86 chevron `▾` 改为静态字符（无下拉，M1.2 大陆唯一，per D7）
+4. SMS 模式 CTA 文案改为 "登录"（mockup 原文 "登录 / 注册"，per D4）
+5. login.tsx 实施时默认 `mode = 'password'`（mockup `initialMode='sms'` 仅 preview 用，per D5 + spec FR-001）
 
 ## 测试策略
 
@@ -140,8 +227,8 @@ submitting
 
 ## Phase 风险与缓解
 
-| 风险                                                                            | 缓解                                                                                                                                  |
-| ------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
-| mockup 与业务逻辑层假设冲突（如 mockup 设计了"无 tab 单页双 form 同屏"）        | 业务层 hook 设计兼容：`useLoginForm` 暴露 `tab + setTab`；mockup 决定不要 tab 时只用 password 路径 + 点按钮切 sms 即可，hook 接口不变 |
-| Claude Design 输出的 className 与本仓 design-tokens 不匹配（用了非 token 化值） | handoff.md 必须列出"实际用到的 token 名称"；不匹配的 class 在 review 阶段拒绝                                                         |
-| 60s 倒计时在切 tab / unmount 时未清 timer                                       | useLoginForm 内部 useEffect cleanup 必须 clearInterval；单测覆盖                                                                      |
+| 风险                                                       | 缓解                                                                                                                       |
+| ---------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
+| mockup 与业务逻辑层假设冲突                                | ✅ resolved：mockup 用双 tab（与 hook 接口一致）；4 处 drift（D1-D4）已落 spec 修订 + 翻译期硬约束（UI 结构段末尾 5 条）   |
+| Claude Design 输出的 className 与本仓 design-tokens 不匹配 | ✅ resolved：bundle className 100% 用 token 命名，已 mirror 到 `packages/design-tokens`（per 2026-05-03 commit `3f2cddd`） |
+| 60s 倒计时在切 tab / unmount 时未清 timer                  | useLoginForm 内部 useEffect cleanup 必须 clearInterval；单测覆盖                                                           |
