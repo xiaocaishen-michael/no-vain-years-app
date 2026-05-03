@@ -238,6 +238,21 @@ node tools/runtime-debug.mjs http://localhost:8081 \
 | 5.2 ErrorRow 不显示             | 状态机 bug              | 用 `--raw` 看 console.log + finalUrl                         |
 | 5.3 触发不到 429                | rate limit 配置太宽松   | 跳过；单测覆盖即可                                           |
 
+## 已知 P3 bugs（B2 顺手验证 + 修）
+
+前一 session（2026-05-03 EOD）用 Playwright 复现 prod baseURL trap 时发现：
+
+1. **mapApiError 把 CORS-blocked fetch 误归 `unknown` 而非 `network`** — 浏览器 fetch CORS 失败抛 TypeError，但 OpenAPI Generator runtime fetch wrapper 可能包了一层（`ApiClientError`），丢失 TypeError 类型信息，落到 `'unknown'` 兜底。
+   - 复现：app 不设 EXPO_PUBLIC_API_BASE_URL，点击 "获取验证码"
+   - 期望：errorToast = "网络异常，请检查网络后重试"
+   - 实际：errorToast = "登录失败，请稍后再试"
+   - B2 验证：本地后端跑起来后，故意杀 server 触发真 fetch fail，看 mapApiError 走哪个 bucket。如果还是 `unknown`，去 `apps/native/lib/validation/login.ts` 加 `instanceof TypeError` OR 检查 `error.message` 包含 "fetch" / "Failed to fetch" / "NetworkError" 等模式
+   - 单测同步加：mock OpenAPI Generator 的 fetch 抛 TypeError，断言 mapApiError 返回 `'network'`
+
+2. **requestSms 失败用 "登录失败..." 文案语义偏** — 同一 mapApiError 表覆盖 password / sms / requestSms 全部场景，文案泛指 "登录失败"。requestSms 自己的失败应该是 "验证码发送失败" 之类。
+   - 修复方向：mapApiError 接受第二个 `context` 参数（`'login' | 'requestSms'`），分场景返 toast。OR 在 hook 层捕获后用单独的 toast 串。
+   - 优先级低于 #1。
+
 ## 估时
 
 | Step            | 顺利       | 首启可能                   |
