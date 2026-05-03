@@ -11,8 +11,8 @@ const config: Config = {
     extend: {
       colors: tokens.colors,
       spacing: tokens.spacing,
-      fontSize: tokens.fontSize,
       borderRadius: tokens.borderRadius,
+      fontFamily: tokens.fontFamily,
       boxShadow: tokens.boxShadow,
     },
   },

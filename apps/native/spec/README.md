@@ -14,9 +14,14 @@ apps/native/spec/
 │   ├── plan.md                    ← /speckit.plan 产出（含 UI 结构段，吸收 mockup 决策）
 │   ├── tasks.md                   ← /speckit.tasks 产出
 │   └── design/                    ← Claude Design mockup 留迹
-│       ├── mockup-v1.png          ← 视觉 mockup（PNG 截图）
+│       ├── mockup-v1.png          ← 视觉 mockup（PNG 截图，可选）
 │       ├── mockup-v2.png          ← 迭代版本（如需）
-│       └── handoff.md             ← component breakdown / token 选择 / 状态描述
+│       ├── handoff.md             ← 项目特定决策 + 翻译期注意点（人类作者）
+│       └── source/                ← Claude Design export bundle 原样保留（只读快照）
+│           ├── *.tsx              ← bundle 自带的 RN+NativeWind 源码
+│           ├── tailwind.config.js ← bundle 自带 token 配置（参考用，已 mirror 到 packages/design-tokens）
+│           ├── assets/            ← 品牌资源
+│           └── *-README.md        ← Claude Design 通用 handoff 文档（重命名带前缀）
 ├── register/
 │   ├── spec.md
 │   ├── plan.md
@@ -43,15 +48,17 @@ apps/native/spec/
 
 ## Mockup 留迹纪律
 
-| 项            | 约定                                                                                                       |
-| ------------- | ---------------------------------------------------------------------------------------------------------- |
-| 路径          | `<page>/design/`，与 spec.md 同位                                                                          |
-| 文件命名      | `mockup-v{N}.png` / `handoff.md`；不要带空格 / 中文                                                        |
-| 体积          | 单页通常 1-3 MB；M3 内测前评估是否需 git LFS                                                               |
-| 格式          | PNG（screenshot from Claude Design）；handoff.md 用 markdown 写组件 breakdown / token 选择 / 状态描述      |
-| 心智          | **代码是真相源**；mockup 是历史快照。代码演化后 mockup drift **不算 bug**；只在 design system 大重设时清理 |
-| commit 入 git | ✅ 入 git，方便复盘 / 对外分享；不分支管理（mockup 总跟当时的 spec 走）                                    |
-| 二轮迭代      | 如果用户对第一轮 mockup 不满意，加 mockup-v2.png 而非覆盖 v1（保留迭代历史）                               |
+| 项                | 约定                                                                                                                                                           |
+| ----------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 路径              | `<page>/design/`，与 spec.md 同位                                                                                                                              |
+| 文件命名          | `mockup-v{N}.png` / `handoff.md` / `source/...`；不要带空格 / 中文                                                                                             |
+| 体积              | 单页通常 1-3 MB；M3 内测前评估是否需 git LFS                                                                                                                   |
+| `mockup-v{N}.png` | 视觉快照（**可选**）。bundle 含 RN+NativeWind 源码时 PNG 价值低；bundle 仅含 HTML preview 时建议补 PNG                                                         |
+| `handoff.md`      | **必有**，人类作者。组件 breakdown / token 决策 / 翻译期注意点 / drift 政策。详见 `login/design/handoff.md` 模板                                               |
+| `source/`         | **必有**（v2 起）。Claude Design export bundle 原样保留，**只读**，不在此处编辑；bundle 内 README.md 重命名为 `<TOOL>-BUNDLE-README.md` 避免与 handoff.md 混淆 |
+| 心智              | **代码是真相源**；mockup 与 source/ 都是历史快照。代码演化后 drift **不算 bug**；只在 design system 大重设时清理                                               |
+| commit 入 git     | ✅ 入 git，方便复盘 / 对外分享；不分支管理（mockup 总跟当时的 spec 走）                                                                                        |
+| 二轮迭代          | 加 `mockup-v2.png` + `source-v2/`；不覆盖 v1（保留迭代历史）                                                                                                   |
 
 ## Claude Design 操作 playbook
 

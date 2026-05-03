@@ -7,8 +7,8 @@
 export {
   colors,
   spacing,
-  fontSize,
   borderRadius,
+  fontFamily,
   boxShadow,
   tokens,
   type Tokens,
