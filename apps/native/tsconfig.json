@@ -19,6 +19,6 @@
       "@nvy/types/*": ["../../packages/types/src/*"]
     }
   },
-  "include": ["**/*.ts", "**/*.tsx"],
+  "include": ["**/*.ts", "**/*.tsx", "nativewind-env.d.ts"],
   "exclude": ["node_modules", "dist", ".expo"]
 }
