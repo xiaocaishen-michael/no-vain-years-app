@@ -35,10 +35,19 @@ vi.mock('@nvy/api-client', () => {
       this.traceId = undefined;
     }
   }
+  class FetchError extends Error {
+    public readonly cause: Error;
+    constructor(cause: Error, message?: string) {
+      super(message);
+      this.name = 'FetchError';
+      this.cause = cause;
+    }
+  }
   return {
     getAccountRegisterApi: () => ({ requestSmsCode: mocks.requestSmsCode }),
     ResponseError,
     ApiClientError,
+    FetchError,
   };
 });
 
