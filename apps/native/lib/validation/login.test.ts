@@ -1,4 +1,4 @@
-import { ApiClientError, ResponseError } from '@nvy/api-client';
+import { ApiClientError, FetchError, ResponseError } from '@nvy/api-client';
 import { describe, expect, it } from 'vitest';
 
 import { loginPasswordSchema, loginSmsSchema, mapApiError, PHONE_REGEX } from './login';
@@ -118,6 +118,13 @@ describe('mapApiError', () => {
 
   it('TypeError → network (fetch failure / DNS / CORS)', () => {
     expect(mapApiError(new TypeError('Failed to fetch'))).toEqual({
+      kind: 'network',
+      toast: '网络异常，请检查网络后重试',
+    });
+  });
+
+  it('FetchError → network (OpenAPI runtime wraps TypeError on connection refused)', () => {
+    expect(mapApiError(new FetchError(new TypeError('Failed to fetch'), 'fetch failed'))).toEqual({
       kind: 'network',
       toast: '网络异常，请检查网络后重试',
     });

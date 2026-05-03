@@ -24,4 +24,4 @@ export type {
   RegisterByPhoneResponse,
   RequestSmsCodeRequest,
 } from './generated';
-export { ResponseError } from './generated';
+export { FetchError, ResponseError } from './generated';

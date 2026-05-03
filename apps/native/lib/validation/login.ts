@@ -1,4 +1,4 @@
-import { ApiClientError, ResponseError } from '@nvy/api-client';
+import { ApiClientError, FetchError, ResponseError } from '@nvy/api-client';
 import { z } from 'zod';
 
 export const PHONE_REGEX = /^\+861[3-9]\d{9}$/;
@@ -46,7 +46,7 @@ export function mapApiError(error: unknown): MappedApiError {
     }
     return { kind: 'unknown', toast: TOAST.unknown };
   }
-  if (error instanceof TypeError) {
+  if (error instanceof FetchError || error instanceof TypeError) {
     return { kind: 'network', toast: TOAST.network };
   }
   if (error instanceof ApiClientError) {
