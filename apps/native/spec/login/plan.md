@@ -132,30 +132,93 @@ submitting
 | KeyboardAvoidingView           | 必须包裹 form 区域，避免 iOS 软键盘遮 input；Web 端无影响（noop）                                |
 | Platform.OS conditional render | Apple Button 在 caller 层（login.tsx）用 `Platform.OS === 'ios'` 判，不下沉到 packages/ui        |
 
-## UI 结构
+## UI 结构（mockup v2 driven，2026-05-04 落地）
 
-> **TBD**：等新版 Claude Design mockup 落地（参见 `apps/native/spec/login/design/`）。
->
-> 旧 v1 mockup（双 tab + password / sms 切换）已 SUPERSEDED；新版 mockup 须重做（per `docs/experience/claude-design-handoff.md` § 2.1b 合一页 prompt 模板）。
->
-> 新 mockup 必含元素（per spec FR-001 / FR-007 / FR-008 / FR-009）：
->
-> - 顶部：右上 "立即体验" 游客模式占位 link（M1.2 不实施，仅 UI 占位）
-> - 中央：项目 logo + 副标题
-> - 单 form 容器（无 tab）：
->   - PhoneInput（+86 静态 prefix + 手机号输入）
->   - SmsInput（6 位数字 + 60s 倒计时内联 "获取验证码" → "{N}s 后重发"）
->   - PrimaryButton（CTA 文案 "登录"）
-> - Divider "其他登录方式"
-> - 三方 OAuth 横排（圆形 icon-only）：
->   - 微信（绿色，全平台）
->   - Google（多彩 G，全平台）
->   - Apple（黑色，**iOS-only conditional render**）
-> - 底部：
->   - "登录即表示同意《服务条款》《隐私政策》"（隐式同意，不需 checkbox）
->   - "登录遇到问题" link（M1.2 不实施，仅 UI 占位）
->
-> mockup 落地后回本段 + 由 `UI UX Pro Max` skill 跑一遍 review 再 commit。
+参考源码：[`./design/source-v2/LoginScreen.tsx`](./design/source-v2/LoginScreen.tsx) + [`./design/handoff.md`](./design/handoff.md)。v1 mockup 已 SUPERSEDED 留档。
+
+### 布局
+
+单列移动端，container `flex-1 bg-surface px-lg pb-lg`；mockup 测试宽度 360px。无栅格 / 无 desktop 适配（M1.2 mobile + RN Web 出 web bundle）。
+
+### 区域分块
+
+```text
+LoginScreen (flex-1 bg-surface px-lg pb-lg)
+├── TopBar              (h-11 px-1 flex-row items-center)
+│   └── close × button  (text-2xl text-ink — close 按钮，per FR-008 / mockup v2 drift)
+│
+├── Header              (mt-3 items-center gap-2)
+│   ├── LogoMark            (Svg 56x56，brand-500 圆角矩形 + 12 道光线 + 橙色 sun)
+│   ├── h1: "欢迎回来"      (text-3xl font-bold text-ink mt-3.5 tracking-tight text-center)
+│   └── subtitle           "把这一段日子，过得不虚此生。"  (text-sm text-ink-muted text-center)
+│
+├── Form                (mt-9 gap-3)
+│   ├── PhoneInput          (h-12 border-b；+86 prefix + ▾ chevron 静态 + 1px 分隔 + TextInput)
+│   ├── SmsInput            (h-12 border-b；TextInput + 右侧 send-code 按钮三态)
+│   └── ErrorRow            (errorScope 决定哪个 input 旁渲染 + 文案由 mapApiError 提供)
+│
+├── CTA                 (mt-7)
+│   └── PrimaryButton       (h-12 rounded-full shadow-cta；CTA 文案 "登录"，per FR-001)
+│       状态：
+│         disabled  → bg-brand-200
+│         loading   → bg-brand-300 + Spinner(white) + "登录中…"
+│         enabled   → bg-brand-500 active:bg-brand-600 + "登录"
+│
+├── flex spacer
+│
+├── Divider             (mt-6 flex-row items-center gap-3)
+│   └── "其他登录方式"     (h-px bg-line-soft 横线 + text-[11px] text-ink-subtle 中文)
+│
+├── OAuth row           (mt-4 flex-row justify-center gap-10)
+│   ├── WechatButton        (w-12 h-12 rounded-full bg-[#07C160] + WeChat svg glyph + "微信" label)
+│   ├── GoogleButton        (w-12 h-12 rounded-full bg-surface border border-line + "G" + "Google" label)
+│   └── AppleButton         (w-12 h-12 rounded-full bg-ink + Apple unicode  + "Apple" label)
+│                           **caller 层 Platform.OS === 'ios' conditional render** (per FR-007)
+│
+├── Help link           (items-center mt-5)
+│   └── "登录遇到问题"     (text-xs text-ink-muted；placeholder per FR-009)
+│
+└── Implicit consent    (text-center text-[11px] text-ink-subtle mt-3)
+    └── "登录即表示同意 《服务条款》 与 《隐私政策》"  (隐式同意，per FR-001 + ADR-0016 决策 4)
+```
+
+### 状态视觉转移（5 + success + error 共 7 种渲染态）
+
+| 状态 (hook)      | 视觉变化                                                                                                        |
+| ---------------- | --------------------------------------------------------------------------------------------------------------- |
+| `idle`           | inputs editable / CTA disabled (bg-brand-200) / SmsInput 右侧 "获取验证码"                                      |
+| `requesting_sms` | inputs disabled opacity-60 / CTA disabled / SmsInput 右侧 "发送中…" + Spinner(muted)                            |
+| `sms_sent`       | inputs editable / CTA enabled (form valid 时) / SmsInput 右侧 "{N}s 后重发" 倒计时                              |
+| `submitting`     | inputs disabled / CTA bg-brand-300 + Spinner(white) + "登录中…"                                                 |
+| `error`          | errorScope 决定 PhoneInput 或 SmsInput border-err + ErrorRow 渲染对应 input 旁                                  |
+| `success`        | 切到 `<SuccessOverlay>`（SuccessCheck reanimated scale-in + 骨架屏，per FR-011） → AuthGate 自动 router.replace |
+
+### Token 映射
+
+bundle className 100% 在 `packages/design-tokens` 内已定义；详 [`./design/handoff.md`](./design/handoff.md) § 4。**禁** inline `style={{}}` 使用 px / hex（reanimated 的复合 style 例外）。
+
+**唯一 ad-hoc 任意值**：`bg-[#07C160]`（微信品牌绿）— 仅 WechatButton 内部使用，不进 design-tokens（品牌色 literal，非 design system token）。
+
+### a11y 落点
+
+每个交互组件必有 `accessibilityLabel`：
+
+- TopBar close button：`accessibilityLabel='关闭'`
+- PhoneInput / SmsInput：`accessibilityLabel='手机号' / '验证码'`
+- PrimaryButton：`accessibilityRole='button'` + `accessibilityState.disabled` 跟 loading 联动
+- WechatButton / GoogleButton / AppleButton：`accessibilityLabel='微信登录（即将上线）' / 'Google 登录（即将上线）' / 'Apple 登录（即将上线）'`
+- ErrorRow：`accessibilityRole='alert'`（iOS / Web）+ `accessibilityLiveRegion='polite'`（Android）
+- 帮助 link：`accessibilityRole='link'` + `accessibilityLabel='登录遇到问题（即将上线）'`
+
+### 翻译期硬约束（per [`./design/handoff.md`](./design/handoff.md) § 5）
+
+1. `w-18 h-18`（mockup line 71，SuccessCheck 圆圈）→ 替换为 `w-[72px] h-[72px]`（Tailwind 默认 spacing 无 18 档）
+2. CTA 文案改为 `"登录"`（mockup v2 line 354 写 `"登录 / 注册"` 违反 ADR-0016 决策 4 negative constraint，drift 修订）
+3. 协议同意 `《服务条款》《隐私政策》` 中间补 "与" 字
+4. `useCountdown` 不抽出来 — 用 useLoginForm hook 已暴露的 `smsCountdown`
+5. `errorScope` 由 hook 提供（'sms' | 'submit' | null），LoginScreen 接 hook 而非 caller 控制
+6. AppleButton iOS-only conditional render 在 caller 层（login.tsx），不下沉 packages/ui
+7. `bg-[#07C160]` 仅 WechatButton 内部 ad-hoc 任意值，其他不允许任意值
 
 **禁入**（per `docs/experience/claude-design-handoff.md` § 2.1b）：
 

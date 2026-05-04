@@ -9,13 +9,18 @@ import { mapApiError } from '../validation/login';
 // (与旧 4 态相比新增 requesting_sms + sms_sent, 因 SMS 必经而非可选)
 export type AuthState = 'idle' | 'requesting_sms' | 'sms_sent' | 'submitting' | 'success' | 'error';
 
-// Per ADR-0016 决策 4 + spec FR-007/8/9: 三方 OAuth (微信/Google/Apple iOS-only)
-// + 顶部 立即体验 占位 + 底部 登录遇到问题 占位; 全部 placeholder, M1.3+ 实施.
-export type PlaceholderFeature = 'wechat' | 'google' | 'apple' | 'guest' | 'help';
+// Per ADR-0016 决策 4 + spec FR-007/9: 三方 OAuth (微信/Google/Apple iOS-only)
+// + 底部 登录遇到问题 占位; M1.3+ 实施. (顶部 立即体验 占位已删除 per mockup v2 + spec FR-008 修订)
+export type PlaceholderFeature = 'wechat' | 'google' | 'apple' | 'help';
+
+// Per spec FR-015 + mockup v2 (errorScope='sms' | 'submit'):
+// 决定哪个 input 标红 + ErrorRow 渲染位置.
+export type ErrorScope = 'sms' | 'submit' | null;
 
 export interface UseLoginFormResult {
   state: AuthState;
   errorToast: string | null;
+  errorScope: ErrorScope;
   smsCountdown: number;
   requestSms: (phone: string) => Promise<void>;
   submit: (phone: string, smsCode: string) => Promise<void>;
@@ -27,7 +32,6 @@ const PLACEHOLDER_LABEL: Record<PlaceholderFeature, string> = {
   wechat: '微信登录 - Coming in M1.3',
   google: 'Google 登录 - Coming in M1.3',
   apple: 'Apple 登录 - Coming in M1.3',
-  guest: '游客模式 - Coming in M2',
   help: '帮助中心 - Coming in M1.3',
 };
 
@@ -39,6 +43,7 @@ const SMS_COUNTDOWN_SECONDS = 60;
 export function useLoginForm(): UseLoginFormResult {
   const [state, setState] = useState<AuthState>('idle');
   const [errorToast, setErrorToast] = useState<string | null>(null);
+  const [errorScope, setErrorScope] = useState<ErrorScope>(null);
   const [smsCountdown, setSmsCountdown] = useState(0);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
@@ -54,6 +59,7 @@ export function useLoginForm(): UseLoginFormResult {
   // error → idle (or sms_sent if countdown still active, preserving session continuity)
   const clearError = useCallback(() => {
     setErrorToast(null);
+    setErrorScope(null);
     setState((prev) => {
       if (prev !== 'error') return prev;
       // smsCountdown ref via closure — read at call time
@@ -61,9 +67,10 @@ export function useLoginForm(): UseLoginFormResult {
     });
   }, []);
 
-  const handleApiError = useCallback((error: unknown) => {
+  const handleApiError = useCallback((error: unknown, scope: 'sms' | 'submit') => {
     const mapped = mapApiError(error);
     setErrorToast(mapped.toast);
+    setErrorScope(scope);
     setState('error');
   }, []);
 
@@ -90,6 +97,7 @@ export function useLoginForm(): UseLoginFormResult {
       if (smsCountdown > 0) return;
       setState('requesting_sms');
       setErrorToast(null);
+      setErrorScope(null);
       try {
         // PHASE 1 (per ADR-0017): 过渡期仍调既有 /sms-codes endpoint with purpose='LOGIN';
         // server unified endpoint 落地后改为 getAccountSmsCodeApi().requestSmsCode({phone})
@@ -100,7 +108,7 @@ export function useLoginForm(): UseLoginFormResult {
         startCountdown();
         setState('sms_sent');
       } catch (e) {
-        handleApiError(e);
+        handleApiError(e, 'sms');
       }
     },
     [smsCountdown, handleApiError, startCountdown],
@@ -110,11 +118,12 @@ export function useLoginForm(): UseLoginFormResult {
     async (phone: string, smsCode: string) => {
       setState('submitting');
       setErrorToast(null);
+      setErrorScope(null);
       try {
         await phoneSmsAuth(phone, smsCode);
         setState('success');
       } catch (e) {
-        handleApiError(e);
+        handleApiError(e, 'submit');
       }
     },
     [handleApiError],
@@ -127,6 +136,7 @@ export function useLoginForm(): UseLoginFormResult {
   return {
     state,
     errorToast,
+    errorScope,
     smsCountdown,
     requestSms,
     submit,
