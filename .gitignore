@@ -73,3 +73,10 @@ coverage/
 # Personal daily work logs (optional, mirror meta repo convention)
 docs/daily/*.md
 !docs/daily/README.md
+
+# Runtime debug screenshots — binary artifacts, local only.
+# README.md (per-session metadata) is tracked; .png / .jpg are not.
+# See apps/native/runtime-debug/README.md for convention.
+apps/native/runtime-debug/**/*.png
+apps/native/runtime-debug/**/*.jpg
+apps/native/runtime-debug/**/*.jpeg
