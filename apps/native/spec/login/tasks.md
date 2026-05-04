@@ -1,15 +1,18 @@
 # Tasks: Login Page (unified phone-SMS auth)
 
 **Spec**: [spec.md](./spec.md) | **Plan**: [plan.md](./plan.md)
-**Branch**: `docs/login-spec-rewrite-adr-0016`（本次 docs-only） / 后续 M1.3 impl PR 用独立分支
 **Created**: 2026-05-04（per [ADR-0016](../../../../docs/adr/0016-unified-mobile-first-auth.md)；2026-05-03 双 tab 版 tasks 整体重写）
-**Status**: docs-only（spec / plan / tasks 三件套改写）；任何 impl 留下次 dedicated session
+**Status**: ✅ **Shipped** — T_mock + T0-T7 落地于 5-04 下午 PR #50-54；OAuth 真接入（微信/Google/Apple）+ 帮助中心 + 游客模式真实施仍归 M1.3+
 
-> **昨日 PR #48 已落地**（business 层）：T0/T0t/T1/T1t/T2 + design/source mockup v1 + design-tokens mirror + login.tsx 占位 + AuthGate（PR #42）。
+> **5-04 上午 PR #49**（docs-only）：spec / plan / tasks 三件套改写为 unified phone-SMS auth；旧 design/source 标 SUPERSEDED。
 >
-> **本次 PR**（5-04）：spec / plan / tasks 三件套改写为 unified phone-SMS auth；旧 design/source 标 SUPERSEDED；**0 行 impl**。
+> **5-04 下午 PR #50-54**（impl 阶段，Phase 1→4）：
 >
-> **下次 dedicated session 范围**：M1.3 impl PR — 按 T0-T6 顺序执行（依赖 server PR-B 已 merged + 新版 mockup 落地）。
+> - **PR #50**（Phase 1）：business flow + 占位 UI — T0 (api:gen 拉旧版本占位) / T1 (auth wrapper 过渡) / T2 (zod schema) / T3 (5 状态机 hook) / T6 (删 register.tsx)
+> - **PR #51**（Phase 2）：mockup v2 落地 + UI 完成 — T_mock + T4 (新 packages/ui WechatButton + AppleButton + LogoMark + ErrorRow) + T5 (login.tsx 单 form + className 1:1 paste)
+> - **PR #52**：T4 后续 — LogoMark + WechatButton 升级真 SVG（react-native-svg）
+> - **PR #53**：runtime-debug 截图归档目录约定 + Phase 3 session
+> - **PR #54**（Phase 4 + final）：T0 真版本（server #118 merged 后 `pnpm api:gen:dev` 拉新 spec）+ T1 真 wrapper 切换（`getAccountAuthApi().phoneSmsAuth()`）+ T7 真后端冒烟（已注册 + 未注册自动注册两路径）
 
 ## 任务清单
 
@@ -33,24 +36,24 @@
 | ✅T_doc3 | [Tasks]  | 改写本文件 — 重排任务 + 引入 T0-T6 实施步骤           | `apps/native/spec/login/tasks.md`             | ✅（本 PR） |
 | ✅T_doc4 | [Design] | 旧 v1 mockup 加 SUPERSEDED.md 指针指向 v2             | `apps/native/spec/login/design/SUPERSEDED.md` | ✅（本 PR） |
 
-### 下次 — Mockup 阶段（user 单独跑）
+### Mockup 阶段（PR #51）
 
-| #      | 层级        | 任务                                                                                                                                                          | 文件                                                       | 状态        |
-| ------ | ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------- | ----------- |
-| T_mock | [Mockup v2] | Claude Design 出新版合一页 mockup（按 [`docs/experience/claude-design-handoff.md`](../../../../docs/experience/claude-design-handoff.md) § 2.1b prompt 模板） | `apps/native/spec/login/design/source-v2/` + handoff.md 改 | TBD（user） |
+| #         | 层级        | 任务                                                                                                                                                          | 文件                                                             | 状态         |
+| --------- | ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------- | ------------ |
+| ✅ T_mock | [Mockup v2] | Claude Design 出新版合一页 mockup（按 [`docs/experience/claude-design-handoff.md`](../../../../docs/experience/claude-design-handoff.md) § 2.1b prompt 模板） | `apps/native/spec/login/design/source-v2/` + `design/handoff.md` | ✅（PR #51） |
 
-### 下次 — M1.3 impl PR（依赖 mockup v2 + server PR-B merged）
+### Impl 阶段（PR #50-54）
 
-| #   | 层级            | 任务                                                                                                                                                                                                                              | 文件                                                                 | TDD 节奏                                           |
-| --- | --------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------- | -------------------------------------------------- |
-| T0  | [API client]    | `pnpm api:gen:dev` 拉 server unified spec；自动删 `AccountRegisterControllerApi` + `AuthControllerApi`；新增 `AccountAuthControllerApi.phoneSmsAuth` + 简化 `AccountSmsCodeApi.requestSmsCode({phone})`                           | `packages/api-client/src/generated/`                                 | 自动生成；commit 前跑 `pnpm -r typecheck` 全绿     |
-| T1  | [Auth pkg]      | 删 `loginByPassword` / `loginByPhoneSms` wrapper；新增 `phoneSmsAuth(phone, code)` wrapper；TDD 单测                                                                                                                              | `packages/auth/src/usecases.ts` + `__tests__/usecases.test.ts`       | 红 → 绿                                            |
-| T2  | [Schema]        | 改写 `lib/validation/login.ts`：删 `loginPasswordSchema` + `loginSmsSchema`，新增 `phoneSmsAuthSchema`；`mapApiError` 文案改"手机号或验证码错误"（删"密码"字样）                                                                  | `apps/native/lib/validation/login.ts` + `login.test.ts`              | 改 + 测                                            |
-| T3  | [Hook]          | 改写 `lib/hooks/use-login-form.ts`：5 状态机；删 tab state；删 password submit；改名为 `use-phone-sms-auth-form.ts` 或保留路径名（TBD 实施时定）                                                                                  | `apps/native/lib/hooks/use-login-form.ts` + `use-login-form.test.ts` | 改 + 测                                            |
-| T4  | [packages/ui]   | 删 `PasswordField.tsx`（per ADR-0016 决策 2）；新增 `WechatButton.tsx` + `AppleButton.tsx`（参考既有 `GoogleButton.tsx` 设计）；评估 `TabSwitcher.tsx` 改名为 `OAuthButtonRow.tsx` 或删                                           | `packages/ui/src/*.tsx`                                              | TDD-emerge per packages/ui 习惯                    |
-| T5  | [App]           | 改写 `apps/native/app/(auth)/login.tsx`：删 TabSwitcher / PasswordField 渲染；改单 form；加三方 OAuth row（含 Apple `Platform.OS === 'ios'` conditional）+ "立即体验" + "登录遇到问题" placeholder；className 1:1 paste 新 mockup | `apps/native/app/(auth)/login.tsx`                                   | 改 + 测                                            |
-| T6  | [App]           | 删 `apps/native/app/(auth)/register.tsx` placeholder（per ADR-0016 决策 1，无独立 register 页）                                                                                                                                   | `apps/native/app/(auth)/register.tsx`                                | 单文件删                                           |
-| T7  | [B2 真后端冒烟] | Playwright runtime-debug.mjs 跑 4 状态（happy 已注册 / happy 未注册 / 401 / 429 / network）；验证 SC-002 反枚举一致响应 client 无感                                                                                               | `apps/native/tools/runtime-debug.mjs`                                | per `docs/experience/claude-design-handoff.md` § 6 |
+| #     | 层级            | 任务                                                                                                                                                                                                                                 | 文件                                                                                              | 状态                                            |
+| ----- | --------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------- | ----------------------------------------------- |
+| ✅ T0 | [API client]    | `pnpm api:gen:dev` 拉 server unified spec；删 `AccountRegisterControllerApi` 旧 `registerByPhone` + `AuthControllerApi` 旧 login methods；新增 `AccountAuthControllerApi.phoneSmsAuth`；简化 `RequestSmsCodeRequest` 删 purpose 字段 | `packages/api-client/src/generated/`                                                              | ✅（PR #50 占位 → #54 真版本）                  |
+| ✅ T1 | [Auth pkg]      | 删 `loginByPassword` / `loginByPhoneSms` wrapper；新增 `phoneSmsAuth(phone, code)` wrapper                                                                                                                                           | `packages/auth/src/usecases.ts` + `__tests__/usecases.test.ts`                                    | ✅（PR #50 过渡 wrapper → #54 切到真 API）      |
+| ✅ T2 | [Schema]        | 改写 `lib/validation/login.ts`：删 `loginPasswordSchema` + `loginSmsSchema`；新增 `phoneSmsAuthSchema`；`mapApiError` 文案"手机号或验证码错误"                                                                                       | `apps/native/lib/validation/login.ts` + `login.test.ts`                                           | ✅（PR #50）                                    |
+| ✅ T3 | [Hook]          | 改写 `lib/hooks/use-login-form.ts` 为 5 状态机（idle / requesting_sms / sms_sent / submitting / success / error）；删 tab state；删 password submit；保留路径名                                                                      | `apps/native/lib/hooks/use-login-form.ts` + `use-login-form.test.ts`                              | ✅（PR #50；#54 删 requestSms 的 purpose 字段） |
+| ✅ T4 | [packages/ui]   | 删 `PasswordField.tsx`；新增 `WechatButton.tsx` + `AppleButton.tsx` + `LogoMark.tsx` + `ErrorRow.tsx`；`LogoMark` + `WechatButton` 升级真 SVG（react-native-svg）                                                                    | `packages/ui/src/*.tsx`                                                                           | ✅（PR #51 + #52）                              |
+| ✅ T5 | [App]           | 改写 `apps/native/app/(auth)/login.tsx`：单 form + 三方 OAuth row（Apple iOS-only conditional）+ 顶部 close `×` 按钮 + "登录遇到问题" placeholder；className 按 mockup v2 1:1 paste                                                  | `apps/native/app/(auth)/login.tsx`                                                                | ✅（PR #51）                                    |
+| ✅ T6 | [App]           | 删 `apps/native/app/(auth)/register.tsx` placeholder                                                                                                                                                                                 | `apps/native/app/(auth)/register.tsx`                                                             | ✅（PR #50）                                    |
+| ✅ T7 | [B2 真后端冒烟] | runtime-debug.mjs 跑 happy 已注册 / happy 未注册自动注册两路径；DB state 验证（last_login_at 更新 + 新 Account ACTIVE 创建）                                                                                                         | `apps/native/runtime-debug/2026-05-04-phase3-unified-auth/` + `2026-05-04-phase4-server-unified/` | ✅（PR #53 截图归档约定 + #54 phase 4 冒烟）    |
 
 ---
 
@@ -378,13 +381,14 @@ node apps/native/tools/runtime-debug.mjs <action-list-spec>
 
 ---
 
-## 完成定义（M1.3 impl PR ready 前）
+## 完成定义（M1.2 落地状态）
 
-| #   | 验收                                                         |
-| --- | ------------------------------------------------------------ |
-| ✅  | spec.md / plan.md / tasks.md 三件套是 unified phone-SMS auth |
-| ✅  | design/SUPERSEDED.md 在；旧 source bundle 保留               |
-| 🟡  | 新版 mockup 落地（user 单独跑 Claude Design）                |
-| 🟡  | T0-T6 impl 完成；`pnpm -r test/typecheck/lint` 全绿          |
-| 🟡  | T7 B2 真后端冒烟 4 状态全过                                  |
-| 🟡  | M1.3 PR open as ready；CI 全绿 + auto-merge                  |
+| #   | 验收                                                                                               |
+| --- | -------------------------------------------------------------------------------------------------- |
+| ✅  | spec.md / plan.md / tasks.md 三件套是 unified phone-SMS auth                                       |
+| ✅  | design/SUPERSEDED.md 在；旧 source bundle 保留；source-v2 mockup + handoff.md 落地（PR #51）       |
+| ✅  | T_mock + T0-T7 impl 完成；`pnpm -r test/typecheck/lint` 全绿                                       |
+| ✅  | T7 B2 真后端冒烟 — 已注册 + 未注册自动注册两路径全过（runtime-debug 截图归档于 phase 3 + phase 4） |
+| ✅  | PR #50-54 全 merged（CI 全绿 + auto-merge）                                                        |
+| 🟡  | OAuth 真接入（微信 / Google / Apple）— M1.3 范围                                                   |
+| 🟡  | "登录遇到问题" 帮助中心 + 游客模式真实施 — M1.3 / M2 评估                                          |
