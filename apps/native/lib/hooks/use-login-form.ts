@@ -99,11 +99,10 @@ export function useLoginForm(): UseLoginFormResult {
       setErrorToast(null);
       setErrorScope(null);
       try {
-        // PHASE 1 (per ADR-0017): 过渡期仍调既有 /sms-codes endpoint with purpose='LOGIN';
-        // server unified endpoint 落地后改为 getAccountSmsCodeApi().requestSmsCode({phone})
-        // (无 purpose 字段, server 内部按 phone 状态决定 template).
+        // Per ADR-0016 + server phone-sms-auth FR-004: SMS code request 入参仅 {phone};
+        // server 内部不再分 purpose, 统一发 Template A real code (反枚举一致响应).
         await getAccountRegisterApi().requestSmsCode({
-          requestSmsCodeRequest: { phone, purpose: 'LOGIN' },
+          requestSmsCodeRequest: { phone },
         });
         startCountdown();
         setState('sms_sent');

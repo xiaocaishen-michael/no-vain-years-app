@@ -1,5 +1,5 @@
 
-# RequestSmsCodeRequest
+# PhoneSmsAuthRequest
 
 
 ## Properties
@@ -7,16 +7,18 @@
 Name | Type
 ------------ | -------------
 `phone` | string
+`code` | string
 
 ## Example
 
 ```typescript
-import type { RequestSmsCodeRequest } from ''
+import type { PhoneSmsAuthRequest } from ''
 
 // TODO: Update the object below with actual values
 const example = {
   "phone": null,
-} satisfies RequestSmsCodeRequest
+  "code": null,
+} satisfies PhoneSmsAuthRequest
 
 console.log(example)
 
@@ -25,7 +27,7 @@ const exampleJSON: string = JSON.stringify(example)
 console.log(exampleJSON)
 
 // Parse the JSON string back to an object
-const exampleParsed = JSON.parse(exampleJSON) as RequestSmsCodeRequest
+const exampleParsed = JSON.parse(exampleJSON) as PhoneSmsAuthRequest
 console.log(exampleParsed)
 ```
 
