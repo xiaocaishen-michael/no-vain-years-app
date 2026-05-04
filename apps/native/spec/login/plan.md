@@ -1,234 +1,209 @@
-# Implementation Plan: Login Page
+# Implementation Plan: Login Page (unified phone-SMS auth)
 
-**Branch**: `feat/account-login-page`
+**Branch**: `docs/login-spec-rewrite-adr-0016`
 **Spec**: [spec.md](./spec.md)
-**Created**: 2026-05-03
-**Status**: 业务段完整；UI 结构段已吸收 mockup（Claude Design v2，2026-05-03 commit `3f2cddd`）；tasks.md T0-T3 完成 / T4-T5 完成 / T6-T8 进下次 PR 走 implement
-**Depends**: PR #42（@nvy/auth + @nvy/api-client + auth guard 落地）+ server PRs #98 / #101（4 endpoint）
+**Created**: 2026-05-04（per [ADR-0016](../../../../docs/adr/0016-unified-mobile-first-auth.md)；2026-05-03 双 tab 版 plan **整体重写**）
+**Status**: Business 段完整；UI 结构段 TBD（等 user 单独跑 Claude Design 出新版 mockup，per `docs/experience/claude-design-handoff.md` § 2.1b 合一页 prompt 模板）
+**Depends**: server PR-B（phone-sms-auth spec 落地）→ M1.3 impl PR（packages/api-client 重新 gen + packages/auth 加 phoneSmsAuth wrapper + packages/ui 删 PasswordField）
 
 > 本 plan 切成两个回合：
 >
-> 1. **本次（5-03）**：业务逻辑层（zod schema / form state machine hook / 单测）+ login.tsx 最小占位接 hook —— 全部不依赖 mockup
-> 2. **下次（mockup 落地后）**：吸收 mockup 决策回填 UI 结构段；packages/ui 组件 TDD-emerge；className 1:1 paste mockup → tasks T4-T8
+> 1. **本次（5-04 docs-only）**：spec / plan / tasks 三件套改写，业务段完整 + UI 段 TBD；旧 design/source 标 SUPERSEDED
+> 2. **下次（mockup 落地后 + server impl 后）**：吸收新版 mockup 决策回填 UI 结构段；packages/ui 删 PasswordField + 加 WechatButton + AppleButton；className 1:1 paste mockup → tasks T4-Tn
 
 ## 数据流
 
 ```text
 <LoginScreen>
    │
-   ├─ useLoginForm()  (apps/native/lib/hooks/use-login-form.ts)
-   │     ├─ tab state            : 'password' | 'sms'
-   │     ├─ form state machine   : idle → submitting → (success | error)
-   │     ├─ submitPassword(p, pw) ──→ @nvy/auth.loginByPassword
-   │     ├─ submitSms(p, code)    ──→ @nvy/auth.loginByPhoneSms
-   │     ├─ requestSms(p)         ──→ @nvy/api-client.getAccountRegisterApi().requestSmsCode (purpose='LOGIN')
-   │     └─ navigation            : success → @nvy/auth.setSession (内部); AuthGate 自动 redirect (hook 不直调 router)
+   ├─ usePhoneSmsAuthForm()  (apps/native/lib/hooks/use-phone-sms-auth-form.ts) [改写自 use-login-form.ts]
+   │     ├─ form state machine    : idle → requesting_sms → sms_sent → submitting → (success | error)
+   │     ├─ requestSms(phone)      ──→ @nvy/api-client.getAccountSmsCodeApi().requestSmsCode({phone}) [无 purpose]
+   │     ├─ submit(phone, code)    ──→ @nvy/auth.phoneSmsAuth(phone, code) [新 wrapper，M1.3 impl 加]
+   │     ├─ smsCountdown 60s       : useState<number> + useRef<setInterval>
+   │     ├─ showPlaceholderToast(feature) : 'wechat' | 'google' | 'apple' | 'guest' | 'help'
+   │     └─ navigation             : success → store.setSession (内部); AuthGate 自动 redirect (hook 不直调 router)
    │
-   ├─ login schemas (apps/native/lib/validation/login.ts)
-   │     ├─ loginPasswordSchema  : z.object({ phone: z.string().regex(PHONE_RE), password: z.string().min(1) })
-   │     ├─ loginSmsSchema       : z.object({ phone: z.string().regex(PHONE_RE), smsCode: z.string().regex(/^\d{6}$/) })
-   │     └─ mapApiError(e)       : (ApiClientError | ResponseError | TypeError | unknown) → { kind, toast }
+   ├─ phone-sms-auth schema (apps/native/lib/validation/login.ts) [改写：删 loginPasswordSchema + loginSmsSchema，新增单 phoneSmsAuthSchema]
+   │     ├─ phoneSmsAuthSchema     : z.object({ phone: z.string().regex(PHONE_RE), smsCode: z.string().regex(/^\d{6}$/) })
+   │     └─ mapApiError(e)          : (FetchError | ResponseError | ApiClientError | TypeError | unknown) → { kind, toast }
    │
-   └─ UI 渲染（mockup-driven，per apps/native/spec/login/design/source/LoginScreen.tsx）
-         ├─ <LogoMark>          : "不"字 mark，brand-500 圆角矩形 w-11 h-11
-         ├─ <TabSwitcher>       : B 站风格下划线 bar（"短信登录" / "密码登录"）
-         ├─ <PhoneInput>        : +86 静态 prefix（per D7 chevron 改静态）+ 下划线分隔
-         ├─ <PasswordField>     : 密码输入 + 显示/隐藏 toggle（mockup 命名，spec 原称 PasswordInput）
-         ├─ <SmsInput>          : SMS 6 位输入 + 右侧"获取验证码"/"60s 后重发"内联（mockup 命名，spec 原称 SmsCodeInput）
-         ├─ <PrimaryButton>     : 登录 CTA（圆角胶囊，shadow-cta；loading 变 brand-300 + spinner）
-         ├─ <GoogleButton>      : Google OAuth 圆形按钮（M1.2 placeholder，per D1 仅此一个）
-         ├─ <ErrorRow>          : input 下方错误提示（红圆点 ! + err 色文字）
-         ├─ <SuccessCheck>      : reanimated scale-in 绿色对勾
-         ├─ <SuccessOverlay>    : success 短动画 ≤ 800ms（含 SuccessCheck + 骨架屏过渡）后 router.replace（per D8）
-         └─ <Spinner>           : reanimated rotation，3 tone（white / muted / brand）
+   └─ UI 渲染（mockup-driven，TBD：等 Claude Design v2 合一页 mockup 落地）
+         ├─ <LogoMark>          : 保留 (PR #48 落地)
+         ├─ <PhoneInput>        : 保留
+         ├─ <SmsInput>          : 保留（含 60s 倒计时内联）
+         ├─ <PrimaryButton>     : 保留（CTA "登录"，文案不变）
+         ├─ <SuccessCheck>      : 保留
+         ├─ <Spinner>           : 保留
+         ├─ <ErrorRow>          : 保留
+         ├─ <SuccessOverlay>    : 保留（含 SuccessCheck + 骨架屏过渡）
+         ├─ <GoogleButton>      : 保留（M1.3 impl placeholder → 真接入）
+         ├─ <WechatButton>      : ⭐ M1.3 新增（packages/ui）
+         ├─ <AppleButton>       : ⭐ M1.3 新增（iOS-only conditional render 在 caller 端做）
+         ├─ <PasswordField>     : 🔴 M1.3 删除（per ADR-0016 决策 2）
+         └─ <TabSwitcher>       : 🔴 M1.3 评估改名 OAuthSelector 或删（per ADR-0016 Migration 表）
 ```
 
 ## 状态机
 
 ```text
 idle
-  │ submitPassword / submitSms invoked + form valid
+  │ requestSms(phone) called + phone valid
+  ▼
+requesting_sms
+  │     ├─ api success → smsCountdown=60 → state sms_sent
+  │     │
+  │     └─ api throws → mapApiError → setErrorToast → state error
+  ▼
+sms_sent
+  │ submit(phone, code) called + form valid
   ▼
 submitting
-  │     ├─ api success → @nvy/auth.setSession; state success
-  │     │                                               │
-  │     │                                               ▼
-  │     │                                          success (AuthGate 监测 isAuthenticated → router.replace('/(app)') → page unmounts)
+  │     ├─ api success → @nvy/auth internal setSession; state success
+  │     │                                                  │
+  │     │                                                  ▼
+  │     │                                             success (AuthGate 监测 isAuthenticated → router.replace('/(app)/'))
   │     │
   │     └─ api throws → mapApiError → setErrorToast
-  │                                                     │
-  │                                                     ▼
-  │                                                   error
-  │                                                     │ user changes input OR switches tab
-  │                                                     ▼
-  └────────────────────────────────────────────────── idle (errorToast cleared)
+  │                                                        │
+  │                                                        ▼
+  │                                                      error
+  │                                                        │ user changes input
+  │                                                        ▼
+  └────────────────────────────────────────────────── idle / sms_sent (errorToast cleared)
+                                                            (state 回 sms_sent 如 smsCountdown > 0；否则回 idle)
 ```
+
+**关键不变性**（per spec FR-006 + SC-002 反枚举字节级一致）：
+
+- 401 路径**不区分**子码（server 4 分支已字节级一致返回 401，client 仅看 401 状态返回统一 toast）
+- 已注册 happy vs 未注册 happy 的 client state 转移完全相同（client 无 phone-existed 分支）
 
 ## 错误映射（mapApiError 契约）
 
-| 输入                                               | output.kind    | output.toast                                                       |
-| -------------------------------------------------- | -------------- | ------------------------------------------------------------------ |
-| `ResponseError` w/ status 401                      | `'invalid'`    | `'手机号或验证码/密码错误'`                                        |
-| `ResponseError` w/ status 429                      | `'rate_limit'` | `'请求过于频繁，请稍后再试'`                                       |
-| `ResponseError` w/ status 5xx                      | `'network'`    | `'网络异常，请检查网络后重试'`                                     |
-| `ResponseError` w/ status 400                      | `'invalid'`    | `'手机号或验证码/密码错误'` (form validation 已先拦下，此分支兜底) |
-| `TypeError`（fetch 抛 — 网络断 / DNS 失败 / CORS） | `'network'`    | `'网络异常，请检查网络后重试'`                                     |
-| `ApiClientError`（generic wrapper）                | `'unknown'`    | `'登录失败，请稍后再试'`                                           |
-| 其他 / unknown                                     | `'unknown'`    | `'登录失败，请稍后再试'`                                           |
+| 输入                                                                              | output.kind    | output.toast                                                   |
+| --------------------------------------------------------------------------------- | -------------- | -------------------------------------------------------------- |
+| `ResponseError` w/ status 401                                                     | `'invalid'`    | `'手机号或验证码错误'`                                         |
+| `ResponseError` w/ status 429                                                     | `'rate_limit'` | `'请求过于频繁，请稍后再试'`                                   |
+| `ResponseError` w/ status 5xx                                                     | `'network'`    | `'网络异常，请检查网络后重试'`                                 |
+| `ResponseError` w/ status 400                                                     | `'invalid'`    | `'手机号或验证码错误'`（form validation 已先拦下，此分支兜底） |
+| `FetchError`（@nvy/api-client 包装的网络错，cause = TypeError；昨日 PR #48 修复） | `'network'`    | `'网络异常，请检查网络后重试'`                                 |
+| `TypeError`（裸网络错，旧路径兼容）                                               | `'network'`    | `'网络异常，请检查网络后重试'`                                 |
+| `ApiClientError`（generic wrapper）                                               | `'unknown'`    | `'登录失败，请稍后再试'`                                       |
+| 其他 / unknown                                                                    | `'unknown'`    | `'登录失败，请稍后再试'`                                       |
 
-**关键不变性**（per spec FR-006 + SC-002 防枚举）：401 不细分子码，**所有 401 路径返回完全相同的 `kind`/`toast`**。这保证 "已注册号 + 错码" vs "未注册号 + 任意码" 两个场景在前端可见的字节级一致。
+**删除的错误码**（旧 spec 含，新模式废）：
 
-### Mockup state prop ↔ spec/hook state 映射（per D6）
+- `'invalid'` 文案不再含 "密码" 字样（"手机号或验证码/密码错误" → "手机号或验证码错误"）
+- 不再有 `INVALID_CREDENTIALS` / `WEAK_PASSWORD` / `PHONE_ALREADY_REGISTERED` 子码区分
 
-mockup 的 `LoginScreen` 接受 `state` prop 取值 `default / loading / success / error`（Claude Design preview 命名）；spec / hook 内部使用 `idle / submitting / success / error`。login.tsx 渲染时一行 mapping：
+## 复用既有代码
 
-```ts
-const visualState = state === 'idle' ? 'default' : state === 'submitting' ? 'loading' : state; // success / error 同名
-```
+| 来源                                                              | 用法                                              | M1.2 状态                                   |
+| ----------------------------------------------------------------- | ------------------------------------------------- | ------------------------------------------- |
+| `@nvy/auth.useAuthStore`（Zustand store + persist）               | store.setSession 由 phoneSmsAuth wrapper 内部调用 | 🟢 不变                                     |
+| `@nvy/api-client.ResponseError` / `FetchError` / `ApiClientError` | mapApiError 入参类型                              | 🟢 不变（昨日 PR #48 已 export FetchError） |
+| `expo-router.useRouter()`                                         | router.replace（实际由 AuthGate 调，hook 不直调） | 🟢 不变                                     |
+| AuthGate middleware（apps/native/app/\_layout.tsx，PR #48）       | 已 mount 全局                                     | 🟢 不变                                     |
+| React Hook Form + zod resolver                                    | form 管理                                         | 🟢 不变（packages.json 已含）               |
+| `react-native.Platform`                                           | Apple Android conditional render（per FR-007）    | 🟢 标准 RN API                              |
 
-不改 spec 内部命名（idle/submitting 是 React form 业界惯例）；不改 mockup（来自 frozen bundle）。
+**新增依赖（M1.3 impl 时落地）**：
 
-## 复用既有代码（PR #42）
+| 来源                                                        | 用法                                                                                  |
+| ----------------------------------------------------------- | ------------------------------------------------------------------------------------- |
+| `@nvy/auth.phoneSmsAuth(phone, code)`                       | 新 wrapper，替换 `loginByPassword` + `loginByPhoneSms`；packages/auth M1.3 impl PR 加 |
+| `@nvy/api-client.AccountSmsCodeApi.requestSmsCode({phone})` | 通过 `pnpm api:gen:dev` 拉 server 新 spec 自动生成（server PR-B merged 后）           |
 
-| 来源                                                                                                             | 用法                                                                                                                                 |
-| ---------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
-| `@nvy/auth.loginByPassword(phone, password)`                                                                     | US1 提交路径                                                                                                                         |
-| `@nvy/auth.loginByPhoneSms(phone, smsCode)`                                                                      | US2 提交路径                                                                                                                         |
-| `@nvy/auth.useAuthStore`（Zustand store + persist）                                                              | `useAuthStore.getState().setSession(...)` 由 useLoginForm 间接通过上面 use case 调用（store 写入是 use case 内部副作用，本页不直调） |
-| `@nvy/api-client.getAccountRegisterApi().requestSmsCode({ requestSmsCodeRequest: { phone, purpose: 'LOGIN' } })` | US2 短信触发；purpose enum 'login' / 'register' 二选一（per server FR-001）                                                          |
-| `@nvy/api-client.ResponseError` / `ApiClientError`                                                               | mapApiError 入参类型                                                                                                                 |
-| `expo-router.useRouter()`                                                                                        | router.replace / router.push                                                                                                         |
-| auth guard middleware（apps/native/app/\_layout.tsx，PR #42）                                                    | 已 mount 全局，本页不重复实现                                                                                                        |
+**删除的依赖（M1.3 impl 时清理）**：
 
-**非依赖**（已确认）：
+- `@nvy/auth.loginByPassword` / `loginByPhoneSms` → 被 `phoneSmsAuth` 取代（删旧 wrapper）
+- `@nvy/api-client.AccountRegisterControllerApi`（包含旧 `requestSmsCode(phone, purpose)` 定义）→ generator 自动删
+- `@nvy/api-client.AuthControllerApi`（包含 `loginByPhoneSms` / `loginByPassword`）→ generator 自动删
 
-- React Hook Form + zod resolver 已装（packages.json 含 `react-hook-form` + `@hookform/resolvers` + `zod`）
-- jest + @testing-library/react-native 已装（apps/native/package.json）
+## RN Web 兼容点（per [`.claude/nativewind-mapping.md`](../../../.claude/nativewind-mapping.md) 已知 gotcha）
 
-## RN Web 兼容点（per [.claude/nativewind-mapping.md](../../../.claude/nativewind-mapping.md) 已知 gotcha）
+| 维度                           | 约束                                                                                             |
+| ------------------------------ | ------------------------------------------------------------------------------------------------ |
+| hover / focus 视觉             | 只在 `<Pressable>` 上 fire；`<View>` 上的 hover className 不生效                                 |
+| borderRadius                   | 不用 `%` 单位（RN Web 报 warning）；用 `rounded-{xs,sm,md,lg,full}` Tailwind class               |
+| boxShadow                      | 用 design-tokens 定义的 shadow class（`shadow-card` / `shadow-cta`），不写 `shadow-[...]` 任意值 |
+| accessibilityLiveRegion        | Android only；iOS / Web 用 `accessibilityRole='alert'`                                           |
+| KeyboardAvoidingView           | 必须包裹 form 区域，避免 iOS 软键盘遮 input；Web 端无影响（noop）                                |
+| Platform.OS conditional render | Apple Button 在 caller 层（login.tsx）用 `Platform.OS === 'ios'` 判，不下沉到 packages/ui        |
 
-| 维度                    | 约束                                                                            |
-| ----------------------- | ------------------------------------------------------------------------------- |
-| hover / focus 视觉      | 只在 `<Pressable>` 上 fire；`<View>` 上的 hover className 不生效                |
-| borderRadius            | 不用 `%` 单位（RN Web 报 warning）；用 `rounded-{sm,md,lg,full}` Tailwind class |
-| boxShadow               | 用 design-tokens 定义的 shadow class，不写 `shadow-[...]` 任意值                |
-| accessibilityLiveRegion | Android only；iOS / Web 用 `accessibilityRole='alert'`                          |
-| KeyboardAvoidingView    | 必须包裹 form 区域，避免 iOS 软键盘遮 input；Web 端无影响（noop）               |
+## UI 结构
 
-## UI 结构（mockup-driven）
+> **TBD**：等新版 Claude Design mockup 落地（参见 `apps/native/spec/login/design/`）。
+>
+> 旧 v1 mockup（双 tab + password / sms 切换）已 SUPERSEDED；新版 mockup 须重做（per `docs/experience/claude-design-handoff.md` § 2.1b 合一页 prompt 模板）。
+>
+> 新 mockup 必含元素（per spec FR-001 / FR-007 / FR-008 / FR-009）：
+>
+> - 顶部：右上 "立即体验" 游客模式占位 link（M1.2 不实施，仅 UI 占位）
+> - 中央：项目 logo + 副标题
+> - 单 form 容器（无 tab）：
+>   - PhoneInput（+86 静态 prefix + 手机号输入）
+>   - SmsInput（6 位数字 + 60s 倒计时内联 "获取验证码" → "{N}s 后重发"）
+>   - PrimaryButton（CTA 文案 "登录"）
+> - Divider "其他登录方式"
+> - 三方 OAuth 横排（圆形 icon-only）：
+>   - 微信（绿色，全平台）
+>   - Google（多彩 G，全平台）
+>   - Apple（黑色，**iOS-only conditional render**）
+> - 底部：
+>   - "登录即表示同意《服务条款》《隐私政策》"（隐式同意，不需 checkbox）
+>   - "登录遇到问题" link（M1.2 不实施，仅 UI 占位）
+>
+> mockup 落地后回本段 + 由 `UI UX Pro Max` skill 跑一遍 review 再 commit。
 
-参考源码：[`./design/source/LoginScreen.tsx`](./design/source/LoginScreen.tsx) + [`./design/handoff.md`](./design/handoff.md)。
+**禁入**（per `docs/experience/claude-design-handoff.md` § 2.1b）：
 
-### 布局
+- ❌ "注册" 字样（任何位置）
+- ❌ "还没账号？" / "立即注册" / "新用户注册" 引导文案
+- ❌ 密码输入框
+- ❌ 邮箱输入框
+- ❌ "忘记密码" 链接
+- ❌ tab / segmented control 切换登录方式
+- ❌ "中国移动 / 联通 / 电信 提供认证服务" 运营商 SDK 文案
 
-单列移动端，container `flex-1 bg-surface px-lg pb-lg`；mockup 测试宽度 360px。无栅格 / 无 desktop 适配（M1.2 mobile-only，desktop 走 RN Web 时由根 layout 处理）。
+## Token 映射
 
-### 区域分块
+复用既有 `packages/design-tokens`（PR #48 落地，from v1 mockup）：brand-{50..900} / brand-soft / accent / ink / line / surface / ok / warn / err；spacing xs/sm/md/lg/xl/2xl/3xl；radius xs/sm/md/lg/full；shadow card/cta；font sans (Inter + Noto Sans SC + PingFang)。
 
-```text
-LoginScreen (flex-1 bg-surface px-lg pb-lg)
-├── Header           (mt-3 items-start gap-2)
-│   ├── LogoMark            (w-11 h-11 rounded-xl bg-brand-500，"不"字)
-│   ├── h1: "欢迎回来"      (text-3xl font-bold text-ink mt-3.5)
-│   └── subtitle           "把这一段日子，过得不虚此生。"  (text-sm text-ink-muted)
-│
-├── Tabs             (mt-7 mb-4)
-│   └── TabSwitcher        (flex-row gap-7，按下下划线 bar 跟随)
-│
-├── Inputs           (gap-3)
-│   ├── PhoneInput         (always 渲染，含 +86 静态前缀 — per D7 chevron 改静态)
-│   └── conditional:
-│       ├── SmsInput       (mode === 'sms')
-│       └── PasswordField  (mode === 'password')
-│
-├── HelperRow        (mt-3.5 flex-row justify-between)
-│   └── 仅密码 tab：       "忘记密码"链接 (text-sm text-brand-500，placeholder)
-│   ✗ AgreeRow            (mockup 此处含但 per D3 删除；只保留 footer 隐式同意)
-│
-├── CTA              (mt-5)
-│   └── PrimaryButton      (h-12 rounded-full shadow-cta；loading 变 brand-300 + spinner)
-│                          SMS 模式文案 "登录"（per D4，非 mockup 原文 "登录 / 注册"）
-│
-├── Divider          (mt-6 flex-row gap-3)
-│   └── "其他登录方式"    (line-soft 横线 + 中文 11px text-ink-subtle)
-│
-├── OAuth row        (mt-4 flex-row justify-center gap-6)
-│   └── GoogleButton       (w-12 h-12 rounded-full border border-line) — M1.2 仅此一个，per D1
-│
-├── flex spacer
-│
-└── Footer
-    ├── "还没账号？创建一个"  (text-sm text-ink-muted；"创建一个" text-brand-500 → router.push register)
-    └── "登录即表示同意 服务协议 与 隐私政策" (text-[11px] text-ink-subtle；隐式同意，per D3)
-
-✗ TopBar (× / 跳过)        (mockup 顶部含但 per D2 删除整个 TopBar — login 是 auth guard 入口，无上层可关)
-```
-
-### Token 映射
-
-bundle className 100% 在 `packages/design-tokens` 内已定义；详 [`./design/handoff.md`](./design/handoff.md) § 4 + § 5.4。**禁** inline `style={{}}` 使用 px / hex（reanimated 的复合 style 例外）。
-
-### 状态视觉转移
-
-| 状态 (spec / hook) | mockup state prop | 视觉变化                                                                                 |
-| ------------------ | ----------------- | ---------------------------------------------------------------------------------------- |
-| idle               | default           | inputs editable / CTA enabled                                                            |
-| submitting         | loading           | inputs disabled / opacity-60 / CTA bg-brand-300 + spinner / SMS 模式 countdown inline    |
-| error              | error             | input border `border-err` / ErrorRow 出现 / errorToast                                   |
-| success            | success           | 切到 SuccessOverlay（SuccessCheck reanimated scale-in + 骨架屏）≤ 800ms → router.replace |
-
-### RN Web 兼容点
-
-| 维度                    | 约束                                                                         |
-| ----------------------- | ---------------------------------------------------------------------------- |
-| hover / focus 视觉      | 只在 `<Pressable>` 上 fire；`<View>` 上的 hover className 不生效             |
-| borderRadius            | 不用 `%` 单位；用 `rounded-{xs,sm,md,lg,full}` Tailwind class                |
-| boxShadow               | 用 design-tokens 的 `shadow-card` / `shadow-cta`，不写 `shadow-[...]` 任意值 |
-| accessibilityLiveRegion | Android only；iOS / Web 用 `accessibilityRole='alert'`                       |
-| KeyboardAvoidingView    | 必须包裹 form 区域；Web 端 noop                                              |
-
-### a11y 落点
-
-每个交互组件必有 `accessibilityLabel`：
-
-- TabSwitcher 两 tab：`accessibilityRole='tab'` + `accessibilityState.selected`
-- PhoneInput / SmsInput / PasswordField：`accessibilityLabel='手机号' / '验证码' / '密码'`
-- PrimaryButton：`accessibilityRole='button'` + `accessibilityState.disabled` 跟 loading 联动
-- GoogleButton / 忘记密码 / 创建一个：分别 `accessibilityLabel='Google 登录' / '忘记密码（即将上线）' / '前往注册'`
-- ErrorRow：`accessibilityRole='alert'`（iOS / Web）+ `accessibilityLiveRegion='polite'`（Android）
-
-### 翻译期硬约束（per [`./design/handoff.md`](./design/handoff.md) § 5）
-
-1. `w-18 h-18`（mockup line 100，SuccessCheck 圆圈）→ 替换为 `w-16 h-16` 或 `w-[72px] h-[72px]`（Tailwind 默认 spacing 无 18 档）
-2. reanimated v3 装包走 `pnpm exec expo install react-native-reanimated`
-3. PhoneInput 的 +86 chevron `▾` 改为静态字符（无下拉，M1.2 大陆唯一，per D7）
-4. SMS 模式 CTA 文案改为 "登录"（mockup 原文 "登录 / 注册"，per D4）
-5. login.tsx 实施时默认 `mode = 'password'`（mockup `initialMode='sms'` 仅 preview 用，per D5 + spec FR-001）
+新 v2 mockup 不引入新 token（视觉语言保持 v1 baseline；改的仅是 layout / 区域结构）。
 
 ## 测试策略
 
-| 层             | 工具                                                                          | 覆盖范围                                                                       |
-| -------------- | ----------------------------------------------------------------------------- | ------------------------------------------------------------------------------ |
-| 单测（schema） | jest                                                                          | zod schema 正负 case + mapApiError 各错误类型映射                              |
-| 单测（hook）   | jest + @testing-library/react-hooks（或 @testing-library/react 19 hook test） | useLoginForm 状态机所有 transition + tab 切换 + form invalid → submit 不调 api |
-| 组件测（TBD）  | @testing-library/react-native                                                 | login.tsx 渲染 + tab 切换 + form 提交（mockup 落地后补 packages/ui 组件测）    |
-| E2E（TBD）     | 手测（expo dev server 浏览器 + iOS simulator）                                | 完整 5 条 acceptance scenario                                                  |
+| 层             | 工具                                                         | 覆盖范围                                                                                            |
+| -------------- | ------------------------------------------------------------ | --------------------------------------------------------------------------------------------------- |
+| 单测（schema） | vitest + jest                                                | `phoneSmsAuthSchema` 正负 case + `mapApiError` 各错误类型映射（含 FetchError per 昨日 PR #48）      |
+| 单测（hook）   | vitest + @testing-library/react                              | `usePhoneSmsAuthForm` 5 状态机所有 transition + smsCountdown + 反枚举一致响应 + placeholder toasts  |
+| 组件测（TBD）  | @testing-library/react-native                                | login.tsx 渲染 + Platform.OS Apple conditional + form 提交（mockup 落地后补 packages/ui 组件测）    |
+| E2E（TBD）     | 手测（expo dev server 浏览器）+ Playwright runtime-debug.mjs | 完整 4 状态截图（happy / 401 / 429 / network） — per `docs/experience/claude-design-handoff.md` § 6 |
 
-**本次 PR 不覆盖**：组件测 + E2E（等 mockup 落地后下一 PR）。
+**本次 docs PR 不覆盖**：组件测 + E2E（等 mockup + impl 落地后下一 PR）。
 
-## 不在本 plan 范围
+## Constitution / 边界 Check
 
-- mockup 视觉决策（间距 / 颜色 / 字号 / 圆角具体值）— 由 Claude Design 单独产出
-- packages/ui 组件实现（TabSwitcher / PhoneInput / PasswordInput / SmsCodeInput / Button）— mockup 落地后 TDD-emerge
-- register 页 / home 页 — login 页定调 design system 后开
-- 国际化 / 多语言 — M3+
-- 真机 iOS / Android 渲染验证 — M2.1
-- "踢掉其他设备" / "退出所有设备"按钮（在 home 页，本 spec 不涉及）
+- ✅ phone-sms-auth 单 endpoint（无 client 端 phone 已注册预查）— 反枚举设计哲学一致
+- ✅ Hook 不感知 register/login 区分（client 视角 SC-002）
+- ✅ Apple Android conditional render 在 caller（login.tsx），不下沉 packages/ui
+- ✅ 视觉决策不进 spec.md，落 plan.md UI 结构段 + design/handoff.md
+- ✅ 不引入 ad-hoc 视觉 token（hex / px / rgb 字面量），SC-007 grep 守
 
-## Phase 风险与缓解
+## 反模式（明确避免）
 
-| 风险                                                       | 缓解                                                                                                                       |
-| ---------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
-| mockup 与业务逻辑层假设冲突                                | ✅ resolved：mockup 用双 tab（与 hook 接口一致）；4 处 drift（D1-D4）已落 spec 修订 + 翻译期硬约束（UI 结构段末尾 5 条）   |
-| Claude Design 输出的 className 与本仓 design-tokens 不匹配 | ✅ resolved：bundle className 100% 用 token 命名，已 mirror 到 `packages/design-tokens`（per 2026-05-03 commit `3f2cddd`） |
-| 60s 倒计时在切 tab / unmount 时未清 timer                  | useLoginForm 内部 useEffect cleanup 必须 clearInterval；单测覆盖                                                           |
+- ❌ Hook 内部根据 phone 是否已注册选不同流程（违反 unified 设计哲学）
+- ❌ Client 调"phone 已注册查询"接口（暴露反枚举信号）
+- ❌ Apple Button 组件在 packages/ui 内部做 Platform.OS 判（应该跨端可渲染，conditional 由 caller 决定）
+- ❌ 删 packages/ui PasswordField 但保留 import（dead import）
+- ❌ 写 `Platform.OS === 'ios' ? <AppleButton /> : null` 时把整个 OAuth row container 一起 conditional（应只对 Apple 单按钮 conditional）
+
+## 风险 + 缓解
+
+| 风险                                                                      | 缓解                                                                                                                                                |
+| ------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 旧 PR #48 落地的 PasswordField / TabSwitcher 在 M1.3 impl PR 删除时撞依赖 | M1.3 PR 计划：先删 login.tsx 中的引用 → 再删 packages/ui 组件文件 → 跑全包 typecheck/test 验证（per memory `feedback_repo_wide_scan_on_rename.md`） |
+| 新 mockup vs 旧 v1 visual tokens drift                                    | 新 mockup prompt 显式声明 "复用 v1 design-tokens 命名"（per `claude-design-handoff.md` § 2.1b）                                                     |
+| `pnpm api:gen` 拉新 spec 后旧 client class import 报错                    | M1.3 impl PR 顺序：先 server PR-B merged → 在 app 仓 `pnpm api:gen:dev` → 删 packages/auth 旧 wrapper + login.tsx 旧 import → 加新 wrapper          |
