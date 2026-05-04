@@ -5,30 +5,58 @@
 // - apps/web/tailwind.config.ts (M2)
 // - packages/ui/src/index.ts (re-export to consumers)
 //
-// Token naming follows Tailwind conventions (brand-{50..900} / spacing.md / text-base etc.).
-// Phase 4 design system 定调 后扩展色阶 / 间距 / 字号；M1.2 起手只放最小集，避免"先造没用上的 token"。
-
+// Naming convention: semantic / domain (ink / line / surface / ok / warn / err / accent / brand),
+// mirrored from Claude Design handoff at apps/native/spec/login/design/source/tailwind.config.js
+// (per ADR-0015 + handoff.md § Token decisions, 2026-05-03).
+//
 // Tokens are typed loosely (no `as const`) so Tailwind v3's mutable
-// `KeyValuePair<string, ...>` types accept them via `theme.extend`.
-// `fontSize` tuples must be mutable arrays, not readonly.
+// KeyValuePair types accept them via `theme.extend`.
 
 export const colors = {
   brand: {
-    50: '#eff6ff',
-    100: '#dbeafe',
-    200: '#bfdbfe',
-    300: '#93c5fd',
-    400: '#60a5fa',
-    500: '#3b82f6',
-    600: '#2563eb',
-    700: '#1d4ed8',
-    800: '#1e40af',
-    900: '#1e3a8a',
+    50: '#EEF3FE',
+    100: '#D5E0FC',
+    200: '#ABC1F9',
+    300: '#7DA0F5',
+    400: '#4F7EEF',
+    500: '#2456E5',
+    600: '#1D47C2',
+    700: '#173BA0',
+    800: '#122E7C',
+    900: '#0E2461',
+    soft: '#E8EEFD',
   },
-  surface: '#ffffff',
-  text: '#111827',
-  border: '#e5e7eb',
-  muted: '#6b7280',
+  accent: {
+    DEFAULT: '#FF8C00',
+    soft: '#FFF1DE',
+  },
+  ink: {
+    DEFAULT: '#1A1A1A',
+    muted: '#666666',
+    subtle: '#999999',
+  },
+  line: {
+    DEFAULT: '#E5E7EB',
+    strong: '#D1D5DB',
+    soft: '#EEF0F3',
+  },
+  surface: {
+    DEFAULT: '#FFFFFF',
+    alt: '#F9F9F9',
+    sunken: '#F2F4F7',
+  },
+  ok: {
+    DEFAULT: '#10B981',
+    soft: '#E7F8F1',
+  },
+  warn: {
+    DEFAULT: '#F59E0B',
+    soft: '#FEF3DC',
+  },
+  err: {
+    DEFAULT: '#EF4444',
+    soft: '#FDECEC',
+  },
 };
 
 export const spacing = {
@@ -38,36 +66,32 @@ export const spacing = {
   lg: '24px',
   xl: '32px',
   '2xl': '48px',
-};
-
-export const fontSize: Record<string, [string, { lineHeight: string }]> = {
-  xs: ['12px', { lineHeight: '16px' }],
-  sm: ['14px', { lineHeight: '20px' }],
-  base: ['16px', { lineHeight: '24px' }],
-  lg: ['18px', { lineHeight: '28px' }],
-  xl: ['20px', { lineHeight: '28px' }],
-  '2xl': ['24px', { lineHeight: '32px' }],
-  '3xl': ['30px', { lineHeight: '36px' }],
+  '3xl': '64px',
 };
 
 export const borderRadius = {
-  sm: '4px',
-  md: '8px',
-  lg: '12px',
+  xs: '4px',
+  sm: '8px',
+  md: '12px',
+  lg: '16px',
   full: '9999px',
 };
 
+export const fontFamily = {
+  sans: ['Inter', 'Noto Sans SC', 'PingFang SC', 'sans-serif'],
+  mono: ['JetBrains Mono', 'SF Mono', 'Menlo', 'monospace'],
+};
+
 export const boxShadow = {
-  sm: '0 1px 2px 0 rgb(0 0 0 / 0.05)',
-  md: '0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1)',
-  lg: '0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1)',
+  card: '0 1px 2px 0 rgba(17,24,39,.05), 0 1px 3px 0 rgba(17,24,39,.04)',
+  cta: '0 4px 12px -2px rgba(36,86,229,0.25)',
 };
 
 export const tokens = {
   colors,
   spacing,
-  fontSize,
   borderRadius,
+  fontFamily,
   boxShadow,
 };
 

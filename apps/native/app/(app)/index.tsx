@@ -10,8 +10,8 @@ import { Text, View } from 'react-native';
 export default function HomeScreen() {
   return (
     <View className="flex-1 items-center justify-center bg-surface gap-md">
-      <Text className="text-3xl font-semibold text-text">no-vain-years</Text>
-      <Text className="text-sm text-muted">NativeWind primitives mounted</Text>
+      <Text className="text-3xl font-semibold text-ink">no-vain-years</Text>
+      <Text className="text-sm text-ink-muted">NativeWind primitives mounted</Text>
       <StatusBar style="auto" />
     </View>
   );

@@ -2,9 +2,9 @@ import '../global.css';
 
 import { registerAuthInterceptor, useAuthStore } from '@nvy/auth';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { Stack, useRouter, useSegments } from 'expo-router';
+import { Stack, useNavigationContainerRef, useRouter, useSegments } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
@@ -24,16 +24,35 @@ const queryClient = new QueryClient({
 function AuthGate({ children }: { children: React.ReactNode }) {
   const segments = useSegments();
   const router = useRouter();
+  const navRef = useNavigationContainerRef();
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
+  const [navReady, setNavReady] = useState(false);
+
+  // Wait for the navigation container to actually mount before issuing any
+  // router.replace — Expo Router asserts navigationRef.isReady() and throws
+  // "Attempted to navigate before mounting the Root Layout component"
+  // otherwise. `useNavigationContainerRef` + `state` listener is the
+  // canonical way to subscribe to readiness.
+  useEffect(() => {
+    if (navRef.isReady()) {
+      setNavReady(true);
+      return;
+    }
+    const unsubscribe = navRef.addListener('state', () => {
+      if (navRef.isReady()) setNavReady(true);
+    });
+    return unsubscribe;
+  }, [navRef]);
 
   useEffect(() => {
+    if (!navReady) return;
     const inAuthGroup = segments[0] === '(auth)';
     if (!isAuthenticated && !inAuthGroup) {
       router.replace('/(auth)/login');
     } else if (isAuthenticated && inAuthGroup) {
       router.replace('/(app)');
     }
-  }, [isAuthenticated, segments, router]);
+  }, [navReady, isAuthenticated, segments, router]);
 
   return <>{children}</>;
 }
