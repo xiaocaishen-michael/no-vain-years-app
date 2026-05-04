@@ -1,32 +1,29 @@
-import { Image, Pressable } from 'react-native';
+import { Pressable, Text, View } from 'react-native';
 
 export interface GoogleButtonProps {
   onPress?: () => void;
   disabled?: boolean;
 }
 
-// Google "G" mark via remote SVG. M1.2 仅 placeholder（press 弹 toast "Coming in M1.3"）；
-// M1.3 接真实 OAuth 时可换成本地 asset 或 expo-auth-session 的内置 icon。
-const GOOGLE_G_URL = 'https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_%22G%22_logo.svg';
-
+// Google OAuth circle button (per mockup v2 spec/login/design/source-v2/LoginScreen.tsx ~L257).
+// M1.2 仅 placeholder（caller 端 onPress 弹 toast "Coming in M1.3"）；M1.3 接真实 OAuth 时
+// 用 SVG asset 或 expo-auth-session 内置 icon 替换单字 "G"。
 export function GoogleButton({ onPress, disabled }: GoogleButtonProps) {
   return (
-    <Pressable
-      onPress={onPress}
-      disabled={disabled}
-      accessibilityRole="button"
-      accessibilityLabel="Google 登录"
-      accessibilityState={{ disabled: !!disabled }}
-      className={`w-12 h-12 rounded-full border border-line bg-surface items-center justify-center ${
-        disabled ? 'opacity-50' : ''
-      }`}
-    >
-      <Image
-        source={{ uri: GOOGLE_G_URL }}
-        className="w-5 h-5"
-        resizeMode="contain"
-        accessibilityIgnoresInvertColors
-      />
-    </Pressable>
+    <View className="items-center gap-1.5">
+      <Pressable
+        onPress={onPress}
+        disabled={disabled}
+        accessibilityRole="button"
+        accessibilityLabel="Google 登录（即将上线）"
+        accessibilityState={{ disabled: !!disabled }}
+        className={`w-12 h-12 rounded-full items-center justify-center bg-surface border border-line ${
+          disabled ? 'opacity-50' : ''
+        }`}
+      >
+        <Text className="text-ink text-xl font-bold">G</Text>
+      </Pressable>
+      <Text className="text-[11px] text-ink-subtle">Google</Text>
+    </View>
   );
 }

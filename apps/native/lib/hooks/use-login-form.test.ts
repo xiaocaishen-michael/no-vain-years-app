@@ -68,6 +68,7 @@ describe('useLoginForm', () => {
       const { result } = renderHook(() => useLoginForm());
       expect(result.current.state).toBe('idle');
       expect(result.current.errorToast).toBeNull();
+      expect(result.current.errorScope).toBeNull();
       expect(result.current.smsCountdown).toBe(0);
     });
   });
@@ -117,7 +118,7 @@ describe('useLoginForm', () => {
       expect(mocks.requestSmsCode).toHaveBeenCalledTimes(1);
     });
 
-    it('on API error, state goes to error and toast is set', async () => {
+    it('on API error, state goes to error with errorScope=sms (per FR-015)', async () => {
       mocks.requestSmsCode.mockRejectedValue(
         new ResponseError(new Response(null, { status: 429 })),
       );
@@ -128,6 +129,7 @@ describe('useLoginForm', () => {
       });
 
       expect(result.current.state).toBe('error');
+      expect(result.current.errorScope).toBe('sms');
       expect(result.current.errorToast).toBe('请求过于频繁，请稍后再试');
       expect(result.current.smsCountdown).toBe(0);
     });
@@ -151,7 +153,7 @@ describe('useLoginForm', () => {
       expect(result.current.errorToast).toBeNull();
     });
 
-    it('401 → error + invalid toast (per ADR-0016: 文案删 "密码" 字样)', async () => {
+    it('401 → error with errorScope=submit (per FR-015) + 文案删 "密码"', async () => {
       mocks.phoneSmsAuth.mockRejectedValue(new ResponseError(new Response(null, { status: 401 })));
       const { result } = renderHook(() => useLoginForm());
 
@@ -160,6 +162,7 @@ describe('useLoginForm', () => {
       });
 
       expect(result.current.state).toBe('error');
+      expect(result.current.errorScope).toBe('submit');
       expect(result.current.errorToast).toBe('手机号或验证码错误');
     });
 
@@ -214,7 +217,7 @@ describe('useLoginForm', () => {
   });
 
   describe('clearError', () => {
-    it('clears errorToast and returns error state to idle', async () => {
+    it('clears errorToast + errorScope and returns error state to idle', async () => {
       mocks.phoneSmsAuth.mockRejectedValue(new ResponseError(new Response(null, { status: 401 })));
       const { result } = renderHook(() => useLoginForm());
 
@@ -222,22 +225,23 @@ describe('useLoginForm', () => {
         await result.current.submit('+8613800138000', '999999');
       });
       expect(result.current.state).toBe('error');
+      expect(result.current.errorScope).toBe('submit');
 
       act(() => {
         result.current.clearError();
       });
 
       expect(result.current.errorToast).toBeNull();
+      expect(result.current.errorScope).toBeNull();
       expect(result.current.state).toBe('idle');
     });
   });
 
-  describe('showPlaceholderToast (per ADR-0016 决策 4 + spec FR-007/8/9)', () => {
+  describe('showPlaceholderToast (per ADR-0016 决策 4 + spec FR-007/9)', () => {
     it.each([
       ['wechat', '微信登录 - Coming in M1.3'],
       ['google', 'Google 登录 - Coming in M1.3'],
       ['apple', 'Apple 登录 - Coming in M1.3'],
-      ['guest', '游客模式 - Coming in M2'],
       ['help', '帮助中心 - Coming in M1.3'],
     ] as const)('%s → toast = %s', (feature, expected) => {
       const { result } = renderHook(() => useLoginForm());
