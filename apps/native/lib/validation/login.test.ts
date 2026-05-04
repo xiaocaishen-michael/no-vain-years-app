@@ -1,7 +1,7 @@
 import { ApiClientError, FetchError, ResponseError } from '@nvy/api-client';
 import { describe, expect, it } from 'vitest';
 
-import { loginPasswordSchema, loginSmsSchema, mapApiError, PHONE_REGEX } from './login';
+import { mapApiError, phoneSmsAuthSchema, PHONE_REGEX } from './login';
 
 describe('PHONE_REGEX', () => {
   it.each([
@@ -18,48 +18,21 @@ describe('PHONE_REGEX', () => {
   });
 });
 
-describe('loginPasswordSchema', () => {
-  it('accepts legal phone + non-empty password', () => {
-    const result = loginPasswordSchema.safeParse({
+describe('phoneSmsAuthSchema', () => {
+  it('accepts legal phone + 6-digit code', () => {
+    const result = phoneSmsAuthSchema.safeParse({
       phone: '+8613800138000',
-      password: 'Abcdefg1',
+      smsCode: '123456',
     });
     expect(result.success).toBe(true);
   });
 
   it('rejects invalid phone', () => {
-    const result = loginPasswordSchema.safeParse({
+    const result = phoneSmsAuthSchema.safeParse({
       phone: '13800138000',
-      password: 'pw',
-    });
-    expect(result.success).toBe(false);
-  });
-
-  it('rejects empty password', () => {
-    const result = loginPasswordSchema.safeParse({
-      phone: '+8613800138000',
-      password: '',
-    });
-    expect(result.success).toBe(false);
-  });
-
-  it('does NOT enforce password strength', () => {
-    // 密码强度只在 register 设密时校验（per server FR-006）；登录不检
-    const result = loginPasswordSchema.safeParse({
-      phone: '+8613800138000',
-      password: 'a',
-    });
-    expect(result.success).toBe(true);
-  });
-});
-
-describe('loginSmsSchema', () => {
-  it('accepts legal phone + 6-digit code', () => {
-    const result = loginSmsSchema.safeParse({
-      phone: '+8613800138000',
       smsCode: '123456',
     });
-    expect(result.success).toBe(true);
+    expect(result.success).toBe(false);
   });
 
   it.each([
@@ -68,7 +41,7 @@ describe('loginSmsSchema', () => {
     ['12a456', '含字母'],
     ['', '空'],
   ])('rejects sms code %s (%s)', (smsCode) => {
-    const result = loginSmsSchema.safeParse({
+    const result = phoneSmsAuthSchema.safeParse({
       phone: '+8613800138000',
       smsCode,
     });
@@ -81,17 +54,17 @@ describe('mapApiError', () => {
   const makeResponseError = (status: number) =>
     new ResponseError(new Response(null, { status }), `HTTP ${status}`);
 
-  it('401 → invalid', () => {
+  it('401 → invalid (per ADR-0016: 文案删 "密码" 字样)', () => {
     expect(mapApiError(makeResponseError(401))).toEqual({
       kind: 'invalid',
-      toast: '手机号或验证码/密码错误',
+      toast: '手机号或验证码错误',
     });
   });
 
   it('400 → invalid (form bypass safety net)', () => {
     expect(mapApiError(makeResponseError(400))).toEqual({
       kind: 'invalid',
-      toast: '手机号或验证码/密码错误',
+      toast: '手机号或验证码错误',
     });
   });
 
@@ -155,7 +128,7 @@ describe('mapApiError', () => {
     });
   });
 
-  // SC-002 防枚举字节级一致：401 不区分子码
+  // SC-002 反枚举字节级一致（per ADR-0016: server 4 分支字节级一致, client 不区分子码）
   it('all 401 errors collapse to identical {kind, toast} (anti-enumeration)', () => {
     const a = mapApiError(makeResponseError(401)); // 已注册号 + 错码
     const b = mapApiError(makeResponseError(401)); // 未注册号 + 任意码

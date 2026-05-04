@@ -39,16 +39,15 @@ function assertSession(value: {
   };
 }
 
-export async function loginByPassword(phone: string, password: string): Promise<LoginResult> {
-  const response = await getAuthApi().loginByPassword({
-    loginByPasswordRequest: { phone, password },
-  });
-  const session = assertSession(response);
-  useAuthStore.getState().setSession(session);
-  return session;
-}
-
-export async function loginByPhoneSms(phone: string, code: string): Promise<LoginResult> {
+// Unified phone-SMS auth wrapper (per ADR-0016 client-facing API):
+// client 视角不区分 login / register; server unified endpoint 落地后内部分支
+// (已注册→login / 未注册→自动创建+login).
+//
+// PHASE 1 (per ADR-0017): 过渡期内部仍调既有 loginByPhoneSms endpoint
+// (已注册号 happy / 未注册号反枚举 401, 不支持自动注册). server unified
+// endpoint 落地后, 改本函数一行: getAuthApi().loginByPhoneSms(...) →
+// getAccountAuthApi().phoneSmsAuth(...) + 请求体 key 名调整. 调用方代码 0 改动.
+export async function phoneSmsAuth(phone: string, code: string): Promise<LoginResult> {
   const response = await getAuthApi().loginByPhoneSms({
     loginByPhoneSmsRequest: { phone, code },
   });

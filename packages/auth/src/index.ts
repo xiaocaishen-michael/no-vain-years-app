@@ -6,10 +6,9 @@ export { useAuthStore } from './store';
 export type { LoginResult } from './usecases';
 export {
   ApiClientError,
-  loginByPassword,
-  loginByPhoneSms,
   logoutAll,
   logoutLocal,
+  phoneSmsAuth,
   refreshTokenFlow,
   registerAuthInterceptor,
   ResponseError,
