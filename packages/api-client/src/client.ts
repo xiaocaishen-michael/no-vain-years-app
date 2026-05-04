@@ -1,7 +1,7 @@
 // HTTP client for @nvy/api-client.
 //
 // Two surfaces:
-// 1. Typed APIs from generated/ (preferred) — `getAuthApi()` / `getAccountRegisterApi()`
+// 1. Typed APIs from generated/ (preferred) — `getAuthApi()` / `getAccountSmsCodeApi()`
 // 2. Low-level helpers (`apiFetch` / `apiJson`) — for paths not covered by the OpenAPI spec.
 //
 // Both share the same Configuration: base URL from env, Authorization header
@@ -13,7 +13,7 @@
 // (for typed APIs in usecases.ts), so the dependency must flow one way.
 
 import { AccountAuthControllerApi } from './generated/apis/AccountAuthControllerApi';
-import { AccountRegisterControllerApi } from './generated/apis/AccountRegisterControllerApi';
+import { AccountSmsCodeControllerApi } from './generated/apis/AccountSmsCodeControllerApi';
 import { AuthControllerApi } from './generated/apis/AuthControllerApi';
 import { Configuration, type Middleware, type ResponseContext } from './generated/runtime';
 
@@ -143,8 +143,8 @@ export function getAuthApi(): AuthControllerApi {
   return new AuthControllerApi(getConfig());
 }
 
-export function getAccountRegisterApi(): AccountRegisterControllerApi {
-  return new AccountRegisterControllerApi(getConfig());
+export function getAccountSmsCodeApi(): AccountSmsCodeControllerApi {
+  return new AccountSmsCodeControllerApi(getConfig());
 }
 
 export function getAccountAuthApi(): AccountAuthControllerApi {

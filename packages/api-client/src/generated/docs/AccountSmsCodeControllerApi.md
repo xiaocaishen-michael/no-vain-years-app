@@ -1,10 +1,10 @@
-# AccountRegisterControllerApi
+# AccountSmsCodeControllerApi
 
 All URIs are relative to *http://localhost:8080*
 
 | Method | HTTP request | Description |
 |------------- | ------------- | -------------|
-| [**requestSmsCode**](AccountRegisterControllerApi.md#requestsmscodeoperation) | **POST** /api/v1/sms-codes |  |
+| [**requestSmsCode**](AccountSmsCodeControllerApi.md#requestsmscodeoperation) | **POST** /api/v1/sms-codes |  |
 
 
 
@@ -19,13 +19,13 @@ All URIs are relative to *http://localhost:8080*
 ```ts
 import {
   Configuration,
-  AccountRegisterControllerApi,
+  AccountSmsCodeControllerApi,
 } from '';
 import type { RequestSmsCodeOperationRequest } from '';
 
 async function example() {
   console.log("🚀 Testing  SDK...");
-  const api = new AccountRegisterControllerApi();
+  const api = new AccountSmsCodeControllerApi();
 
   const body = {
     // RequestSmsCodeRequest

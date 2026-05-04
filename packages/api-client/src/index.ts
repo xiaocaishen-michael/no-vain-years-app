@@ -6,7 +6,7 @@ export {
   ApiClientError,
   DEFAULT_BASE_URL,
   getAccountAuthApi,
-  getAccountRegisterApi,
+  getAccountSmsCodeApi,
   getAuthApi,
   resetClientForTests,
   setTokenGetter,

@@ -42,7 +42,7 @@ vi.mock('@nvy/api-client', () => {
     }
   }
   return {
-    getAccountRegisterApi: () => ({ requestSmsCode: mocks.requestSmsCode }),
+    getAccountSmsCodeApi: () => ({ requestSmsCode: mocks.requestSmsCode }),
     ResponseError,
     ApiClientError,
     FetchError,
