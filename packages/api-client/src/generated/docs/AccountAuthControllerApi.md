@@ -1,16 +1,16 @@
-# AccountRegisterControllerApi
+# AccountAuthControllerApi
 
 All URIs are relative to *http://localhost:8080*
 
 | Method | HTTP request | Description |
 |------------- | ------------- | -------------|
-| [**requestSmsCode**](AccountRegisterControllerApi.md#requestsmscodeoperation) | **POST** /api/v1/sms-codes |  |
+| [**phoneSmsAuth**](AccountAuthControllerApi.md#phonesmsauthoperation) | **POST** /api/v1/accounts/phone-sms-auth |  |
 
 
 
-## requestSmsCode
+## phoneSmsAuth
 
-> requestSmsCode(requestSmsCodeRequest)
+> LoginResponse phoneSmsAuth(phoneSmsAuthRequest)
 
 
 
@@ -19,21 +19,21 @@ All URIs are relative to *http://localhost:8080*
 ```ts
 import {
   Configuration,
-  AccountRegisterControllerApi,
+  AccountAuthControllerApi,
 } from '';
-import type { RequestSmsCodeOperationRequest } from '';
+import type { PhoneSmsAuthOperationRequest } from '';
 
 async function example() {
   console.log("🚀 Testing  SDK...");
-  const api = new AccountRegisterControllerApi();
+  const api = new AccountAuthControllerApi();
 
   const body = {
-    // RequestSmsCodeRequest
-    requestSmsCodeRequest: ...,
-  } satisfies RequestSmsCodeOperationRequest;
+    // PhoneSmsAuthRequest
+    phoneSmsAuthRequest: ...,
+  } satisfies PhoneSmsAuthOperationRequest;
 
   try {
-    const data = await api.requestSmsCode(body);
+    const data = await api.phoneSmsAuth(body);
     console.log(data);
   } catch (error) {
     console.error(error);
@@ -49,11 +49,11 @@ example().catch(console.error);
 
 | Name | Type | Description  | Notes |
 |------------- | ------------- | ------------- | -------------|
-| **requestSmsCodeRequest** | [RequestSmsCodeRequest](RequestSmsCodeRequest.md) |  | |
+| **phoneSmsAuthRequest** | [PhoneSmsAuthRequest](PhoneSmsAuthRequest.md) |  | |
 
 ### Return type
 
-`void` (Empty response body)
+[**LoginResponse**](LoginResponse.md)
 
 ### Authorization
 
@@ -62,7 +62,7 @@ No authorization required
 ### HTTP request headers
 
 - **Content-Type**: `application/json`
-- **Accept**: Not defined
+- **Accept**: `*/*`
 
 
 ### HTTP response details

@@ -12,6 +12,7 @@
 // deliberately don't import @nvy/auth here — auth already imports api-client
 // (for typed APIs in usecases.ts), so the dependency must flow one way.
 
+import { AccountAuthControllerApi } from './generated/apis/AccountAuthControllerApi';
 import { AccountRegisterControllerApi } from './generated/apis/AccountRegisterControllerApi';
 import { AuthControllerApi } from './generated/apis/AuthControllerApi';
 import { Configuration, type Middleware, type ResponseContext } from './generated/runtime';
@@ -144,6 +145,10 @@ export function getAuthApi(): AuthControllerApi {
 
 export function getAccountRegisterApi(): AccountRegisterControllerApi {
   return new AccountRegisterControllerApi(getConfig());
+}
+
+export function getAccountAuthApi(): AccountAuthControllerApi {
+  return new AccountAuthControllerApi(getConfig());
 }
 
 export function resetClientForTests(): void {

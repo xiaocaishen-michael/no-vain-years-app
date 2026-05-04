@@ -5,6 +5,7 @@ export {
   apiJson,
   ApiClientError,
   DEFAULT_BASE_URL,
+  getAccountAuthApi,
   getAccountRegisterApi,
   getAuthApi,
   resetClientForTests,
@@ -16,12 +17,9 @@ export type { ApiErrorBody } from './client';
 // Typed APIs and request/response models from the generated client.
 // Consumers MUST import from this entry point — no deep imports into generated/.
 export type {
-  LoginByPasswordRequest,
-  LoginByPhoneSmsRequest,
   LoginResponse,
+  PhoneSmsAuthRequest,
   RefreshTokenRequest,
-  RegisterByPhoneRequest,
-  RegisterByPhoneResponse,
   RequestSmsCodeRequest,
 } from './generated';
 export { FetchError, ResponseError } from './generated';

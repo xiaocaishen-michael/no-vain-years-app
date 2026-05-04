@@ -84,7 +84,7 @@ describe('useLoginForm', () => {
       });
 
       expect(mocks.requestSmsCode).toHaveBeenCalledWith({
-        requestSmsCodeRequest: { phone: '+8613800138000', purpose: 'LOGIN' },
+        requestSmsCodeRequest: { phone: '+8613800138000' },
       });
       expect(result.current.state).toBe('sms_sent');
       expect(result.current.smsCountdown).toBe(60);
