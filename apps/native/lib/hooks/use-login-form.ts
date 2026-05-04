@@ -1,4 +1,4 @@
-import { getAccountRegisterApi } from '@nvy/api-client';
+import { getAccountSmsCodeApi } from '@nvy/api-client';
 import { phoneSmsAuth } from '@nvy/auth';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
@@ -101,7 +101,7 @@ export function useLoginForm(): UseLoginFormResult {
       try {
         // Per ADR-0016 + server phone-sms-auth FR-004: SMS code request 入参仅 {phone};
         // server 内部不再分 purpose, 统一发 Template A real code (反枚举一致响应).
-        await getAccountRegisterApi().requestSmsCode({
+        await getAccountSmsCodeApi().requestSmsCode({
           requestSmsCodeRequest: { phone },
         });
         startCountdown();

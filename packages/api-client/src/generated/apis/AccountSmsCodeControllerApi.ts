@@ -27,7 +27,7 @@ export interface RequestSmsCodeOperationRequest {
 /**
  * 
  */
-export class AccountRegisterControllerApi extends runtime.BaseAPI {
+export class AccountSmsCodeControllerApi extends runtime.BaseAPI {
 
     /**
      * Creates request options for requestSmsCode without sending the request

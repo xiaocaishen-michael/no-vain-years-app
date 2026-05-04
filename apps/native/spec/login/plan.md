@@ -17,7 +17,7 @@
    │
    ├─ useLoginForm()  (apps/native/lib/hooks/use-login-form.ts) [PR #50 改写]
    │     ├─ form state machine    : idle → requesting_sms → sms_sent → submitting → (success | error)
-   │     ├─ requestSms(phone)      ──→ @nvy/api-client.getAccountRegisterApi().requestSmsCode({phone}) [PR #54 删 purpose]
+   │     ├─ requestSms(phone)      ──→ @nvy/api-client.getAccountSmsCodeApi().requestSmsCode({phone}) [PR #54 删 purpose；后续 PR rename 自 getAccountRegisterApi]
    │     ├─ submit(phone, code)    ──→ @nvy/auth.phoneSmsAuth(phone, code) [PR #54 切到真 getAccountAuthApi().phoneSmsAuth()]
    │     ├─ smsCountdown 60s       : useState<number> + useRef<setInterval>
    │     ├─ showPlaceholderToast(feature) : 'wechat' | 'google' | 'apple' | 'guest' | 'help'
@@ -109,16 +109,16 @@ submitting
 
 **新增依赖（已落地）**：
 
-| 来源                                                              | 用法                                                                                                   |
-| ----------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------ |
-| `@nvy/auth.phoneSmsAuth(phone, code)`                             | 新 wrapper，替换 `loginByPassword` + `loginByPhoneSms`（PR #50 过渡 → PR #54 切真 API）                |
-| `@nvy/api-client.getAccountAuthApi().phoneSmsAuth({...})`         | server PR #118 merged 后 PR #54 跑 `pnpm api:gen:dev` 自动生成（含 `AccountAuthControllerApi` + DTOs） |
-| `@nvy/api-client.getAccountRegisterApi().requestSmsCode({phone})` | PR #54 删 `purpose` 字段（per server FR-004 单 Template A）                                            |
+| 来源                                                             | 用法                                                                                                                                       |
+| ---------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
+| `@nvy/auth.phoneSmsAuth(phone, code)`                            | 新 wrapper，替换 `loginByPassword` + `loginByPhoneSms`（PR #50 过渡 → PR #54 切真 API）                                                    |
+| `@nvy/api-client.getAccountAuthApi().phoneSmsAuth({...})`        | server PR #118 merged 后 PR #54 跑 `pnpm api:gen:dev` 自动生成（含 `AccountAuthControllerApi` + DTOs）                                     |
+| `@nvy/api-client.getAccountSmsCodeApi().requestSmsCode({phone})` | PR #54 删 `purpose` 字段（per server FR-004 单 Template A）；后续 rename PR 由 `getAccountRegisterApi` 改名而来（per ADR-0016 命名一致性） |
 
 **删除的依赖（已清理）**：
 
 - `@nvy/auth.loginByPassword` / `loginByPhoneSms` → 被 `phoneSmsAuth` 取代（删旧 wrapper）
-- `@nvy/api-client.AccountRegisterControllerApi`（包含旧 `requestSmsCode(phone, purpose)` 定义）→ generator 自动删
+- `@nvy/api-client.AccountRegisterControllerApi`（包含旧 `requestSmsCode(phone, purpose)` 定义）→ generator 自动删；后续 rename PR 替换为 `AccountSmsCodeControllerApi`（不再带 register 命名）
 - `@nvy/api-client.AuthControllerApi`（包含 `loginByPhoneSms` / `loginByPassword`）→ generator 自动删
 
 ## RN Web 兼容点（per [`.claude/nativewind-mapping.md`](../../../.claude/nativewind-mapping.md) 已知 gotcha）
