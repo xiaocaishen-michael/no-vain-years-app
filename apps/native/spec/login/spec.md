@@ -2,7 +2,7 @@
 
 **Feature Branch**: `docs/login-spec-rewrite-adr-0016`
 **Created**: 2026-05-04（per [ADR-0016](../../../../docs/adr/0016-unified-mobile-first-auth.md)；2026-05-03 双 tab 版 spec **整体重写**，旧版 design/source mockup 标 SUPERSEDED）
-**Status**: Draft（pending impl，docs-only PR；mockup 待 user 单独跑 Claude Design 重做）
+**Status**: ✅ Implemented — 2026-05-04 PR #49（docs）+ #50-54（impl，含 mockup v2 + 真后端冒烟）
 **Module**: `apps/native/app/(auth)/login`
 **Input**: User description: "参考大陆主流 app（网易云音乐 / 小红书 / 拼多多）登录注册合一交互；用户视角不存在'注册'，单 form 输入手机号 + SMS code 一键登录；server 自动判已注册→login / 未注册→自动创建+login。"
 
@@ -84,7 +84,7 @@
 | ------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | FR-001 | 单 form 容器（**无 tab**，无密码 / SMS 切换）；用户操作路径单一：phone → SMS code → submit                                                                                                                                                                                                                                                                     |
 | FR-002 | 手机号格式校验：客户端用 zod regex `/^\+861[3-9]\d{9}$/`；不合法 form invalid，submit 按钮 disabled；不区分大小写空格（trim 处理）                                                                                                                                                                                                                             |
-| FR-003 | submit 调 `@nvy/auth.phoneSmsAuth(phone, code)`（M1.3 impl 时 packages/auth 加该 wrapper，**替换** 既有 `loginByPassword` / `loginByPhoneSms`）；server 自动判 login/register（per server phone-sms-auth FR-005）                                                                                                                                              |
+| FR-003 | submit 调 `@nvy/auth.phoneSmsAuth(phone, code)`（已落地于 PR #50 过渡 → PR #54 切到真 `getAccountAuthApi().phoneSmsAuth()`，替换既有 `loginByPassword` / `loginByPhoneSms`）；server 自动判 login/register（per server phone-sms-auth FR-005）                                                                                                                 |
 | FR-004 | SMS 触发：调 `@nvy/api-client.AccountSmsCodeApi.requestSmsCode({phone})` （**无 purpose 字段**，per server phone-sms-auth FR-004）；60s 倒计时锁按钮防重复点击                                                                                                                                                                                                 |
 | FR-005 | submit 成功后：`@nvy/auth.phoneSmsAuth` 内部调 `store.setSession({accountId, accessToken, refreshToken})`；`AuthGate` (apps/native/app/\_layout.tsx) 监听 `isAuthenticated` 自动 `router.replace('/(app)/')`。Hook **不直调** router                                                                                                                           |
 | FR-006 | 错误统一映射（per `mapApiError` util，已含 `FetchError` 检查per 昨日 PR #48 修复）：401 → "手机号或验证码错误"；429 → "请求过于频繁，请稍后再试"；FetchError / TypeError / 5xx → "网络异常，请检查网络后重试"；未知错 → "登录失败，请稍后再试"；**不区分 401 子码**（server 单接口 4 分支字节级一致，client 仅看 401 状态）                                    |
@@ -95,7 +95,7 @@
 | FR-011 | 状态机 5 态 idle / requesting_sms / sms_sent / submitting / (success \| error)；submitting 期间 submit 按钮 disabled + loading 视觉；success 短动画 ≤ 800ms（绿色对勾 reanimated scale-in）后 AuthGate 接管切走；error 展示 errorToast；error 状态下任意 input change 清空 errorToast 回 idle                                                                  |
 | FR-012 | 401 → refresh：本页已 mount AuthGate（PR #48），未登录态进 `/(app)/*` 自动跳 `/(auth)/login`；access token 过期场景由 `@nvy/api-client.client` 拦截器透明 refresh，不在本 spec 责任范围                                                                                                                                                                        |
 | FR-013 | a11y：所有交互 component（input / submit / OAuth / 立即体验 / 登录遇到问题 / 获取验证码）必有 `accessibilityLabel`；submit 按钮 disabled 时 `accessibilityState.disabled = true`；错误 toast 使用 `accessibilityLiveRegion='polite'`（Android）/ `accessibilityRole='alert'`（iOS / Web）                                                                      |
-| FR-014 | **删除既有逻辑**：双 tab（password / sms 切换） / `<PasswordField>` 渲染 / `loginPasswordSchema` zod / `loginByPassword` use case 调用 / "忘记密码"链接 / "创建一个"footer 链接 / 跳 register 路由 — 全部废弃（M1.3 impl PR 一并清理）                                                                                                                         |
+| FR-014 | **删除既有逻辑**：双 tab（password / sms 切换） / `<PasswordField>` 渲染 / `loginPasswordSchema` zod / `loginByPassword` use case 调用 / "忘记密码"链接 / "创建一个"footer 链接 / 跳 register 路由 — 全部废弃（已于 PR #50 一并清理）                                                                                                                          |
 | FR-015 | `errorScope` 双场景（per mockup v2 设计）：hook (`useLoginForm`) 维护 `errorScope: 'sms' \| 'submit' \| null` 字段；`requestSms` 抛错时 setErrorScope('sms')，`submit` 抛错时 setErrorScope('submit')；UI 据此决定哪个 input 标红边框 + ErrorRow 在哪一栏下方渲染（PhoneInput 旁还是 SmsInput 旁）；clearError / 任意 input change → setErrorScope(null)       |
 
 ---
@@ -127,7 +127,7 @@
 - iOS / Android 真机渲染验证（M2.1）
 - 国际化 / 多语言（M3+）
 - 视觉细节（精确 px / hex / 阴影偏移 / 字重值）— 走 mockup → plan.md UI 段吸收
-- **register 独立页**（per ADR-0016 决策 1，整页废弃；旧 `app/(auth)/register.tsx` placeholder 在 M1.3 impl PR 一并删除）
+- **register 独立页**（per ADR-0016 决策 1，整页废弃；旧 `app/(auth)/register.tsx` placeholder 已于 PR #50 删除）
 - **密码登录 / 忘记密码 / 修改密码**（per ADR-0016 决策 2，整套废弃）
 - **邮箱登录 / 邮箱注册 / Google email-only 账号**（per ADR-0016 决策 3）
 
@@ -135,7 +135,7 @@
 
 ## Assumptions & Dependencies
 
-- `@nvy/auth.phoneSmsAuth` wrapper 在 M1.3 impl PR 落地（替换 既有 `loginByPassword` / `loginByPhoneSms`）
+- `@nvy/auth.phoneSmsAuth` wrapper 已落地（PR #50 过渡 → PR #54 切真 API；替换既有 `loginByPassword` / `loginByPhoneSms`）
 - `@nvy/api-client.AccountSmsCodeApi.requestSmsCode({phone})` (无 purpose 字段) 在 server PR-B merged 后通过 `pnpm api:gen:dev` 拉取 — server PR-B 与本 spec 同 session 落地
 - AuthGate / `<Redirect>` 双保险逻辑已在 PR #48 落地
 - `expo-router` v6+ + `useRouter().replace()` 可用
