@@ -1,12 +1,35 @@
-import { Text, View } from 'react-native';
+import Svg, { Circle, G, Path, Rect } from 'react-native-svg';
 
-// Brand "不" wordmark in a brand-500 rounded square.
-// See apps/native/spec/login/design/source/assets/logo-mark.svg for the full
-// SVG variant (used in marketing assets, not in-app).
-export function LogoMark() {
+export interface LogoMarkProps {
+  /** SVG outer width / height in px. Default 56 (matches mockup v2). */
+  size?: number;
+}
+
+// Brand logo mark — blue rounded tile + 12 white rays + orange halo + sun.
+// SVG glyph paste 1:1 from apps/native/spec/login/design/source-v2/LoginScreen.tsx ~L93.
+// Hex literals (#2456E5 / #FF8C00 / #FFFFFF) align with design-tokens
+// (brand-500 / accent / pure white) but kept inline since SVG fills don't accept className.
+export function LogoMark({ size = 56 }: LogoMarkProps) {
   return (
-    <View className="w-11 h-11 rounded-xl bg-brand-500 items-center justify-center">
-      <Text className="text-white text-xl font-bold">不</Text>
-    </View>
+    <Svg width={size} height={size} viewBox="0 0 64 64">
+      <Rect width={64} height={64} rx={14} fill="#2456E5" />
+      <Circle cx={32} cy={32} r={22} fill="#FF8C00" opacity={0.18} />
+      <G stroke="#FFFFFF" strokeWidth={2.5} strokeLinecap="round">
+        <Path d="M32 18 L32 8" />
+        <Path d="M39 19.88 L44 11.22" />
+        <Path d="M44.12 25 L52.78 20" />
+        <Path d="M46 32 L56 32" />
+        <Path d="M44.12 39 L52.78 44" />
+        <Path d="M39 44.12 L44 52.78" />
+        <Path d="M32 46 L32 56" />
+        <Path d="M25 44.12 L20 52.78" />
+        <Path d="M19.88 39 L11.22 44" />
+        <Path d="M18 32 L8 32" />
+        <Path d="M19.88 25 L11.22 20" />
+        <Path d="M25 19.88 L20 11.22" />
+      </G>
+      <Circle cx={32} cy={32} r={9.5} fill="#FF8C00" />
+      <Circle cx={29.5} cy={29.5} r={2.5} fill="#FFFFFF" opacity={0.3} />
+    </Svg>
   );
 }
