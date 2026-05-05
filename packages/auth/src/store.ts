@@ -24,9 +24,11 @@ export interface AuthState {
   accountId: number | null;
   accessToken: string | null;
   refreshToken: string | null;
+  displayName: string | null;
   isAuthenticated: boolean;
   setSession: (session: Session) => void;
   setAccessToken: (token: string) => void;
+  setDisplayName: (name: string | null) => void;
   clearSession: () => void;
 }
 
@@ -36,15 +38,18 @@ export const useAuthStore = create<AuthState>()(
       accountId: null,
       accessToken: null,
       refreshToken: null,
+      displayName: null,
       isAuthenticated: false,
       setSession: ({ accountId, accessToken, refreshToken }) =>
         set({ accountId, accessToken, refreshToken, isAuthenticated: true }),
       setAccessToken: (token) => set({ accessToken: token }),
+      setDisplayName: (name) => set({ displayName: name }),
       clearSession: () =>
         set({
           accountId: null,
           accessToken: null,
           refreshToken: null,
+          displayName: null,
           isAuthenticated: false,
         }),
     }),
@@ -52,9 +57,11 @@ export const useAuthStore = create<AuthState>()(
       name: 'nvy-auth',
       storage: createJSONStorage(() => sessionStorage),
       // accessToken intentionally omitted — refreshed on cold start.
+      // displayName persisted to avoid AuthGate flicker on rehydrate (FR-002).
       partialize: (state) => ({
         accountId: state.accountId,
         refreshToken: state.refreshToken,
+        displayName: state.displayName,
       }),
       onRehydrateStorage: () => (state) => {
         if (state?.refreshToken && state.accountId !== null) {
