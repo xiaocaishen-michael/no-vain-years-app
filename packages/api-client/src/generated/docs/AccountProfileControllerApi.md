@@ -1,17 +1,17 @@
-# AuthControllerApi
+# AccountProfileControllerApi
 
 All URIs are relative to *http://localhost*
 
 | Method | HTTP request | Description |
 |------------- | ------------- | -------------|
-| [**logoutAll**](AuthControllerApi.md#logoutall) | **POST** /api/v1/auth/logout-all |  |
-| [**refreshToken**](AuthControllerApi.md#refreshtokenoperation) | **POST** /api/v1/auth/refresh-token |  |
+| [**getMe**](AccountProfileControllerApi.md#getme) | **GET** /api/v1/accounts/me |  |
+| [**patchMe**](AccountProfileControllerApi.md#patchme) | **PATCH** /api/v1/accounts/me |  |
 
 
 
-## logoutAll
+## getMe
 
-> logoutAll()
+> AccountProfileResponse getMe()
 
 
 
@@ -20,16 +20,16 @@ All URIs are relative to *http://localhost*
 ```ts
 import {
   Configuration,
-  AuthControllerApi,
+  AccountProfileControllerApi,
 } from '';
-import type { LogoutAllRequest } from '';
+import type { GetMeRequest } from '';
 
 async function example() {
   console.log("🚀 Testing  SDK...");
-  const api = new AuthControllerApi();
+  const api = new AccountProfileControllerApi();
 
   try {
-    const data = await api.logoutAll();
+    const data = await api.getMe();
     console.log(data);
   } catch (error) {
     console.error(error);
@@ -46,7 +46,7 @@ This endpoint does not need any parameter.
 
 ### Return type
 
-`void` (Empty response body)
+[**AccountProfileResponse**](AccountProfileResponse.md)
 
 ### Authorization
 
@@ -55,7 +55,7 @@ No authorization required
 ### HTTP request headers
 
 - **Content-Type**: Not defined
-- **Accept**: Not defined
+- **Accept**: `*/*`
 
 
 ### HTTP response details
@@ -66,9 +66,9 @@ No authorization required
 [[Back to top]](#) [[Back to API list]](../README.md#api-endpoints) [[Back to Model list]](../README.md#models) [[Back to README]](../README.md)
 
 
-## refreshToken
+## patchMe
 
-> LoginResponse refreshToken(refreshTokenRequest)
+> AccountProfileResponse patchMe(updateDisplayNameRequest)
 
 
 
@@ -77,21 +77,21 @@ No authorization required
 ```ts
 import {
   Configuration,
-  AuthControllerApi,
+  AccountProfileControllerApi,
 } from '';
-import type { RefreshTokenOperationRequest } from '';
+import type { PatchMeRequest } from '';
 
 async function example() {
   console.log("🚀 Testing  SDK...");
-  const api = new AuthControllerApi();
+  const api = new AccountProfileControllerApi();
 
   const body = {
-    // RefreshTokenRequest
-    refreshTokenRequest: ...,
-  } satisfies RefreshTokenOperationRequest;
+    // UpdateDisplayNameRequest
+    updateDisplayNameRequest: ...,
+  } satisfies PatchMeRequest;
 
   try {
-    const data = await api.refreshToken(body);
+    const data = await api.patchMe(body);
     console.log(data);
   } catch (error) {
     console.error(error);
@@ -107,11 +107,11 @@ example().catch(console.error);
 
 | Name | Type | Description  | Notes |
 |------------- | ------------- | ------------- | -------------|
-| **refreshTokenRequest** | [RefreshTokenRequest](RefreshTokenRequest.md) |  | |
+| **updateDisplayNameRequest** | [UpdateDisplayNameRequest](UpdateDisplayNameRequest.md) |  | |
 
 ### Return type
 
-[**LoginResponse**](LoginResponse.md)
+[**AccountProfileResponse**](AccountProfileResponse.md)
 
 ### Authorization
 
