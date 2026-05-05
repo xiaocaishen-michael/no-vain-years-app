@@ -7,6 +7,7 @@
 import {
   ApiClientError,
   getAccountAuthApi,
+  getAccountProfileApi,
   getAuthApi,
   ResponseError,
   setTokenGetter,
@@ -44,13 +45,42 @@ function assertSession(value: {
 // Server unified endpoint POST /api/v1/accounts/phone-sms-auth: client 视角
 // 不区分 login / register, server 内部按 phone 状态自动分支
 // (已注册→login / 未注册→自动创建+login / FROZEN/ANONYMIZED→反枚举吞).
+//
+// 末尾 await loadProfile() 拉 displayName 写入 store，使 AuthGate 三态决策
+// 在同一异步流内拿到一致 state（FR-004）。loadProfile 失败被 swallow，store
+// 保持 displayName === null，AuthGate fallback 到 /(app)/onboarding（FR-001）。
+//
+// 反枚举不变性（SC-003）：本函数体不读取 response.displayName — displayName
+// 仅由 loadProfile 经独立 GET /me 写入，phoneSmsAuth 响应不暴露该字段。
 export async function phoneSmsAuth(phone: string, code: string): Promise<LoginResult> {
   const response = await getAccountAuthApi().phoneSmsAuth({
     phoneSmsAuthRequest: { phone, code },
   });
   const session = assertSession(response);
   useAuthStore.getState().setSession(session);
+  await loadProfile().catch(() => {
+    /* swallow: AuthGate fallback to /(app)/onboarding when displayName stays null */
+  });
   return session;
+}
+
+// Reads the authenticated user's profile and writes displayName to the store.
+// 401 from /me means the refresh middleware exhausted retries — re-thrown so
+// callers can drop session / redirect to login. Network errors also re-thrown
+// (callers like phoneSmsAuth swallow to keep login flow resilient).
+export async function loadProfile(): Promise<void> {
+  const response = await getAccountProfileApi().getMe();
+  useAuthStore.getState().setDisplayName(response.displayName ?? null);
+}
+
+// Updates displayName via PATCH /me. Server returns the canonical profile;
+// store is written only on 2xx — 400 / 429 / network errors propagate to the
+// caller (the onboarding form maps them to user-visible toasts).
+export async function updateDisplayName(name: string): Promise<void> {
+  const response = await getAccountProfileApi().patchMe({
+    updateDisplayNameRequest: { displayName: name },
+  });
+  useAuthStore.getState().setDisplayName(response.displayName ?? null);
 }
 
 // Refreshes the access token using the persisted refresh token. Rotates the

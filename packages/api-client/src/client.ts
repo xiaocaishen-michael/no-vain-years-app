@@ -13,6 +13,7 @@
 // (for typed APIs in usecases.ts), so the dependency must flow one way.
 
 import { AccountAuthControllerApi } from './generated/apis/AccountAuthControllerApi';
+import { AccountProfileControllerApi } from './generated/apis/AccountProfileControllerApi';
 import { AccountSmsCodeControllerApi } from './generated/apis/AccountSmsCodeControllerApi';
 import { AuthControllerApi } from './generated/apis/AuthControllerApi';
 import { Configuration, type Middleware, type ResponseContext } from './generated/runtime';
@@ -149,6 +150,10 @@ export function getAccountSmsCodeApi(): AccountSmsCodeControllerApi {
 
 export function getAccountAuthApi(): AccountAuthControllerApi {
   return new AccountAuthControllerApi(getConfig());
+}
+
+export function getAccountProfileApi(): AccountProfileControllerApi {
+  return new AccountProfileControllerApi(getConfig());
 }
 
 export function resetClientForTests(): void {
