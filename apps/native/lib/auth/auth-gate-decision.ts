@@ -1,0 +1,38 @@
+// Pure routing decision for AuthGate. Extracted from app/_layout.tsx so
+// the 3-state truth table (per onboarding spec FR-001) can be tested
+// without mocking expo-router / react-native.
+//
+// Three states (per FR-001):
+//   1. !isAuthenticated                      → /(auth)/login
+//   2. isAuthenticated && displayName == null → /(app)/onboarding
+//   3. isAuthenticated && displayName != null → /(app)
+//
+// Each state maps to a target route, with `noop` when the user is already
+// where they should be (avoids replace-loop + needless re-renders).
+
+export interface AuthGateInput {
+  isAuthenticated: boolean;
+  displayName: string | null;
+  inAuthGroup: boolean;
+  inOnboarding: boolean;
+}
+
+export type AuthGateDecision = { kind: 'noop' } | { kind: 'replace'; target: string };
+
+export function decideAuthRoute(input: AuthGateInput): AuthGateDecision {
+  const { isAuthenticated, displayName, inAuthGroup, inOnboarding } = input;
+
+  if (!isAuthenticated) {
+    if (inAuthGroup) return { kind: 'noop' };
+    return { kind: 'replace', target: '/(auth)/login' };
+  }
+
+  if (displayName === null) {
+    if (inOnboarding) return { kind: 'noop' };
+    return { kind: 'replace', target: '/(app)/onboarding' };
+  }
+
+  // isAuthenticated + displayName != null — user must NOT stay on (auth) or onboarding.
+  if (inAuthGroup || inOnboarding) return { kind: 'replace', target: '/(app)' };
+  return { kind: 'noop' };
+}
