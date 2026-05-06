@@ -122,73 +122,75 @@ PHASE 1 占位 UI 阶段使用裸 RN component，gotcha 影响最小化：
 
 mockup PHASE 2 落地后引入 className / token 时再回填 NativeWind 兼容点（hover / borderRadius / boxShadow 等）。
 
-## UI 结构（PHASE 1 占位版，pending mockup PHASE 2）
+## UI 结构（PHASE 2 mockup 落地，per ADR-0017 类 1 流程）
 
-**per ADR-0017 类 1 强制纪律**：本节**不**做视觉决策（间距 / 颜色 / 字号 / 阴影 / 动画 / 自定义样式属性）；mockup 由用户单独跑 Claude Design 产出后回填本段为完整 UI 结构。
+**Mockup 来源**：[`design/mockup-prompt.md`](./design/mockup-prompt.md) → Claude Design 产出 [`design/source/`](./design/source/) → [`design/handoff.md`](./design/handoff.md) 翻译期决策。
 
-### 4 边界占位条目（FR-006）
+**视觉前提**：tailwind.config.js byte-identical 于 login v2，0 新增 token；5/7 子组件复用 @nvy/ui，2/7 inline。
 
-| 边界            | 占位实现                                             | mockup PHASE 2 决定                                             |
-| --------------- | ---------------------------------------------------- | --------------------------------------------------------------- |
-| **路由**        | `apps/native/app/(app)/onboarding.tsx` ✓             | 不变（路由不重做）                                              |
-| **输入**        | 单 `<TextInput placeholder="昵称">` 裸 RN            | 间距 / 字号 / 边框样式 / 验证态视觉 / placeholder 文案润色      |
-| **提交**        | 单 `<Pressable>` 裸 RN，含 `<Text>提交</Text>`       | 按钮形状 / disabled / loading / success 视觉 / hover-press 反馈 |
-| **状态 / 错误** | `<Text>` 状态指示（`提交中...` / `成功` / 错误信息） | 错误位排布 / 颜色 / 图标 / 动画 / a11y alert 容器               |
+### 区域分块（自上而下）
 
-### 占位代码示意（不是最终 impl，仅约束 4 边界形态）
+| 区域                                                | 实现                                                                                                       | 关键 className                                                                                                |
+| --------------------------------------------------- | ---------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------- |
+| 顶部 spacer（无 close × / skip / 返回，per FR-011） | `<View className="flex-row items-center h-11" />`                                                          | `h-11`                                                                                                        |
+| Header（LogoMark + 标题 + 副标题，居中）            | `<View className="mt-4 items-center gap-3">` 内 `<LogoMark size={40} />` + 标题 `<Text>` + 副标题 `<Text>` | `mt-4 items-center gap-3` / `text-[28px] font-bold tracking-tight` / `text-sm text-ink-muted leading-relaxed` |
+| Form（DisplayNameInput + 可选 ErrorRow）            | `<View className="mt-9">` 内 `<DisplayNameInput />` + 条件 `<ErrorRow />`                                  | `mt-9`                                                                                                        |
+| CTA（PrimaryButton）                                | `<View className="mt-7"><PrimaryButton ... /></View>`                                                      | `mt-7`                                                                                                        |
+| Bottom spacer（撑开）                               | `<View className="flex-1" />`                                                                              | `flex-1`                                                                                                      |
+| Footer 提示（"昵称可在「设置」中随时修改"）         | `<Text>` 居中、低对比度                                                                                    | `text-center text-[11px] text-ink-subtle mb-2`                                                                |
 
-```tsx
-// apps/native/app/(app)/onboarding.tsx
-// PHASE 1 PLACEHOLDER — business flow validated; visuals pending mockup.
+整页容器 `<View className="flex-1 bg-surface px-lg pb-lg">` 包于 `<KeyboardAvoidingView>`。
 
-import { TextInput, Pressable, Text, View, KeyboardAvoidingView } from 'react-native';
-import { useOnboardingForm } from '~/lib/hooks/use-onboarding-form';
+### 状态视觉转移（4 状态 ↔ hook `OnboardingStatus`）
 
-export default function OnboardingScreen() {
-  const { displayName, setDisplayName, submit, status, errorMessage } = useOnboardingForm();
-  return (
-    <KeyboardAvoidingView behavior="padding" style={{ flex: 1 }}>
-      <View style={{ flex: 1, padding: 16 }}>
-        <Text>完善个人资料</Text>
-        <TextInput
-          accessibilityLabel="昵称"
-          accessibilityHint="1 至 32 字符"
-          placeholder="昵称"
-          value={displayName}
-          onChangeText={setDisplayName}
-          editable={status !== 'submitting'}
-        />
-        <Pressable onPress={submit} disabled={status === 'submitting' || !displayName}>
-          <Text>{status === 'submitting' ? '提交中...' : '提交'}</Text>
-        </Pressable>
-        {errorMessage && (
-          <Text accessibilityRole="alert" accessibilityLiveRegion="polite">
-            {errorMessage}
-          </Text>
-        )}
-      </View>
-    </KeyboardAvoidingView>
-  );
-}
-```
+| status       | input 视觉                                        | CTA 视觉                                                             | 错误位                             | overlay                                                              |
+| ------------ | ------------------------------------------------- | -------------------------------------------------------------------- | ---------------------------------- | -------------------------------------------------------------------- |
+| `idle`       | `border-line` + 计数 0/32                         | `bg-brand-300` disabled（form 空 → `!isSubmittable`）                | 隐藏                               | —                                                                    |
+| `submitting` | `border-brand-500`（focused） + `opacity-60` 锁定 | `bg-brand-300` + Spinner + "提交中…"                                 | 隐藏                               | —                                                                    |
+| `success`    | —                                                 | —                                                                    | —                                  | full-screen `<SuccessOverlay>`（SuccessCheck + "完成！" + 进入提示） |
+| `error`      | `border-err` + 计数同上                           | 恢复 `bg-brand-500` enabled（hook 清回 idle 由 setDisplayName 触发） | `<ErrorRow text={errorMessage} />` | —                                                                    |
 
-> **样式属性白名单**（占位 UI 仅可用）：`flex / padding / margin` 基础布局原语；`<Text>` 不带 className / fontSize / color；不引 `packages/ui`；不引 `@nvy/design-tokens` className。
->
-> mockup PHASE 2 落地后**整段重写**为 NativeWind className 风格（per [ADR-0014](../../../../docs/adr/0014-nativewind-tailwind-universal.md) + login 页同模式）。
+> PrimaryButton drift accepted — per [`handoff.md § 6`](./design/handoff.md#6-drift-政策)，packages/ui 当前 2 态（`disabled∪loading=bg-brand-300`），mockup 设计 3 态视觉细节差异以代码为准。
 
-### Token 映射（PHASE 2 占位）
+### Token 映射（实际使用清单）
 
-PHASE 1 不引入 token 映射；PHASE 2 mockup 落地后回填本段（参考 login 页 plan.md UI 段 `### Token 映射` 写法）。
+| 维度      | className                                                                                                                                                          |
+| --------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Surface   | `bg-surface`                                                                                                                                                       |
+| Padding   | `px-lg`（24）/ `pb-lg`（24）/ `pl-2`（8）                                                                                                                          |
+| Margin    | `mt-1.5` / `mt-2` / `mt-4` / `mt-7` / `mt-9` / `mb-2`                                                                                                              |
+| Gap       | `gap-2` / `gap-3` / `gap-4`                                                                                                                                        |
+| Size      | `h-11` / `h-12` / `pb-20`                                                                                                                                          |
+| Border    | `border-b` / `border-line` / `border-brand-500`（focused） / `border-err`（errored）                                                                               |
+| Font 字号 | `text-base` / `text-sm` / `text-xs` / `text-xl` / `text-[28px]`（标题 arbitrary）/ `text-[11px]`（footer arbitrary）                                               |
+| Font 颜色 | `text-ink` / `text-ink-muted` / `text-ink-subtle` / `text-err` / `text-white`                                                                                      |
+| Font 修饰 | `font-bold` / `font-semibold` / `font-medium` / `font-mono` / `font-sans` / `tracking-tight` / `text-center` / `leading-relaxed` / `leading-snug` / `leading-none` |
+| Layout    | `flex-1` / `flex-row` / `items-center` / `justify-center`                                                                                                          |
+| Effect    | `opacity-60`                                                                                                                                                       |
 
-### a11y 落点（PHASE 1 已实施）
+**全清单已在 `packages/design-tokens`** — grep cross-check 无新引入。
 
-每个交互组件必有 `accessibilityLabel`：
+### 复用 packages/ui 组件清单（per handoff.md § 2）
 
-- TextInput：`accessibilityLabel='昵称'` + `accessibilityHint='1 至 32 字符，支持中文、字母、数字、emoji'`
-- Pressable submit：`accessibilityRole='button'` + `accessibilityState.disabled` 跟 status 联动
-- Error Text：`accessibilityRole='alert'`（iOS / Web）+ `accessibilityLiveRegion='polite'`（Android）
+| 组件               | 来源        | 备注                                                           |
+| ------------------ | ----------- | -------------------------------------------------------------- |
+| `Spinner`          | `@nvy/ui`   | size=12 / 15 两种使用（CTA loading + SuccessOverlay 进入提示） |
+| `SuccessCheck`     | `@nvy/ui`   | 仅 SuccessOverlay 内                                           |
+| `LogoMark`         | `@nvy/ui`   | 显式 `size={40}`（onboarding 专属，packages/ui 默认 56）       |
+| `ErrorRow`         | `@nvy/ui`   | error 状态条件渲染                                             |
+| `PrimaryButton`    | `@nvy/ui`   | drift accepted（disabled 视觉差）                              |
+| `DisplayNameInput` | inline 本页 | once-only；未来通用 TextInput 走单独 ADR（per FR-012）         |
+| `SuccessOverlay`   | inline 本页 | onboarding 专属视觉（与 login 即时跳转不同）                   |
 
-PHASE 2 mockup 落地后审视是否新增 a11y 维度（如 form section 标签 / submit success 反馈语音）。
+### a11y 落点
+
+| 元素                          | a11y props                                                                                                                                |
+| ----------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
+| TextInput                     | `accessibilityLabel="昵称"` + `accessibilityHint="1 至 32 字符，支持中文、字母、数字、emoji"` + `returnKeyType="done"` + `maxLength={32}` |
+| PrimaryButton（来自 @nvy/ui） | `accessibilityRole="button"` + `accessibilityState={{ disabled, busy: !!loading }}` + `accessibilityLabel={label}` packages/ui 内置       |
+| ErrorRow（来自 @nvy/ui）      | `accessibilityRole="alert"` + `accessibilityLiveRegion="polite"` packages/ui 内置                                                         |
+
+PHASE 2 不新增 a11y 维度（mockup 未带新需求，hook 不变）。
 
 ## 测试策略
 
