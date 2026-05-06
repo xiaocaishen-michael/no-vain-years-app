@@ -2,7 +2,7 @@
 
 **Spec**: [spec.md](./spec.md) | **Plan**: [plan.md](./plan.md)
 **Created**: 2026-05-05（per [ADR-0016](../../../../docs/adr/0016-unified-mobile-first-auth.md) + [ADR-0017](../../../../docs/adr/0017-sdd-business-flow-first-then-mockup.md)）
-**Status**: ✅ PHASE 1 Implemented（PR [#63](https://github.com/xiaocaishen-michael/no-vain-years-app/pull/63) — 业务流 + 占位 UI + 真后端冒烟）；🔲 PHASE 2 Pending Mockup（待 user 跑 Claude Design 出 bundle）
+**Status**: ✅ PHASE 1 Implemented（PR [#63](https://github.com/xiaocaishen-michael/no-vain-years-app/pull/63) — 业务流 + 占位 UI + 真后端冒烟）；✅ PHASE 2 Translated（mockup-prompt PR [#65](https://github.com/xiaocaishen-michael/no-vain-years-app/pull/65) + 本 PR — bundle 落 source / handoff / T8-T10）
 
 > **TDD enforcement**（per [no-vain-years-app CLAUDE.md § 五](https://github.com/xiaocaishen-michael/no-vain-years-app/blob/main/CLAUDE.md)）：业务 hook / store / 工具函数**必须**测；纯展示 UI 不强制 TDD。每条 task 内**测试任务绑定到实现 task**。
 >
@@ -43,13 +43,13 @@
 
 ### Mockup PHASE 2 阶段（再下 session PR — UI 完成）
 
-| #         | 层级          | 任务                                                                                                                                                              | 文件                                                                  | 状态              |
-| --------- | ------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------- | ----------------- |
-| 🔲 T_mock | [Mockup]      | Claude Design 出 onboarding 页 mockup（按 [`docs/experience/claude-design-handoff.md`](../../../../docs/experience/claude-design-handoff.md) § 2.1b prompt 模板） | `apps/native/spec/onboarding/design/source-v1/` + `design/handoff.md` | 🔲                |
-| 🔲 T8     | [packages/ui] | 评估是否新增 `<DisplayNameInput>` / `<OnboardingScreen>` 抽组件（per FR-012）；按需新建 + 单测                                                                    | `packages/ui/src/*.tsx`                                               | 🔲 待 mockup 落地 |
-| 🔲 T9     | [App]         | 改写 `apps/native/app/(app)/onboarding.tsx`：删占位 UI banner + className 按 mockup 1:1 paste + Token 映射                                                        | `apps/native/app/(app)/onboarding.tsx`                                | 🔲 待 mockup 落地 |
-| 🔲 T10    | [Plan]        | plan.md UI 段从 4 边界占位回填为完整 UI 结构（含布局 / 区域分块 / 状态视觉转移 / Token 映射）                                                                     | `apps/native/spec/onboarding/plan.md`                                 | 🔲 待 mockup 落地 |
-| 🔲 T11    | [视觉回归]    | 视情况引入 visual regression（M2 后）                                                                                                                             | TBD                                                                   | 🟡 评估           |
+| #         | 层级          | 任务                                                                                                                                                                                                                        | 文件                                                                                           | 状态                                                     |
+| --------- | ------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------- | -------------------------------------------------------- |
+| ✅ T_mock | [Mockup]      | Claude Design 出 onboarding 页 mockup（按 [`docs/experience/claude-design-handoff.md`](../../../../docs/experience/claude-design-handoff.md) § 2.1b prompt 模板）+ bundle 落 `design/source/` + 写 `design/handoff.md` 7 段 | `apps/native/spec/onboarding/design/source/` + `design/mockup-prompt.md` + `design/handoff.md` | ✅ PR #65 (mockup-prompt) + 本 PR (source/ + handoff.md) |
+| ✅ T8     | [packages/ui] | 评估子组件归属（per FR-012）：5 复用 `@nvy/ui`（Spinner / SuccessCheck / LogoMark / ErrorRow / PrimaryButton）+ 2 inline（DisplayNameInput / SuccessOverlay 单页 once-only）                                                | `apps/native/spec/onboarding/design/handoff.md` § 2                                            | ✅ 本 PR — 不新增 packages/ui 组件                       |
+| ✅ T9     | [App]         | 改写 `apps/native/app/(app)/onboarding.tsx`：删 PHASE 1 PLACEHOLDER banner + 5 个组件 import @nvy/ui + DisplayNameInput / SuccessOverlay inline + 整页 layout 1:1 paste + 保留现有 hook / BackHandler / a11y 接入           | `apps/native/app/(app)/onboarding.tsx`                                                         | ✅ 本 PR                                                 |
+| ✅ T10    | [Plan]        | plan.md UI 段从 4 边界占位回填为完整 UI 结构（区域分块 / 状态视觉转移 / Token 映射 / packages/ui 复用清单 / a11y 落点）                                                                                                     | `apps/native/spec/onboarding/plan.md`                                                          | ✅ 本 PR                                                 |
+| 🔲 T11    | [视觉回归]    | 视情况引入 visual regression（M2 后）                                                                                                                                                                                       | TBD                                                                                            | 🟡 评估                                                  |
 
 ---
 
