@@ -1,30 +1,24 @@
 
-# AccountProfileResponse
+# CancelDeletionRequest
 
 
 ## Properties
 
 Name | Type
 ------------ | -------------
-`accountId` | number
 `phone` | string
-`displayName` | string
-`status` | string
-`createdAt` | Date
+`code` | string
 
 ## Example
 
 ```typescript
-import type { AccountProfileResponse } from ''
+import type { CancelDeletionRequest } from ''
 
 // TODO: Update the object below with actual values
 const example = {
-  "accountId": null,
   "phone": null,
-  "displayName": null,
-  "status": null,
-  "createdAt": null,
-} satisfies AccountProfileResponse
+  "code": null,
+} satisfies CancelDeletionRequest
 
 console.log(example)
 
@@ -33,7 +27,7 @@ const exampleJSON: string = JSON.stringify(example)
 console.log(exampleJSON)
 
 // Parse the JSON string back to an object
-const exampleParsed = JSON.parse(exampleJSON) as AccountProfileResponse
+const exampleParsed = JSON.parse(exampleJSON) as CancelDeletionRequest
 console.log(exampleParsed)
 ```
 
