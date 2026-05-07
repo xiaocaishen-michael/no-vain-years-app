@@ -1,9 +1,10 @@
-// PHASE 1 PLACEHOLDER — business flow validated; visuals pending mockup.
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import { Alert, Pressable, ScrollView, Text, View } from 'react-native';
 
 import { logoutAll } from '@nvy/auth';
+
+import { Card, Divider, Row } from '../../../components/settings/primitives';
 
 const COPY = {
   cards: {
@@ -23,8 +24,6 @@ const COPY = {
   logoutCancel: '取消',
   logoutOk: '确定',
 };
-
-const DISABLED_OPACITY = 0.5;
 
 export default function SettingsIndex() {
   const router = useRouter();
@@ -49,74 +48,54 @@ export default function SettingsIndex() {
   }
 
   return (
-    <ScrollView>
-      {/* Card 1 — account-security */}
-      <View>
-        <Pressable
+    <ScrollView
+      className="flex-1 bg-surface-sunken"
+      contentContainerClassName="px-md pt-md pb-xl gap-md"
+    >
+      <Card>
+        <Row
+          label={COPY.cards.accountSecurity}
           onPress={() => router.push('/(app)/settings/account-security')}
-          accessibilityRole="button"
-          accessibilityLabel={COPY.cards.accountSecurity}
-        >
-          <Text>{COPY.cards.accountSecurity}</Text>
-          <Text>›</Text>
-        </Pressable>
-      </View>
+        />
+      </Card>
 
-      {/* Card 2 — 4 disabled placeholders */}
-      <View>
-        {(['general', 'notifications', 'privacy', 'about'] as const).map((key) => (
-          <Pressable
-            key={key}
-            onPress={undefined}
-            accessibilityRole="button"
-            accessibilityLabel={COPY.cards[key]}
-            accessibilityState={{ disabled: true }}
-            style={{ opacity: DISABLED_OPACITY }}
-          >
-            <Text>{COPY.cards[key]}</Text>
-            <Text>›</Text>
-          </Pressable>
-        ))}
-      </View>
+      <Card>
+        <Row label={COPY.cards.general} disabled />
+        <Divider />
+        <Row label={COPY.cards.notifications} disabled />
+        <Divider />
+        <Row label={COPY.cards.privacy} disabled />
+        <Divider />
+        <Row label={COPY.cards.about} disabled />
+      </Card>
 
-      {/* Card 3 — switchAccount disabled / logout */}
-      <View>
-        <Pressable
-          onPress={undefined}
-          accessibilityRole="button"
-          accessibilityLabel={COPY.cards.switchAccount}
-          accessibilityState={{ disabled: true }}
-          style={{ opacity: DISABLED_OPACITY }}
-        >
-          <Text>{COPY.cards.switchAccount}</Text>
-        </Pressable>
-        <Pressable
+      <Card>
+        <Row label={COPY.cards.switchAccount} disabled showChevron={false} align="center" />
+        <Divider />
+        <Row
+          label={COPY.cards.logout}
+          destructive
+          showChevron={false}
+          align="center"
+          busy={isLoading}
           onPress={confirmLogout}
-          disabled={isLoading}
-          accessibilityRole="button"
-          accessibilityLabel={COPY.cards.logout}
-          accessibilityState={{ disabled: isLoading, busy: isLoading }}
-          style={{ opacity: isLoading ? DISABLED_OPACITY : 1 }}
-        >
-          <Text>{COPY.cards.logout}</Text>
-        </Pressable>
-      </View>
+        />
+      </Card>
 
-      {/* Footer — 双链接 */}
-      <View>
+      <View className="items-center pt-xl pb-lg gap-2">
         <Pressable
           onPress={() => router.push('/(app)/settings/legal/personal-info')}
           accessibilityRole="link"
           accessibilityLabel={COPY.legal.personalInfo}
         >
-          <Text style={{ color: 'blue' }}>{COPY.legal.personalInfo}</Text>
+          <Text className="text-xs text-accent">{COPY.legal.personalInfo}</Text>
         </Pressable>
         <Pressable
           onPress={() => router.push('/(app)/settings/legal/third-party')}
           accessibilityRole="link"
           accessibilityLabel={COPY.legal.thirdParty}
         >
-          <Text style={{ color: 'blue' }}>{COPY.legal.thirdParty}</Text>
+          <Text className="text-xs text-accent">{COPY.legal.thirdParty}</Text>
         </Pressable>
       </View>
     </ScrollView>

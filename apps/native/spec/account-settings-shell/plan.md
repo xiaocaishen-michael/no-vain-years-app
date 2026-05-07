@@ -555,34 +555,127 @@ mockup PHASE 2 落地后 NativeWind 兼容点回填。
 
 ---
 
-## UI 结构(占位版,pending mockup)
+## UI 结构(PHASE 2 完整版,per ADR-0017 类 1 流程 mockup 回填)
 
-per [ADR-0017](../../../../docs/adr/0017-sdd-business-flow-first-then-mockup.md) 类 1 流程,本段是 PHASE 1 占位 UI 边界声明;mockup PHASE 2 落地后回填完整版。
+mockup bundle 落 [`design/source/`](./design/source/);视觉决策 / 翻译 gotcha / drift 政策见 [`design/handoff.md`](./design/handoff.md)。本段从 PHASE 1 4 边界占位升级为完整 UI 结构 — token / zone / 状态视觉一一就位。
 
-### 4 边界条目(占位 UI 严格遵守)
+### 5 page zone breakdown
 
-| 边界                      | 本 spec 落点                                                                                                                               |
-| ------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
-| 路由结构                  | 8 文件 settings stack(per 决策 7) ✓                                                                                                        |
-| 单层 form-equivalent 输入 | 本 spec 无 form input — 替代为 list 行 tap + Alert 确认                                                                                    |
-| 提交事件                  | 替代为 router.push(导航)/ `Alert.alert` confirm(退出登录)                                                                                  |
-| 状态机视觉指示            | disabled 项 `opacity 0.5`(占位常量,per CL-003) / Alert 双按钮(取消 / 确定 destructive) / `isLoading` 期间退出登录行 disabled + opacity 0.5 |
-| 错误展示位                | 本 spec 无网络请求 UI 展示 — logoutAll 失败走 console.warn 不进 UI(per US5 + CL-004 不引埋点)                                              |
+5 page 共享外层:`flex-1 bg-surface-sunken`(列表型 page) / `flex-1 bg-surface`(单文本 page);Stack header 由 Expo Router default 提供(per 决策 3,**不引自定义 header**)。
 
-### 视觉细节(全裸 RN,占位)
+#### Page 1 — `settings/index`(设置主页)
 
-- 列表卡片(card)分组用裸 `<View>` + 基础 padding;**不写**精确 px / hex / 阴影
-- 行 `<Pressable>` 含 `flexDirection: 'row'` + `justifyContent: 'space-between'` + 基础 padding(基础布局允许)
-- 右侧 `>` chevron 用 emoji `›` 或裸 `<Text>`(无图标资源,per 与 spec A `(tabs)/profile.tsx` 同款不引图)
-- footer 法规链接用 `color: 'blue'`(占位常量,PHASE 2 mockup 决具体 token)
-- disabled 项 `opacity: 0.5`(占位常量,per CL-003)
-- Alert.alert 由 RN 系统默认样式
-
-### 每 page 顶 banner
-
-```ts
-// PHASE 1 PLACEHOLDER — business flow validated; visuals pending mockup.
+```text
+ScrollView (bg-surface-sunken, contentContainer: px-md pt-md pb-xl gap-md)
+├── Card 1 ── 1 row
+│   └── Row "账号与安全" (active, chevron)
+├── Card 2 ── 4 rows + 3 dividers
+│   ├── Row "通用" (disabled)        — opacity 0.5 + ink-muted
+│   ├── Divider
+│   ├── Row "通知" (disabled)
+│   ├── Divider
+│   ├── Row "隐私与权限" (disabled)
+│   ├── Divider
+│   └── Row "关于" (disabled)
+├── Card 3 ── 2 rows + 1 divider
+│   ├── Row "切换账号" (disabled, showChevron=false, align=center)
+│   ├── Divider
+│   └── Row "退出登录" (destructive, showChevron=false, align=center, busy=isLoading)
+└── Footer ── View (items-center pt-xl pb-lg gap-2)
+    ├── Pressable role=link "《个人信息收集与使用清单》" (text-xs text-accent)
+    └── Pressable role=link "《第三方共享清单》"     (text-xs text-accent)
 ```
+
+#### Page 2 — `account-security/index`(账号与安全)
+
+```text
+ScrollView (bg-surface-sunken, contentContainer: px-md pt-md pb-xl gap-md)
+├── Card 1 ── 3 rows + 2 dividers
+│   ├── Row "手机号" value=maskPhone(store.phone) (active, chevron)   ← value 右对齐 + chevron 最右
+│   ├── Divider
+│   ├── Row "实名认证" (disabled)
+│   ├── Divider
+│   └── Row "第三方账号绑定" (disabled)
+├── Card 2 ── 1 row
+│   └── Row "登录设备与授权管理" (disabled)
+└── Card 3 ── 2 rows + 1 divider
+    ├── Row "注销账号" (destructive, chevron 由 destructive 否决, push 占位 spec C)
+    ├── Divider
+    └── Row "安全小知识" (disabled)
+```
+
+**反枚举护栏**(per spec SC-005 + Q4):全文不渲染 accountId / 7+ 位连续数字明文 / 🎧 客服 icon / 安全系数 banner / 4 盾牌图;集成测内静态 grep 守护(`account-settings-shell-flow.test.tsx` 反枚举段)。
+
+#### Page 3 — `account-security/phone`(手机号 mask 详情)
+
+```text
+ScrollView (bg-surface, contentContainer: flex-1 items-center justify-center px-lg)
+└── Text "+86 138****5678" 或 "未绑定"   ← text-2xl font-semibold text-ink font-mono tracking-wide
+```
+
+极简 — 无副标题(per spec Q4 "仅 mask 显示")、无操作入口、无装饰(per drift 决议:mockup 加的 `已绑定手机号` 副标题不翻译)。
+
+#### Page 4 / 5 — `legal/personal-info` + `legal/third-party`(法规占位)
+
+```text
+ScrollView (bg-surface, contentContainer: px-xl pt-2xl)
+└── Text "本清单内容由法务团队定稿后填入,预计 M3 内测前完成。"
+   (text-sm text-ink-muted leading-relaxed text-center)
+```
+
+两 page 共享文案,仅 Stack header `options.title` 不同(由 `legal/_layout.tsx` 提供)。
+
+### Reusable primitives(`app/(app)/settings/_primitives.tsx`)
+
+PHASE 2 抽 3 个 primitive,**仅 app-local**(不进 packages/ui;decision 见 handoff.md § 2):
+
+| Primitive   | className                                                                                                                                                   | 行为                                                                                                         |
+| ----------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------ |
+| `<Card>`    | `bg-surface rounded-md border border-line-soft overflow-hidden`                                                                                             | 单卡片容器,pages 用 `gap-md` 分隔多 cards                                                                    |
+| `<Divider>` | `flex-row` + 内 `w-md` spacer + `flex-1 h-px bg-line-soft`                                                                                                  | 行间分隔,16px 左缩进对齐 label                                                                               |
+| `<Row>`     | `flex-row items-center px-md` + `style={{ height: 52, opacity }}` + 7 props (label / value / disabled / destructive / showChevron / align / busy / onPress) | label tone 三态(`text-ink` / `text-ink-muted` / `text-err`)+ 右侧 value(可选)+ chevron `›`(destructive 否决) |
+
+### 状态视觉转移表
+
+| 状态        | label tone       | label weight    | opacity | onPress                                           | Pressable disabled | accessibilityState             |
+| ----------- | ---------------- | --------------- | ------- | ------------------------------------------------- | ------------------ | ------------------------------ |
+| default     | `text-ink`       | `font-normal`   | 1       | provided                                          | false              | `{disabled:false, busy:false}` |
+| disabled    | `text-ink-muted` | `font-normal`   | 0.5     | undefined                                         | true               | `{disabled:true, busy:false}`  |
+| destructive | `text-err`       | `font-medium`   | 1       | provided                                          | false              | `{disabled:false, busy:false}` |
+| busy        | (按既有 tone)    | (按既有 weight) | 0.5     | (sticky default,但 disabled prop=true 阻断 click) | true               | `{disabled:false, busy:true}`  |
+
+handleLogout race guard(per 决策 9):`isLoading=true` → Row `busy={true}` → Pressable disabled / data-opacity=0.5 / data-busy=true(测试 verify)。
+
+### Token 映射(完整复用 my-profile PHASE 2 base,**0 新增**)
+
+| 视觉维度        | className                                            | Token(`packages/design-tokens/src/index.ts`)                                                |
+| --------------- | ---------------------------------------------------- | ------------------------------------------------------------------------------------------- |
+| Card 背景       | `bg-surface`                                         | `colors.surface.DEFAULT = #FFFFFF`                                                          |
+| Card 边框       | `border-line-soft`                                   | `colors.line.soft = #EEF0F3`                                                                |
+| Card 圆角       | `rounded-md`                                         | `borderRadius.md = 12px`                                                                    |
+| 页面背景        | `bg-surface-sunken`                                  | `colors.surface.sunken = #F2F4F7`(列表 page)/ surface(单文本 page)                          |
+| Row label 默认  | `text-ink`                                           | `colors.ink.DEFAULT = #1A1A1A`                                                              |
+| Row label muted | `text-ink-muted`                                     | `colors.ink.muted = #666666`                                                                |
+| Row label dest  | `text-err`                                           | `colors.err.DEFAULT = #EF4444`                                                              |
+| Row value       | `text-ink-muted`(text-sm)                            | 同 ink-muted                                                                                |
+| Chevron `›`     | `text-ink-subtle`                                    | `colors.ink.subtle = #999999`                                                               |
+| Divider 线      | `bg-line-soft`                                       | 同 line.soft                                                                                |
+| Footer 链接     | `text-accent`                                        | `colors.accent.DEFAULT = #FF8C00`(决议:不加新 link-text token,避免与 brand-500 主 CTA 撞色) |
+| Phone mask 字   | `text-2xl text-ink font-mono tracking-wide`          | text-2xl + ink + JetBrains Mono / SF Mono(数字 affordance)                                  |
+| 法规正文        | `text-sm text-ink-muted leading-relaxed text-center` | sm + muted + 居中(无装饰)                                                                   |
+| Spacing 全套    | `xs/sm/md/lg/xl/2xl/3xl`                             | 4/8/16/24/32/48/64                                                                          |
+
+**不消费**(my-profile 引入但本 spec 无 hero / 无沉浸式):`hero-overlay` / `white-soft` / `white-strong` / `boxShadow.hero-ring`。
+
+### Drift 处理摘要(完整版见 handoff.md § 6)
+
+| Mockup 提议                              | 处理                                                                           |
+| ---------------------------------------- | ------------------------------------------------------------------------------ |
+| `<StackHeader>` 自画 header              | **不翻译** — 用 Expo Router default(已 ship + iOS native + 0 维护)             |
+| `<LogoutAlert>` custom modal             | **不翻译** — 保留 PHASE 1 `Alert.alert()`(已 ship + T5 测试覆盖)               |
+| PhoneScreen `已绑定手机号` 副标题        | **不翻译** — per spec Q4 仅 mask 显示                                          |
+| primitives 从 SettingsScreen 反向 export | **抽到 `_primitives.tsx`** — 5 page 干净 import(等价微调,非 drift)             |
+| Row 内 `style={{ height: 52 }}`(layout)  | **保留** — height 是 layout 维度,豁免 className 体系(per className token 守则) |
 
 ---
 
