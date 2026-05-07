@@ -5,7 +5,7 @@ import { displayNameSchema, mapOnboardingApiError } from '../validation/onboardi
 
 // Per onboarding spec FR-008 4-state machine: idle → submitting → (success | error).
 // Hook does NOT navigate on success — AuthGate observes store.displayName via
-// setDisplayName (written by @nvy/auth.updateDisplayName) and routes to /(app)/.
+// setDisplayName (written by @nvy/auth.updateDisplayName) and routes to /(app)/(tabs)/profile.
 export type OnboardingStatus = 'idle' | 'submitting' | 'success' | 'error';
 
 export interface UseOnboardingFormResult {

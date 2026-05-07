@@ -5,7 +5,7 @@
 // Three states (per FR-001):
 //   1. !isAuthenticated                      → /(auth)/login
 //   2. isAuthenticated && displayName == null → /(app)/onboarding
-//   3. isAuthenticated && displayName != null → /(app)
+//   3. isAuthenticated && displayName != null → /(app)/(tabs)/profile
 //
 // Each state maps to a target route, with `noop` when the user is already
 // where they should be (avoids replace-loop + needless re-renders).
@@ -33,6 +33,6 @@ export function decideAuthRoute(input: AuthGateInput): AuthGateDecision {
   }
 
   // isAuthenticated + displayName != null — user must NOT stay on (auth) or onboarding.
-  if (inAuthGroup || inOnboarding) return { kind: 'replace', target: '/(app)' };
+  if (inAuthGroup || inOnboarding) return { kind: 'replace', target: '/(app)/(tabs)/profile' };
   return { kind: 'noop' };
 }
