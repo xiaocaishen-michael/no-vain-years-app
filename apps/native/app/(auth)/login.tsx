@@ -28,10 +28,13 @@ import { useLoginForm } from '../../lib/hooks/use-login-form';
 // Per spec FR-002: PhoneInput 仅显示数字部分；提交前拼 +86 prefix.
 const toE164 = (rawDigits: string): string => `+86${rawDigits.replace(/\s+/g, '')}`;
 
-// spec C T6 — freeze-period intercept modal (PHASE 1 PLACEHOLDER per ADR-0017
-// 类 1 边界: bare RN, no @nvy/ui). Visuals (padding/colors/elevation) pending
-// mockup; behavior is fully wired against US4 acceptance scenarios + FR-011.
+// spec C T15 — freeze-period intercept modal (PHASE 2 mockup translation per
+// design/handoff.md § 2). Behavior wired in PHASE 1 (T6); this commit replaces
+// scrim/card/buttons with token-based className using new modal-overlay +
+// shadow-modal tokens. login form is left untouched (login v2 PHASE 2 in
+// PR #51 owns it).
 const FREEZE_COPY = {
+  heading: '账号处于冻结期',
   description: '账号处于注销冻结期，可撤销注销恢复账号',
   cancelDelete: '撤销',
   keep: '保持',
@@ -235,7 +238,7 @@ export default function LoginScreen() {
         <Text className="text-brand-500">《隐私政策》</Text>
       </Text>
 
-      {/* PHASE 1 PLACEHOLDER — spec C T6 freeze-period modal; visuals pending mockup. */}
+      {/* spec C T15 — freeze-period modal PHASE 2 (per design/handoff.md § 2). */}
       <Modal
         accessibilityLabel="freeze-modal"
         visible={showFrozenModal}
@@ -243,25 +246,46 @@ export default function LoginScreen() {
         animationType="fade"
         onRequestClose={handleKeepLogin}
       >
-        <View className="flex-1 items-center justify-center bg-black/40 px-lg">
-          <View className="w-full bg-surface rounded-xl p-lg gap-4">
-            <Text className="text-base text-ink">{FREEZE_COPY.description}</Text>
-            <View className="flex-row justify-end gap-3">
+        <View className="flex-1 items-center justify-center bg-modal-overlay px-lg">
+          <View
+            className="bg-surface rounded-md shadow-modal p-lg gap-md"
+            style={{ width: 296 }}
+            accessibilityRole="alert"
+          >
+            <View className="flex-row items-center gap-sm">
+              <View
+                className="rounded-full bg-warn-soft items-center justify-center"
+                style={{ width: 28, height: 28 }}
+              >
+                <Text className="font-bold text-warn text-base">!</Text>
+              </View>
+              <Text className="font-semibold text-ink text-base">{FREEZE_COPY.heading}</Text>
+            </View>
+            <Text className="text-ink-muted leading-relaxed text-sm">
+              {FREEZE_COPY.description}
+            </Text>
+            <View className="flex-row gap-sm">
               <Pressable
                 onPress={handleKeepLogin}
                 accessibilityRole="button"
                 accessibilityLabel="freeze-keep"
                 hitSlop={6}
+                className="flex-1 rounded-md border border-line bg-surface items-center justify-center"
+                style={{ height: 44 }}
               >
-                <Text className="text-sm text-ink-muted">{FREEZE_COPY.keep}</Text>
+                <Text className="font-medium text-ink-muted text-sm">{FREEZE_COPY.keep}</Text>
               </Pressable>
               <Pressable
                 onPress={handleCancelDelete}
                 accessibilityRole="button"
                 accessibilityLabel="freeze-cancel-delete"
                 hitSlop={6}
+                className="flex-1 rounded-md bg-brand-500 shadow-cta items-center justify-center"
+                style={{ height: 44 }}
               >
-                <Text className="text-sm text-brand-500">{FREEZE_COPY.cancelDelete}</Text>
+                <Text className="font-semibold text-surface text-sm">
+                  {FREEZE_COPY.cancelDelete}
+                </Text>
               </Pressable>
             </View>
           </View>

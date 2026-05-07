@@ -1,8 +1,8 @@
 # Tasks: Delete Account & Cancel Deletion UI (spec C)
 
-> **Companions**: [`spec.md`](./spec.md) / [`plan.md`](./plan.md)
-> **Status**: T0-T10 + T12 ✅ shipped 2026-05-07;T11 🟡 deferred(post-merge,待 server release 0.2.0 production deploy)
-> **Implementation PR**: feature/spec-c-delete-account-cancel-deletion-ui(本会话 12 commit,见各 task `Commit` 字段;PR # 待 push 后回填)
+> **Companions**: [`spec.md`](./spec.md) / [`plan.md`](./plan.md) / [`design/handoff.md`](./design/handoff.md)
+> **Status**: PHASE 1 T0-T10 + T12 ✅ shipped 2026-05-07(PR [#78](https://github.com/xiaocaishen-michael/no-vain-years-app/pull/78));**PHASE 2 T_mock + T13 + T14 + T15 + T16-doc ✅(本 PR)**;T11 + T16-smoke 🟡 deferred(等 server release 0.2.0 production deploy + manual stack 起)
+> **Implementation PR**: PHASE 1 = PR [#78](https://github.com/xiaocaishen-michael/no-vain-years-app/pull/78);PHASE 2 = feature/spec-c-mockup-translation(本会话,见各 task `Commit` 字段;PR # 待 push 后回填)
 > **里程碑依赖**(spec C impl session 才开):
 >
 > - **spec B impl ship**(`account-settings-shell` PR — 提供 `account-security/_layout.tsx` 文件 + spec B FR-011 `useAuthStore.phone` 字段扩展)
@@ -410,6 +410,195 @@
 **Commit**:`docs(account): close spec C tasks + archive plan file (spec C T12)`
 
 **Aligned FR/SC**:无(纯 doc 归档 task)
+
+---
+
+## Mockup PHASE 2 阶段(本 PR — UI 翻译落地)
+
+> 本段沿用 onboarding(T_mock/T8-T11)/ my-profile(T_mock/T10-T13)/ account-settings-shell(T_mock/T12-T15)PHASE 2 五任务模式。详细 mockup 决策见 [`design/handoff.md`](./design/handoff.md)。
+>
+> **顺序**:T_mock(bundle 落 + handoff 文档)→ T13(delete-account 翻译)→ T14(cancel-deletion 翻译)→ T15(login.tsx freeze modal 翻译)→ T16(plan.md UI 段回填 + visual smoke + 全 ✅)
+
+---
+
+### T_mock ✅ [Mockup] bundle 落 `design/source/` + 写 `design/handoff.md` 7 段
+
+**前置**:Claude Design 跑完 mockup(用户本地 `~/Downloads/account-center/`)
+
+**步骤**:
+
+1. `cp -r ~/Downloads/account-center/. apps/native/spec/delete-account-cancel-deletion-ui/design/source/`
+2. 写 `design/handoff.md` 7 段(per `<meta>/docs/experience/claude-design-handoff.md` § 5 模板,沿用 account-settings-shell handoff 结构):
+   - § 1 Bundle 内容速览 + 丢弃同源 spec 文件清单 + deliverable 命名 drift 说明
+   - § 2 9 个 inline component breakdown(0 抽 packages/ui 决策 + 触发 promote 条件)
+   - § 3 6 状态机 ↔ spec FR/SC 对齐(6/6 完全 match)
+   - § 4 Token 决策(+1 modal-overlay,可能 +1 shadow.modal)
+   - § 5 翻译期 5+12 条 gotcha audit
+   - § 6 Drift 政策(code > mockup)
+   - § 7 引用
+3. 改本 tasks.md:T_mock ✅(本 task) + 顶部 Status 行同步 PHASE 2 启动
+4. `git add` design/source/ + design/handoff.md + tasks.md + `git commit`
+
+**Verify**:
+
+- `ls apps/native/spec/delete-account-cancel-deletion-ui/design/source/project/` 含 `DeleteCancel Preview.html` + `tailwind.config.js` + `IOSFrame.tsx` + `preview/` ✓
+- `wc -l apps/native/spec/delete-account-cancel-deletion-ui/design/handoff.md` ≥ 100 行 ✓
+- `rg "PHASE 2 T_mock ✅" apps/native/spec/delete-account-cancel-deletion-ui/tasks.md` 命中 ✓
+
+**Commit**:`docs(account): spec C delete-cancel mockup bundle + handoff (M1.X / spec C T_mock)`
+
+**Aligned FR/SC**:无(纯 doc + bundle 归档 task)
+
+---
+
+### T13 ✅ [App] 翻译 `delete-account.tsx` — destructive 注销 page UI 完成
+
+**前置**:T_mock 完成 + design-tokens 加 `modal-overlay`(若 shadow.modal 也缺则一并加)
+
+**步骤**:
+
+1. 改 `packages/design-tokens/src/index.ts` + `apps/native/tailwind.config.ts`:加 `color.modal-overlay = 'rgba(15,18,28,0.48)'`(+ `shadow.modal` 若 account-settings-shell base 未含)
+2. 红:`delete-account.test.tsx` 加 PHASE 2 视觉断言:
+   - 警示卡 err-soft className 命中
+   - 双 checkbox 真控件(`<Pressable accessibilityRole="checkbox">` + `<Text>✓</Text>` filled 态)
+   - SendCodeRow 3 态 className 切换(default brand-text / cooldown ink-muted / disabled ink-subtle)
+   - CodeInput 6 cell 渲染 + brand ring(focused)/ err ring(errorMsg !== null)联动
+   - PrimaryButton destructive(err fill + cta-shadow + disabled 灰)
+   - PHASE 1 banner `// PHASE 1 PLACEHOLDER` 已删除
+3. 绿:改写 `apps/native/app/(app)/settings/account-security/delete-account.tsx`(per handoff.md § 2 + plan.md UI 段 PHASE 2 回填):
+   - 删 PHASE 1 PLACEHOLDER banner
+   - 9 inline components(按 handoff § 2 拆解)
+   - className 全部走 token(无 hex / rgb / px,layout 维度豁免 — height/width/borderRadius numeric per § 5.1)
+   - PHASE 1 hook + state machine + a11y **完整保留**
+4. typecheck + lint + test pass
+5. 改 tasks.md:T13 行 heading 加 ✅
+6. `git add` + `git commit`
+
+**Verify**:
+
+- `pnpm --filter native test apps/native/app/\(app\)/settings/account-security/delete-account.test.tsx` 全绿
+- `rg "PHASE 1 PLACEHOLDER" apps/native/app/\(app\)/settings/account-security/delete-account.tsx` 0 命中 ✓
+- `rg "#[0-9a-fA-F]{3,8}|rgb\(|[0-9]+px" apps/native/app/\(app\)/settings/account-security/delete-account.tsx` 0 命中(layout 数值 number-only 豁免)
+- PHASE 1 既有 acceptance 测试不破
+
+**Commit**:`feat(account): delete-account PHASE 2 mockup translation (M1.X / spec C T13)`
+
+**Aligned FR/SC**:FR-001 / FR-002 / FR-005 / FR-009 / SC-001(US1-3 视觉)/ SC-005(占位 → token 完整)
+
+---
+
+### T14 ✅ [App] 翻译 `cancel-deletion.tsx` — recover 撤销 page UI 完成(brand vs T13 destructive 对比)
+
+**前置**:T13 完成
+
+**步骤**:
+
+1. 红:`cancel-deletion.test.tsx` 加 PHASE 2 视觉断言:
+   - 顶部 brand-soft accent bar 渲染 + `恢复账号` heading 命中
+   - PhoneInputBlock prefilled 态:`accessibilityState.disabled=true` + maskPhone 文本 + 🔒 icon visible(role="image" or aria-hidden)
+   - PhoneInputBlock editable 态:`editable=true` + placeholder 文本
+   - SendCodeRow + CodeInput 复用 T13 同结构(本地 inline copy)
+   - PrimaryButton brand fill(`bg-brand-500` + `shadow-cta`)— 与 T13 destructive 对比
+   - 反枚举守则:`getByText('凭证或验证码无效')` 单一文案命中 + 不出现 `phone 未注册` / `已匿名化` 等
+   - PHASE 1 banner 已删除
+2. 绿:改写 `apps/native/app/(auth)/cancel-deletion.tsx`(per handoff.md § 2 + plan.md UI 段)
+3. typecheck + lint + test pass
+4. 改 tasks.md:T14 ✅
+5. `git add` + `git commit`
+
+**Verify**:
+
+- `pnpm --filter native test apps/native/app/\(auth\)/cancel-deletion.test.tsx` 全绿
+- `rg "PHASE 1 PLACEHOLDER" apps/native/app/\(auth\)/cancel-deletion.tsx` 0 命中 ✓
+- `rg "#[0-9a-fA-F]{3,8}|rgb\(|[0-9]+px" apps/native/app/\(auth\)/cancel-deletion.tsx` 0 命中(layout 豁免)
+- 反枚举不变性 grep:`rg "phone 未注册|已匿名化|账号不存在" apps/native/app/\(auth\)/cancel-deletion.tsx` 0 命中
+
+**Commit**:`feat(account): cancel-deletion PHASE 2 mockup translation (M1.X / spec C T14)`
+
+**Aligned FR/SC**:FR-003 / FR-013 / FR-019 / FR-020 / SC-004 / SC-005 / SC-008(反枚举)
+
+---
+
+### T15 ✅ [App] freeze modal 嵌入既有 `login.tsx` — overlay + card + 双 button(login form 不动)
+
+**前置**:T14 完成
+
+**步骤**:
+
+1. 红:`login.test.tsx` 加 freeze modal PHASE 2 视觉断言(扩既有 US4-6 测试):
+   - showFreezeModal=true 时 modal scrim `bg-modal-overlay` 命中
+   - card w296 + rounded-md(16) + shadow-modal 命中
+   - 双 button:[保持] ghost(border-line + ink-muted text)/ [撤销] brand fill(bg-brand-500 + shadow-cta)
+   - warn icon-circle(warn-soft bg + warn fg)visible
+   - 顺序:[保持] 在左 / [撤销] 在右(per mockup primary 在右惯例)
+2. 绿:改写 `apps/native/app/(auth)/login.tsx` 末端 freeze modal section(per handoff.md § 2 + plan.md UI 段):
+   - **login form 不动**(login v2 PHASE 2 已 ship in PR #51)
+   - 替换既有 `<Modal>` body(PHASE 1 占位结构)为 PHASE 2 视觉 — overlay scrim + FreezeModalCard inline
+   - showFreezeModal / handleCancelDelete / handleKeep handlers **完整保留**(PHASE 1 T6 ship)
+3. typecheck + lint + test pass
+4. 改 tasks.md:T15 ✅
+5. `git add` + `git commit`
+
+**Verify**:
+
+- `pnpm --filter native test apps/native/app/\(auth\)/login.test.tsx` 全绿
+- login v2 form a11y / 视觉 PHASE 2 既有不破:`git diff PR-51..HEAD -- apps/native/app/\(auth\)/login.tsx | grep "^-" | head` 仅在 modal section 有删除(form 段 0 删)
+- modal-overlay token 引用:`rg "modal-overlay|modal-overlay" apps/native/app/\(auth\)/login.tsx` 命中
+
+**Commit**:`feat(account): freeze modal PHASE 2 mockup translation in login (M1.X / spec C T15)`
+
+**Aligned FR/SC**:FR-010 / FR-011 / FR-012 / SC-003 / SC-005
+
+---
+
+### T16-doc ✅ [Plan + Doc] plan.md UI 段 PHASE 2 回填 + tasks.md 全 ✅
+
+**前置**:T13/T14/T15 完成
+
+**步骤**:
+
+1. 改 `apps/native/spec/delete-account-cancel-deletion-ui/plan.md` § UI 段:
+   - heading `## UI 段(占位版,pending mockup)` → `## UI 段(PHASE 2 mockup 翻译落地)`
+   - 删 PHASE 1 4 边界占位代码示意(line 442-650 整段),替换为 PHASE 2 完整版(token 映射表 + 各 page 区域 className 主轴 + 测试 mock 兼容性 + layout 维度白名单 + 引用 handoff.md)
+2. 写 `apps/native/runtime-debug/2026-05-07-delete-cancel-mockup-translation/README.md`(占位 — visual smoke 跑法 + 6 状态清单 + future stack-up 步骤)
+3. 改本 tasks.md:T16-doc ✅(本 task) + 顶部 Status 行 PHASE 2 全 ✅(T_mock/T13/T14/T15/T16-doc)+ T11 / T16-smoke 🟡 deferred
+4. typecheck + lint + test pass(已由 T13/T14/T15 闭环 264/264 验证;T16-doc 仅改 plan.md / tasks.md / runtime-debug README,无业务代码改动)
+5. `git add` + `git commit`
+
+**Verify**:
+
+- `rg "PHASE 1 占位版" apps/native/spec/delete-account-cancel-deletion-ui/plan.md` 0 命中(已替换为 PHASE 2 完整版)
+- `rg "✅" apps/native/spec/delete-account-cancel-deletion-ui/tasks.md | wc -l` ≥ 16(T0-T10 + T12 + T_mock + T13/T14/T15/T16-doc = 16,T11 + T16-smoke 仍 🟡)
+- spec C plan-lifecycle:本 PHASE 2 PR 不动 archive 状态,等 T11 + T16-smoke 闭环后再归档(per memory `feedback_conventions_evergreen_only.md`:plan-lifecycle 操作不必每 phase 都做)
+
+**Commit**:`docs(account): plan UI 段 PHASE 2 回填 + tasks ✅ (spec C T16-doc)`
+
+**Aligned FR/SC**:无(纯 plan 回填 task)
+
+---
+
+### T16-smoke 🟡 [Visual smoke] 6 状态截图 + run.mjs(deferred,同 T11)
+
+**前置**:T16-doc 完成 + 真后端 stack 起(server :8080 dev / metro :8081 / docker postgres+redis;Playwright 安装)
+
+**Deferral reason**(2026-05-07):本 spec C visual smoke 与 onboarding T_smoke / my-profile T13 同套路 — 需 docker compose dev + server dev profile + metro web bundle + Playwright。本 session(AI-driven)未启 stack;留作下次 manual session(用户起完 stack 后跑 run.mjs)。**T11(真后端冒烟)+ T16-smoke 共享 stack 启动成本,可同 session 跑**;最佳触发点 = server release 0.2.0 production deploy。
+
+**步骤**(future manual run):
+
+1. 写 `apps/native/runtime-debug/2026-05-07-delete-cancel-mockup-translation/run.mjs`:沿用 onboarding T_smoke 套路(`page.route` 拦请求 + 各状态 force render);6 状态构造详见 README.md
+2. 跑 Playwright headless chromium 生成 6 PNG → 落本目录
+3. manual 检查 6 PNG 视觉态稳定 + console 无 critical error
+4. 改 tasks.md:T16-smoke 🟡 → ✅ + 顶部 Status 行更新
+
+**Verify**:
+
+- `ls apps/native/runtime-debug/2026-05-07-delete-cancel-mockup-translation/*.png | wc -l` == 6
+- 6 PNG manual review 通过(default / cooldown / error / prefilled / deeplink / freeze-modal)
+- `rg "✅" apps/native/spec/delete-account-cancel-deletion-ui/tasks.md` 加 1 (T16-smoke ✅)
+
+**Commit**:`test(account): delete-cancel visual smoke 6 状态 (spec C T16-smoke)`
+
+**Aligned FR/SC**:SC-005(占位 → token 完整 视觉冒烟)/ SC-009(链路联通)
 
 ---
 

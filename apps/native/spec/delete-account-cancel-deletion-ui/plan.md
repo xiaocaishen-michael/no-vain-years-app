@@ -352,217 +352,86 @@ export async function cancelDeletion(phone: string, code: string): Promise<void>
 
 ---
 
-## UI 段(占位版,pending mockup)
+## UI 段(PHASE 2 mockup 翻译落地)
 
-per ADR-0017 类 1 边界,本段仅写**业务流可验**的占位结构;视觉决策(精确 padding / hex / 字号 / 圆角 / 阴影 / 自定义动画 / icon 装饰)留 PHASE 2 mockup 落地后回填本段。
+per ADR-0017 类 1 PHASE 2,mockup bundle 已落地 + 翻译完成。本段记录最终 UI 结构 + token 映射 + 组件 breakdown 概要;**详细 mockup 决策见 [`design/handoff.md`](./design/handoff.md)**(7 段:bundle 速览 / components breakdown / 状态机覆盖 / token 决策 / 翻译期 gotcha / drift 政策 / 引用)。
 
-### delete-account.tsx 占位结构
+### Token 增量(本 spec 引入)
 
-```tsx
-// PHASE 1 PLACEHOLDER — business flow validated; visuals pending mockup.
-const COPY = {
-  title: '注销账号',
-  warning1: '注销后账号进入 15 天冻结期,期间可登录撤销恢复',
-  warning2: '冻结期满后账号数据将永久匿名化,不可恢复',
-  checkbox1: '我已知晓 15 天冻结期可撤销',
-  checkbox2: '我已知晓期满后数据匿名化不可逆',
-  sendCode: '发送验证码',
-  resendCooldown: (s: number) => `${s}s 后可重发`,
-  codePlaceholder: '请输入 6 位验证码',
-  submit: '确认注销',
-  submitting: 'submitting...',
-  errorRateLimit: '操作太频繁,请稍后再试',
-  errorInvalidCode: '验证码错误',
-  errorNetwork: '网络错误,请重试',
-  errorUnknown: '发生未知错误',
-};
+| Token                 | 类型   | 值                                                                          | 用途                   |
+| --------------------- | ------ | --------------------------------------------------------------------------- | ---------------------- |
+| `color.modal-overlay` | color  | `rgba(15,18,28,0.48)`                                                       | freeze modal scrim     |
+| `boxShadow.modal`     | shadow | `0 12px 32px -8px rgba(15,18,28,0.28), 0 4px 12px -4px rgba(15,18,28,0.18)` | freeze modal card 抬升 |
 
-export default function DeleteAccountScreen() {
-  // States: checkbox1, checkbox2, code, hasSentCode, cooldown, isSubmitting, errorMsg
-  return (
-    <View style={{ flex: 1, padding: 16 }}>
-      <Text>{COPY.warning1}</Text>
-      <Text>{COPY.warning2}</Text>
-      <Pressable
-        onPress={() => setCheckbox1(!checkbox1)}
-        accessibilityState={{ checked: checkbox1 }}
-      >
-        <Text>
-          {checkbox1 ? '☑ ' : '☐ '}
-          {COPY.checkbox1}
-        </Text>
-      </Pressable>
-      <Pressable
-        onPress={() => setCheckbox2(!checkbox2)}
-        accessibilityState={{ checked: checkbox2 }}
-      >
-        <Text>
-          {checkbox2 ? '☑ ' : '☐ '}
-          {COPY.checkbox2}
-        </Text>
-      </Pressable>
-      <Pressable
-        disabled={!(checkbox1 && checkbox2) || cooldown > 0 || isSendingCode}
-        onPress={handleSendCode}
-        style={{ opacity: !(checkbox1 && checkbox2) || cooldown > 0 ? 0.5 : 1 }}
-      >
-        <Text>{cooldown > 0 ? COPY.resendCooldown(cooldown) : COPY.sendCode}</Text>
-      </Pressable>
-      <TextInput
-        value={code}
-        onChangeText={(t) => setCode(t.replace(/\D/g, '').slice(0, 6))}
-        keyboardType="number-pad"
-        inputMode="numeric"
-        maxLength={6}
-        editable={hasSentCode && !isSubmitting}
-        placeholder={COPY.codePlaceholder}
-      />
-      <Pressable
-        disabled={!hasSentCode || code.length !== 6 || isSubmitting}
-        onPress={handleSubmit}
-        style={{ opacity: !hasSentCode || code.length !== 6 || isSubmitting ? 0.5 : 1 }}
-        accessibilityState={{ disabled: isSubmitting, busy: isSubmitting }}
-      >
-        <Text>{isSubmitting ? COPY.submitting : COPY.submit}</Text>
-      </Pressable>
-      {errorMsg && <Text>{errorMsg}</Text>}
-    </View>
-  );
-}
-```
+落地于 `packages/design-tokens/src/index.ts`(T15 commit)。其余 token 全部复用 account-settings-shell PHASE 2 base(login v2 + my-profile 4 alpha + boxShadow.cta)。
 
-### cancel-deletion.tsx 占位结构
+### 整体布局共性
 
-```tsx
-// PHASE 1 PLACEHOLDER — business flow validated; visuals pending mockup.
-const COPY = {
-  title: '撤销注销',
-  description: '请通过手机号验证码撤销注销,恢复账号',
-  phonePlaceholder: '请输入手机号(如 +86138...)',
-  sendCode: '发送验证码',
-  resendCooldown: (s: number) => `${s}s 后可重发`,
-  codePlaceholder: '请输入 6 位验证码',
-  submit: '撤销注销',
-  submitting: 'submitting...',
-  errorRateLimit: '操作太频繁,请稍后再试',
-  errorInvalidCredentials: '凭证或验证码无效',
-  errorNetwork: '网络错误,请重试',
-  errorUnknown: '发生未知错误',
-};
+3 个视觉单元(delete-account / cancel-deletion / freeze modal)沿用同套 form 节奏:
 
-export default function CancelDeletionScreen() {
-  const params = useLocalSearchParams<{ phone?: string }>();
-  const router = useRouter();
-  const [phone, setPhone] = useState('');
-  const [phoneReadOnly, setPhoneReadOnly] = useState(false);
-  // 第一动作:读 param + setParams undefined(per FR-013 + FR-022 安全)
-  useEffect(() => {
-    if (params.phone) {
-      setPhone(decodeURIComponent(params.phone));
-      setPhoneReadOnly(true);
-      router.setParams({ phone: undefined });
-    }
-  }, []);
-  // 余下 state: code, hasSentCode, cooldown, isSubmitting, errorMsg
-  return (
-    <View style={{ flex: 1, padding: 16 }}>
-      <Text>{COPY.description}</Text>
-      <TextInput
-        value={phoneReadOnly ? maskPhone(phone) : phone}
-        onChangeText={setPhone}
-        keyboardType="phone-pad"
-        inputMode="tel"
-        autoComplete="tel"
-        textContentType="telephoneNumber"
-        editable={!phoneReadOnly}
-        placeholder={COPY.phonePlaceholder}
-      />
-      <Pressable disabled={!phone || cooldown > 0 || isSendingCode} onPress={handleSendCode}>
-        <Text>{cooldown > 0 ? COPY.resendCooldown(cooldown) : COPY.sendCode}</Text>
-      </Pressable>
-      <TextInput
-        value={code}
-        onChangeText={(t) => setCode(t.replace(/\D/g, '').slice(0, 6))}
-        keyboardType="number-pad"
-        inputMode="numeric"
-        maxLength={6}
-        editable={hasSentCode && !isSubmitting}
-        placeholder={COPY.codePlaceholder}
-      />
-      <Pressable
-        disabled={!hasSentCode || code.length !== 6 || isSubmitting}
-        onPress={handleSubmit}
-      >
-        <Text>{isSubmitting ? COPY.submitting : COPY.submit}</Text>
-      </Pressable>
-      {errorMsg && <Text>{errorMsg}</Text>}
-    </View>
-  );
-}
-```
+- 主容器 `<View className="flex-1 bg-surface">` + 内层 `px-md pt-md pb-xl gap-md`
+- SectionLabel 装饰编号(`01` / `02` / `03`)+ mono 大写 SECTION 文字(`RISK` / `CONFIRM` / `VERIFY` / `PHONE`)
+- SendCodeRow + CodeInput 两个 page 都消费 — 0 抽 packages/ui,各页 inline copy(per handoff.md § 2 决策)
+- ErrorRow err-soft 底卡 + alert prefix
+- 提交按钮 height=52 + 强对比 tone:delete = `bg-err shadow-cta`(destructive)/ cancel-deletion = `bg-brand-500 shadow-cta`(recover)
 
-### freeze modal(嵌入 login.tsx)占位结构
+### delete-account.tsx UI 结构
 
-```tsx
-// 在 login.tsx 末端追加,与 form 同 component scope
-const FREEZE_COPY = {
-  title: '账号处于注销冻结期',
-  description: '可撤销注销恢复账号',
-  cancelDelete: '撤销',
-  keepDelete: '保持',
-};
+| 区域               | className 主轴                                            | 视觉决策                                                                                                                                                                                                 |
+| ------------------ | --------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Section 01 RISK    | `rounded-md bg-err-soft px-md py-md gap-sm`               | 单 err-soft 大卡含双段警示;每段 6×6 dot + 短 tag(`可撤销` warn / `不可逆` err)+ 长描述                                                                                                                   |
+| Section 02 CONFIRM | `rounded-md border border-line-soft bg-surface-alt px-sm` | 双 CheckboxRow 真控件 — `Pressable accessibilityRole="checkbox"` + 18×18 box(brand-500 fill + ✓ when checked / line-strong border 空态)+ middle hairline divider(`bg-line-soft` height=1, marginLeft=26) |
+| Section 03 VERIFY  | `gap-sm`                                                  | SendCodeRow + CodeInput 上下排;CodeInput 6 cell OTP-style(本 spec 首次 — 单 hidden TextInput 接 keyboard,6 visible cell render value);`tone="err"` 当 errorMsg !== null                                  |
+| ErrorRow           | `flex-row gap-sm rounded-sm bg-err-soft px-sm py-sm`      | `!` prefix + msg 文本;`accessibilityRole="alert"`                                                                                                                                                        |
+| SubmitButton       | `bg-err shadow-cta rounded-md` height=52                  | tone=destructive(注销 = 危险);disabled 切 `bg-surface-sunken text-ink-subtle`                                                                                                                            |
+| 副文案             | `text-center text-ink-subtle text-xs`                     | `点击「确认注销」即表示同意进入 15 天冻结期`                                                                                                                                                             |
 
-// State: const [showFreezeModal, setShowFreezeModal] = useState(false);
+### cancel-deletion.tsx UI 结构
 
-// 在 use-login-form.ts catch 块改为:
-// catch (e) {
-//   const mapped = mapApiError(e);
-//   if (mapped.kind === 'frozen') setShowFreezeModal(true);
-//   else setErrorMessage(mapped.toast);
-// }
+| 区域                | className 主轴                                                            | 视觉决策                                                                                                                                                                       |
+| ------------------- | ------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| RecoverBanner(顶部) | `rounded-md border-l-2 border-brand-500 bg-brand-soft px-md py-sm gap-xs` | 与 delete-account err-soft 警示卡形成"危险 vs 恢复"视觉对比;heading `恢复账号` brand-700 + description `请通过手机号验证码撤销注销，恢复账号` ink-muted                        |
+| Section 01 PHONE    | `rounded-md border bg-* px-md` height=48                                  | PhoneInputBlock 单 TextInput 两 mode:prefilled `bg-surface-sunken border-line` + 🔒 prefix + maskPhone(read-only 视觉)/ editable `bg-surface border-line-strong` + placeholder |
+| Phone hint          | `text-ink-subtle text-xs`                                                 | prefilled = `已从冻结期提示自动填入，不可修改` / editable = `请输入注销时使用的手机号`                                                                                         |
+| Section 02 VERIFY   | `gap-sm`                                                                  | SendCodeRow + CodeInput(同 delete-account 同源 inline copy)                                                                                                                    |
+| ErrorRow            | 同 delete-account                                                         | **反枚举守则**(per FR-020 + SC-008):所有 4xx 显示同一文案 `凭证或验证码无效`;mockup-prompt 副文案 "所有错误统一显示" 是 design-time hint,**不入** production                   |
+| SubmitButton        | `bg-brand-500 shadow-cta rounded-md` height=52                            | tone=brand(撤销 = 恢复);disabled 切 sunken                                                                                                                                     |
 
-// JSX 末端:
-<Modal
-  animationType="fade"
-  transparent={true}
-  visible={showFreezeModal}
-  onRequestClose={handleKeep} // Android back 等价 [保持]
-  accessibilityViewIsModal={true}
->
-  <View
-    style={{
-      flex: 1,
-      justifyContent: 'center',
-      alignItems: 'center',
-      backgroundColor: 'rgba(0,0,0,0.5)',
-    }}
-  >
-    <View style={{ backgroundColor: 'white', padding: 16 }} accessibilityRole="alert">
-      <Text>{FREEZE_COPY.title}</Text>
-      <Text>{FREEZE_COPY.description}</Text>
-      <Pressable onPress={handleCancelDelete}>
-        <Text>{FREEZE_COPY.cancelDelete}</Text>
-      </Pressable>
-      <Pressable onPress={handleKeep}>
-        <Text>{FREEZE_COPY.keepDelete}</Text>
-      </Pressable>
-    </View>
-  </View>
-</Modal>;
+### freeze modal in login.tsx UI 结构
 
-// handlers:
-const handleCancelDelete = () => {
-  setShowFreezeModal(false);
-  router.push(`/(auth)/cancel-deletion?phone=${encodeURIComponent(form.phone)}`);
-};
-const handleKeep = () => {
-  setShowFreezeModal(false);
-  // 清 form
-  resetForm(); // 调 react-hook-form reset 或等价
-};
-```
+login form **不动**(login v2 PHASE 2 已 ship in PR #51)。仅替换既有 `<Modal>` 内部:
 
-> **PHASE 2 mockup 回填位置**:本段全部 `<View>` / `<Text>` / `<Pressable>` 替换为 NativeWind className(参考 `.claude/nativewind-mapping.md`);精确 padding / 颜色 / 字号 / 阴影 / 动画 / icon 装饰由 mockup 落地;modal 视觉(顶部 hairline / 圆角 / 阴影 / icon)由 PHASE 2 mockup 决。本段是业务流锚点,**不是视觉规范**。
+| 部件        | className 主轴                                              | 视觉决策                                                                                                                                                                           |
+| ----------- | ----------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Scrim       | `flex-1 items-center justify-center bg-modal-overlay px-lg` | 新 token `modal-overlay`(0.48 vs hero-overlay 0.36 略深以聚焦)                                                                                                                     |
+| Card        | `bg-surface rounded-md shadow-modal p-lg gap-md` width=296  | `accessibilityRole="alert"`;`shadow-modal` token 是新增                                                                                                                            |
+| Heading row | `flex-row items-center gap-sm`                              | 28×28 warn-soft icon-circle 含 `!`(font-bold text-warn)+ heading `账号处于冻结期` font-semibold text-ink                                                                           |
+| Description | `text-ink-muted leading-relaxed text-sm`                    | 简化文案 `账号处于注销冻结期，可撤销注销恢复账号`(per Q3 决议无天数)                                                                                                               |
+| Button row  | `flex-row gap-sm`                                           | 双 button 等宽 height=44;`[保持]` ghost(`bg-surface border-line` text-ink-muted)/ `[撤销]` brand fill(`bg-brand-500 shadow-cta` text-surface);primary 在右沿用 iOS / Material 惯例 |
+
+### 测试 mock 兼容性
+
+PHASE 1 vitest mock(react-native createElement → HTML)对 className 做 silent-drop,**不影响**测试 query(by `accessibilityLabel` / `getByText`)。3 处测试调整(per T13/T14/T15 commit):
+
+1. T13 / T14 send-code button textContent anchor regex `/^发送验证码$/` → partial match `/发送验证码/`(SendCodeRow 现含 `SMS · 6 位验证码` label prefix)
+2. T13 submitting copy `/submitting/i` → `/正在注销/`;T14 `/正在撤销/`(per § 5.2 #10 dev placeholder → friendly copy)
+3. T14 PhoneInputBlock 改单 TextInput 两 mode(原 plan 占位结构是 readOnly 用 Text + editable 用 TextInput)— 测试 `getByLabelText('phone-input')` 兼容 readOnly 路径
+
+### Layout 维度 numeric 豁免清单
+
+per `design/handoff.md` § 5.1 gotcha #3,以下 inline `style={{...}}` 是布局尺寸**非视觉决策**,白名单:
+
+- CheckboxRow box: `width: 18, height: 18`
+- CheckboxRow divider: `height: 1, marginLeft: 26`
+- WarningBlock dot: `width: 6, height: 6`
+- SendCodeRow / PhoneInputBlock / CodeInput cell row: `height: 48`
+- SubmitButton: `height: 52`
+- FreezeModalCard: `width: 296` + warn icon circle `width: 28, height: 28`
+- FreezeModal button: `height: 44`
+
+非白名单的 hex / rgb / px 字面量在业务代码中 0 命中(由 anti-leak 测试 grep 强制)。
+
+> **PHASE 2 翻译完成时间**:2026-05-07 PM。详细组件 breakdown / token 映射 / drift 决策见 [`design/handoff.md`](./design/handoff.md);代码是真相源,plan 与 mockup drift 时以代码为准(per handoff.md § 6)。
 
 ---
 

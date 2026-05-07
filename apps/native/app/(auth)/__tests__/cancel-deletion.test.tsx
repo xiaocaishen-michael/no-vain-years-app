@@ -217,7 +217,9 @@ describe('CancelDeletionScreen — state machine (spec C T8 / US7 acceptance 2 /
     await act(async () => {
       vi.advanceTimersByTime(59_000);
     });
-    expect(screen.getByLabelText('send-code').textContent).toMatch(/^发送验证码$/);
+    // PHASE 2 T14: send-code button now contains SMS label prefix; partial match.
+    expect(screen.getByLabelText('send-code').textContent).toMatch(/发送验证码/);
+    expect(screen.getByLabelText('send-code').textContent).not.toMatch(/后可重发/);
   });
 
   it('US7-2: code input enables after send-code success; typing 6 digits enables submit', async () => {
@@ -305,7 +307,7 @@ describe('CancelDeletionScreen — state machine (spec C T8 / US7 acceptance 2 /
     });
   });
 
-  it('isSubmitting in-flight: a11y disabled+busy, label shows submitting...', async () => {
+  it('isSubmitting in-flight: a11y disabled+busy, label shows 正在撤销...', async () => {
     mocks.useLocalSearchParams.mockReturnValue({ phone: '+8613800138000' });
     mocks.requestCancelDeletionSmsCode.mockResolvedValue(undefined);
     let resolveCancel: (() => void) | undefined;
@@ -328,7 +330,8 @@ describe('CancelDeletionScreen — state machine (spec C T8 / US7 acceptance 2 /
     const submit = screen.getByLabelText('submit');
     expect(submit.getAttribute('aria-disabled')).toBe('true');
     expect(submit.getAttribute('aria-busy')).toBe('true');
-    expect(submit.textContent).toMatch(/submitting/i);
+    // PHASE 2 T14: friendly submitting copy '正在撤销...' replaces dev placeholder.
+    expect(submit.textContent).toMatch(/正在撤销/);
 
     await act(async () => {
       resolveCancel?.();
