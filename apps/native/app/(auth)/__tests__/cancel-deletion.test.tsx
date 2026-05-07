@@ -253,6 +253,88 @@ describe('CancelDeletionScreen — state machine (spec C T8 / US7 acceptance 2 /
     expect(input.value).toBe('123456');
   });
 
+  it('US7-3+4 happy submit: cancelDeletion called + router.replace /(app)/(tabs)', async () => {
+    mocks.useLocalSearchParams.mockReturnValue({ phone: '+8613800138000' });
+    mocks.requestCancelDeletionSmsCode.mockResolvedValue(undefined);
+    mocks.cancelDeletion.mockResolvedValue({
+      accountId: 7,
+      accessToken: 'a',
+      refreshToken: 'r',
+    });
+
+    render(<CancelDeletionScreen />);
+    await act(async () => {
+      fireEvent.click(screen.getByLabelText('send-code'));
+    });
+    fireEvent.change(screen.getByLabelText('code-input'), { target: { value: '123456' } });
+    await act(async () => {
+      fireEvent.click(screen.getByLabelText('submit'));
+    });
+
+    expect(mocks.cancelDeletion).toHaveBeenCalledTimes(1);
+    expect(mocks.cancelDeletion).toHaveBeenCalledWith('+8613800138000', '123456');
+    expect(mocks.routerReplace).toHaveBeenCalledWith('/(app)/(tabs)');
+  });
+
+  it('US9 race guard: rapid double-tap on submit fires cancelDeletion only once', async () => {
+    mocks.useLocalSearchParams.mockReturnValue({ phone: '+8613800138000' });
+    mocks.requestCancelDeletionSmsCode.mockResolvedValue(undefined);
+    let resolveCancel: (() => void) | undefined;
+    mocks.cancelDeletion.mockImplementation(
+      () =>
+        new Promise<{ accountId: number; accessToken: string; refreshToken: string }>((resolve) => {
+          resolveCancel = () => resolve({ accountId: 7, accessToken: 'a', refreshToken: 'r' });
+        }),
+    );
+
+    render(<CancelDeletionScreen />);
+    await act(async () => {
+      fireEvent.click(screen.getByLabelText('send-code'));
+    });
+    fireEvent.change(screen.getByLabelText('code-input'), { target: { value: '123456' } });
+
+    await act(async () => {
+      fireEvent.click(screen.getByLabelText('submit'));
+      fireEvent.click(screen.getByLabelText('submit'));
+    });
+
+    expect(mocks.cancelDeletion).toHaveBeenCalledTimes(1);
+
+    await act(async () => {
+      resolveCancel?.();
+    });
+  });
+
+  it('isSubmitting in-flight: a11y disabled+busy, label shows submitting...', async () => {
+    mocks.useLocalSearchParams.mockReturnValue({ phone: '+8613800138000' });
+    mocks.requestCancelDeletionSmsCode.mockResolvedValue(undefined);
+    let resolveCancel: (() => void) | undefined;
+    mocks.cancelDeletion.mockImplementation(
+      () =>
+        new Promise<{ accountId: number; accessToken: string; refreshToken: string }>((resolve) => {
+          resolveCancel = () => resolve({ accountId: 7, accessToken: 'a', refreshToken: 'r' });
+        }),
+    );
+
+    render(<CancelDeletionScreen />);
+    await act(async () => {
+      fireEvent.click(screen.getByLabelText('send-code'));
+    });
+    fireEvent.change(screen.getByLabelText('code-input'), { target: { value: '123456' } });
+    await act(async () => {
+      fireEvent.click(screen.getByLabelText('submit'));
+    });
+
+    const submit = screen.getByLabelText('submit');
+    expect(submit.getAttribute('aria-disabled')).toBe('true');
+    expect(submit.getAttribute('aria-busy')).toBe('true');
+    expect(submit.textContent).toMatch(/submitting/i);
+
+    await act(async () => {
+      resolveCancel?.();
+    });
+  });
+
   it('SC-008 反枚举: chained reject→resolve uses single "凭证或验证码无效" string for all 4xx kinds', async () => {
     const ResponseError = (await import('@nvy/api-client')).ResponseError;
     mocks.useLocalSearchParams.mockReturnValue({ phone: '+8613800138000' });

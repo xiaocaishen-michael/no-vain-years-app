@@ -16,7 +16,7 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
 import { Pressable, Text, TextInput, View } from 'react-native';
 
-import { requestCancelDeletionSmsCode } from '@nvy/auth';
+import { cancelDeletion, requestCancelDeletionSmsCode } from '@nvy/auth';
 
 import { maskPhone } from '../../lib/format/phone';
 import { mapCancelDeletionError } from './cancel-deletion-errors';
@@ -59,11 +59,12 @@ export default function CancelDeletionScreen() {
   const [hasSentCode, setHasSentCode] = useState(false);
   const [cooldown, setCooldown] = useState(0);
   const [isSendingCode, setIsSendingCode] = useState(false);
-  const [isSubmitting] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const sendingRef = useRef(false);
+  const submittingRef = useRef(false);
 
   // FR-013 + FR-022: read phone from query param on mount, then clear the
   // param via router.setParams so the URL no longer contains the phone.
@@ -122,6 +123,29 @@ export default function CancelDeletionScreen() {
       });
   };
 
+  const handleSubmit = () => {
+    if (submittingRef.current) return;
+    submittingRef.current = true;
+    setIsSubmitting(true);
+    setErrorMsg(null);
+    cancelDeletion(phone, code)
+      .then(() => {
+        // cancelDeletion() wrapper already setSession + loadProfile;
+        // AuthGate detects isAuthenticated change and routes home, but we
+        // explicitly replace too so the cancel-deletion screen unmounts
+        // immediately rather than briefly flashing as auth flips.
+        router.replace('/(app)/(tabs)');
+      })
+      .catch((e: unknown) => {
+        const mapped = mapCancelDeletionError(e);
+        setErrorMsg(errorCopy(mapped.kind));
+      })
+      .finally(() => {
+        submittingRef.current = false;
+        setIsSubmitting(false);
+      });
+  };
+
   const canSendCode = phone.length > 0 && cooldown === 0 && !isSendingCode && !isSubmitting;
   const canSubmit = hasSentCode && code.length === 6 && !isSubmitting;
 
@@ -159,6 +183,7 @@ export default function CancelDeletionScreen() {
       />
       <Pressable
         accessibilityLabel="submit"
+        onPress={handleSubmit}
         accessibilityState={{ disabled: !canSubmit, busy: isSubmitting }}
         style={{ opacity: canSubmit ? 1 : 0.5 }}
       >

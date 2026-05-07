@@ -295,7 +295,7 @@
 
 ---
 
-### T9 [Submit-B] cancel-deletion 提交 + setSession + loadProfile + 跳 (app) + 单测
+### T9 ✅ [Submit-B] cancel-deletion 提交 + setSession + loadProfile + 跳 (app) + 单测
 
 **前置**:T8 完成
 
