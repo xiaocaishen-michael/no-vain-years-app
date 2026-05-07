@@ -40,7 +40,7 @@
 | T8  | [Legal/Layout + Pages]          | `legal/_layout.tsx` + `legal/personal-info.tsx` + `legal/third-party.tsx`(标题 + 占位文案,per spec FR-009 + FR-011 + Q6)                                                   | `settings/legal/_layout.tsx` + `legal/personal-info.tsx` + `legal/third-party.tsx` + tests | ✅                                         |
 | T9  | [Integration]                   | 集成测 — settings 全流(settings → account-security → phone → 退出登录)+ 反枚举静态分析(per spec SC-007 / SC-010 / US9 / SC-005)。stack 返回行为 + 底 tab 隐藏 cut to T10。 | `__tests__/integration/account-settings-shell-flow.test.tsx`                               | ✅                                         |
 | T10 | [Smoke]                         | Playwright 真后端冒烟 — 已 onboarded → ⚙️ → settings → account-security → phone → 返回 → 退出登录 → Alert → 确定 → 跳 login(per spec SC-006)                               | `apps/native/runtime-debug/2026-05-XX-account-settings-shell-business-flow/` + 截图        | 🟡 blocked on staging deploy(后续小 PR 跑) |
-| T11 | [Doc]                           | spec.md 同步修订(FR-005 / FR-011 / FR-019 / Assumption / Open Q,per plan § spec.md 同步修订段)+ tasks.md 全勾 ✅                                                           | `spec.md` + `tasks.md`                                                                     |                                            |
+| T11 | [Doc]                           | spec.md FR-010 改国码白名单(per T3 决策 A)+ 加 2026-05-07 +3 修订记录;plan.md 决策 6 实现段升级国码白名单 + 解释贪心 regex 失败;tasks.md 全勾 ✅(T10 仍 🟡)                | `spec.md` + `plan.md` + `tasks.md`                                                         | ✅                                         |
 
 ### Mockup PHASE 2 阶段(再下 session PR — UI 完成)
 
@@ -774,7 +774,7 @@ manual 检查 17 张截图 + console 无 critical error;Web `window.confirm` 视
 
 ---
 
-## T11 — spec.md 同步修订 + tasks.md ✅(per plan § spec.md 同步修订段)
+## T11 ✅ — spec.md / plan.md 同步修订 + tasks.md 全勾(per plan § spec.md 同步修订段 + T3 决策 A)
 
 **目的**:plan 决策对 spec 影响的 5 处修订(per plan § spec.md 同步修订段);+ tasks.md 全勾。
 

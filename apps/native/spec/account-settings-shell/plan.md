@@ -308,19 +308,22 @@ apps/native/app/(app)/settings/
 
 **决策**:**(a) `apps/native/lib/format/phone.ts`**(纯函数 + `phone.test.ts` 同位)。
 
-**实现**(generic per CL-002):
+**实现**(国码白名单,**T3 impl 升级 — 决策 A,2026-05-07**):
+
+> **背景**:plan 原 generic regex `^(\+\d{1,3})\s*(\d+)$` 因 `\d{1,3}` 贪心匹配国码,把 `+8613812345678` 误抓为 `+861 + 3812345678`(国码 `+86` 和 `+1` 都合法,正则无法仅靠位数区分)。T3 RED 阶段触发 3 个测试 fail。改为国码白名单 lookup(longest-prefix-first),M1 cover 中国 / 美国 / 英国 / 香港 / 台湾 / 日本 / 韩国 / 俄罗斯 8 个 prefix;out-of-list → "未绑定" 兜底。M2 全球扩展再换 libphonenumber-js。
 
 ```ts
 // apps/native/lib/format/phone.ts
+const COUNTRY_CODES = ['+852', '+886', '+86', '+44', '+81', '+82', '+1', '+7'] as const;
+
 export function maskPhone(phone: string | null): string {
   if (phone === null || phone === '') return '未绑定';
 
-  // 提取 + 前缀的国码 + 本地号(允许中间空格)
-  const match = phone.match(/^(\+\d{1,3})\s*(\d+)$/);
-  if (!match) return '未绑定'; // 非法格式(无 + 国码或非全数字本地号)
-  const [, countryCode, localNumber] = match;
+  const countryCode = COUNTRY_CODES.find((cc) => phone.startsWith(cc));
+  if (!countryCode) return '未绑定';
 
-  if (localNumber.length < 7) return '未绑定'; // 本地号过短不足以 mask
+  const localNumber = phone.slice(countryCode.length);
+  if (!/^\d+$/.test(localNumber) || localNumber.length < 7) return '未绑定';
 
   const head = localNumber.slice(0, 3);
   const tail = localNumber.slice(-4);
