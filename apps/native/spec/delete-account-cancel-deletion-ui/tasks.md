@@ -194,7 +194,7 @@
 
 ---
 
-### T6 [Freeze-Modal] freeze modal 嵌入 `login.tsx` + handlers + 单测
+### T6 ✅ [Freeze-Modal] freeze modal 嵌入 `login.tsx` + handlers + 单测
 
 **前置**:T5 完成
 

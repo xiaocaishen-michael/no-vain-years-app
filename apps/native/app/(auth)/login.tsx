@@ -6,7 +6,7 @@
 // (errorScope: 'sms' | 'submit' | null — drives which input shows red border + ErrorRow)
 
 import { useMemo, useState } from 'react';
-import { Platform, Pressable, Text, View } from 'react-native';
+import { Modal, Platform, Pressable, Text, View } from 'react-native';
 import { useRouter } from 'expo-router';
 
 import {
@@ -27,6 +27,15 @@ import { useLoginForm } from '../../lib/hooks/use-login-form';
 
 // Per spec FR-002: PhoneInput 仅显示数字部分；提交前拼 +86 prefix.
 const toE164 = (rawDigits: string): string => `+86${rawDigits.replace(/\s+/g, '')}`;
+
+// spec C T6 — freeze-period intercept modal (PHASE 1 PLACEHOLDER per ADR-0017
+// 类 1 边界: bare RN, no @nvy/ui). Visuals (padding/colors/elevation) pending
+// mockup; behavior is fully wired against US4 acceptance scenarios + FR-011.
+const FREEZE_COPY = {
+  description: '账号处于注销冻结期，可撤销注销恢复账号',
+  cancelDelete: '撤销',
+  keep: '保持',
+} as const;
 
 function SuccessOverlay() {
   return (
@@ -57,6 +66,8 @@ export default function LoginScreen() {
     errorToast,
     errorScope,
     smsCountdown,
+    showFrozenModal,
+    clearFrozenModal,
     requestSms,
     submit,
     showPlaceholderToast,
@@ -91,6 +102,20 @@ export default function LoginScreen() {
 
   const handleClose = () => {
     if (router.canGoBack()) router.back();
+  };
+
+  // spec C T6 — freeze modal handlers
+  const handleCancelDelete = () => {
+    clearFrozenModal();
+    router.push(`/(auth)/cancel-deletion?phone=${encodeURIComponent(phoneE164)}`);
+  };
+
+  // [保持] / Android back / scrim tap → clear modal + reset form (per plan.md
+  // 决策 5 — keep is form-clearing so user re-enters fresh credentials).
+  const handleKeepLogin = () => {
+    clearFrozenModal();
+    setPhone('');
+    setSmsCode('');
   };
 
   const onPhoneChange = (next: string) => {
@@ -209,6 +234,39 @@ export default function LoginScreen() {
         登录即表示同意 <Text className="text-brand-500">《服务条款》</Text> 与{' '}
         <Text className="text-brand-500">《隐私政策》</Text>
       </Text>
+
+      {/* PHASE 1 PLACEHOLDER — spec C T6 freeze-period modal; visuals pending mockup. */}
+      <Modal
+        accessibilityLabel="freeze-modal"
+        visible={showFrozenModal}
+        transparent
+        animationType="fade"
+        onRequestClose={handleKeepLogin}
+      >
+        <View className="flex-1 items-center justify-center bg-black/40 px-lg">
+          <View className="w-full bg-surface rounded-xl p-lg gap-4">
+            <Text className="text-base text-ink">{FREEZE_COPY.description}</Text>
+            <View className="flex-row justify-end gap-3">
+              <Pressable
+                onPress={handleKeepLogin}
+                accessibilityRole="button"
+                accessibilityLabel="freeze-keep"
+                hitSlop={6}
+              >
+                <Text className="text-sm text-ink-muted">{FREEZE_COPY.keep}</Text>
+              </Pressable>
+              <Pressable
+                onPress={handleCancelDelete}
+                accessibilityRole="button"
+                accessibilityLabel="freeze-cancel-delete"
+                hitSlop={6}
+              >
+                <Text className="text-sm text-brand-500">{FREEZE_COPY.cancelDelete}</Text>
+              </Pressable>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
