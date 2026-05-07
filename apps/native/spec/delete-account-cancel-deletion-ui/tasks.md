@@ -71,7 +71,9 @@
 
 ---
 
-### T2 [Page-A] `delete-account.tsx` 占位 page + 伴文件 + Stack.Screen 注册 + 单测
+### T2 ✅ [Page-A] `delete-account.tsx` 占位 page + 伴文件 + Stack.Screen 注册 + 单测
+
+> **Drift note (impl)**: 伴文件实际命名 `delete-account-errors.ts`(原 tasks.md 写 `delete-account.ts` 与 `.tsx` 同名,触发 TS 模块解析 `.ts` 优先 + Expo Router app/ 下 `.ts` 扫描歧义 — 重命名规避)。
 
 **前置**:T1 完成 + spec B impl ship(`account-security/_layout.tsx` 文件存在)
 
