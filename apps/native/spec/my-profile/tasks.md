@@ -29,17 +29,17 @@
 
 ### Impl 阶段(下个 PR — 业务流 + 占位 UI + 真后端冒烟)
 
-| #   | 层级                 | 任务                                                                                                                         | 文件                                                                    | 状态    |
-| --- | -------------------- | ---------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------- | ------- |
-| T1  | [AuthGate]           | AuthGate 第三态目标改 `(app)/(tabs)/profile`(per FR-002 / SC-002)                                                            | `apps/native/lib/auth/auth-gate-decision.ts` + 同 dir test              | ✅      |
-| T2  | [Layout]             | 新建 `(tabs)/_layout.tsx` — Tabs × 4 配置(无图标 / `unmountOnBlur=false` / `headerShown=false`,per FR-001 / FR-012 / CL-003) | `apps/native/app/(app)/(tabs)/_layout.tsx` + test                       | ✅      |
-| T3  | [Placeholder]        | 3 个 placeholder pages — `(tabs)/index.tsx` / `(tabs)/search.tsx` / `(tabs)/pkm.tsx`(per FR-003)                             | `apps/native/app/(app)/(tabs)/{index,search,pkm}.tsx`                   | ✅      |
-| T4  | [Migration]          | 删 `(app)/index.tsx` + 全仓 grep 引用更新(per 决策 5 / SC-009)                                                               | `apps/native/app/(app)/index.tsx`(删) + grep 命中点                     | ✅      |
-| T5  | [Profile][Skeleton]  | profile screen 骨架 + 顶 nav + Hero 区(per FR-004 / FR-005 / FR-006 / FR-007 + 决策 2 / 7)                                   | `apps/native/app/(app)/(tabs)/profile.tsx` + test                       | ✅      |
-| T6  | [Profile][SlideTabs] | 三 slide tabs 状态机 + tap 切换 + 内容占位 + a11y(per FR-008 / FR-009 / FR-014 / SC-003)                                     | `(tabs)/profile.tsx`(扩展)+ test                                        | ✅      |
-| T7  | [Profile][Sticky]    | ScrollView `stickyHeaderIndices` 集成(per FR-018 / CL-001 (b))                                                               | `(tabs)/profile.tsx`(扩展)                                              | ✅      |
-| T8  | [Integration]        | 集成测 + cross-tab activeTab 保持 + logout 后 (tabs) umount(per CL-003 / SC-007 / SC-010)                                    | `__tests__/integration/my-profile-flow.test.tsx`                        | ✅      |
-| T9  | [Smoke]              | Playwright 真后端冒烟 — 已 onboarded 用户 → (tabs)/profile → 切 slide tabs → 点 ⚙️(dev warning 接受)                         | `apps/native/runtime-debug/2026-05-XX-my-profile-business-flow/` + 截图 | pending |
+| #   | 层级                 | 任务                                                                                                                         | 文件                                                                    | 状态 |
+| --- | -------------------- | ---------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------- | ---- |
+| T1  | [AuthGate]           | AuthGate 第三态目标改 `(app)/(tabs)/profile`(per FR-002 / SC-002)                                                            | `apps/native/lib/auth/auth-gate-decision.ts` + 同 dir test              | ✅   |
+| T2  | [Layout]             | 新建 `(tabs)/_layout.tsx` — Tabs × 4 配置(无图标 / `unmountOnBlur=false` / `headerShown=false`,per FR-001 / FR-012 / CL-003) | `apps/native/app/(app)/(tabs)/_layout.tsx` + test                       | ✅   |
+| T3  | [Placeholder]        | 3 个 placeholder pages — `(tabs)/index.tsx` / `(tabs)/search.tsx` / `(tabs)/pkm.tsx`(per FR-003)                             | `apps/native/app/(app)/(tabs)/{index,search,pkm}.tsx`                   | ✅   |
+| T4  | [Migration]          | 删 `(app)/index.tsx` + 全仓 grep 引用更新(per 决策 5 / SC-009)                                                               | `apps/native/app/(app)/index.tsx`(删) + grep 命中点                     | ✅   |
+| T5  | [Profile][Skeleton]  | profile screen 骨架 + 顶 nav + Hero 区(per FR-004 / FR-005 / FR-006 / FR-007 + 决策 2 / 7)                                   | `apps/native/app/(app)/(tabs)/profile.tsx` + test                       | ✅   |
+| T6  | [Profile][SlideTabs] | 三 slide tabs 状态机 + tap 切换 + 内容占位 + a11y(per FR-008 / FR-009 / FR-014 / SC-003)                                     | `(tabs)/profile.tsx`(扩展)+ test                                        | ✅   |
+| T7  | [Profile][Sticky]    | ScrollView `stickyHeaderIndices` 集成(per FR-018 / CL-001 (b))                                                               | `(tabs)/profile.tsx`(扩展)                                              | ✅   |
+| T8  | [Integration]        | 集成测 + cross-tab activeTab 保持 + logout 后 (tabs) umount(per CL-003 / SC-007 / SC-010)                                    | `__tests__/integration/my-profile-flow.test.tsx`                        | ✅   |
+| T9  | [Smoke]              | Playwright 真后端冒烟 — 已 onboarded 用户 → (tabs)/profile → 切 slide tabs → 点 ⚙️(dev warning 接受)                         | `apps/native/runtime-debug/2026-05-07-my-profile-business-flow/` + 截图 | ✅   |
 
 ### Mockup PHASE 2 阶段(再下 session PR — UI 完成)
 
