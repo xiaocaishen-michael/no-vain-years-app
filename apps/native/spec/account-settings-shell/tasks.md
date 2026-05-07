@@ -28,19 +28,19 @@
 
 ### Impl 阶段(下个 PR — 业务流 + 占位 UI + 真后端冒烟)
 
-| #   | 层级                            | 任务                                                                                                                                                                       | 文件                                                                                       | 状态 |
-| --- | ------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------ | ---- |
-| T1  | [Auth-Store]                    | `useAuthStore` 加 `phone` 字段 + `setPhone` action + `clearSession` 同步加 phone + persist `partialize` 加 phone(per plan 决策 1 + 8)                                      | `packages/auth/src/store.ts` + `apps/native/lib/auth/store.test.ts`                        | ✅   |
-| T2  | [Auth-UseCase]                  | `loadProfile` 改:同时 `setPhone(response.phone ?? null)`(per plan 决策 1);plan-impl 阶段先验 generated `getMe()` type 含 phone                                             | `packages/auth/src/usecases.ts` + `apps/native/lib/auth/usecases.test.ts`                  | ✅   |
-| T3  | [Format-Lib]                    | `maskPhone` 函数 + 表驱动测试 7 case(per plan 决策 6 + spec FR-010 + CL-002;实现采用国码白名单 per T3 决策 A)                                                              | `apps/native/lib/format/phone.ts` + `phone.test.ts`                                        | ✅   |
-| T4  | [Settings/Layout + Page]        | `settings/_layout.tsx`(Stack) + `settings/index.tsx`(主页 3 cards + footer 双链接,per spec FR-001 ~ FR-004 + FR-006)                                                       | `apps/native/app/(app)/settings/_layout.tsx` + `settings/index.tsx` + tests                | ✅   |
-| T5  | [Settings/Logout]               | `handleLogout` 流程(Alert 二次确认 + best-effort + race guard,per spec FR-005 + FR-019 + plan 决策 2 + 9)                                                                  | `settings/index.tsx`(扩展)+ `__tests__/handleLogout.test.tsx`                              | ✅   |
-| T6  | [AccountSecurity/Layout + Page] | `account-security/_layout.tsx` + `account-security/index.tsx`(3 cards + 反枚举,per spec FR-007 + FR-018 + Q4)                                                              | `settings/account-security/_layout.tsx` + `account-security/index.tsx` + tests             | ✅   |
-| T7  | [AccountSecurity/Phone]         | `account-security/phone.tsx`(mask 渲染 + null fallback,per spec FR-008 + FR-018)                                                                                           | `settings/account-security/phone.tsx` + `phone.test.tsx`                                   | ✅   |
-| T8  | [Legal/Layout + Pages]          | `legal/_layout.tsx` + `legal/personal-info.tsx` + `legal/third-party.tsx`(标题 + 占位文案,per spec FR-009 + FR-011 + Q6)                                                   | `settings/legal/_layout.tsx` + `legal/personal-info.tsx` + `legal/third-party.tsx` + tests | ✅   |
-| T9  | [Integration]                   | 集成测 — settings 全流(settings → account-security → phone → 退出登录)+ 反枚举静态分析(per spec SC-007 / SC-010 / US9 / SC-005)。stack 返回行为 + 底 tab 隐藏 cut to T10。 | `__tests__/integration/account-settings-shell-flow.test.tsx`                               | ✅   |
-| T10 | [Smoke]                         | Playwright 真后端冒烟 — 已 onboarded → ⚙️ → settings → account-security → phone → 返回 → 退出登录 → Alert → 确定 → 跳 login(per spec SC-006)                               | `apps/native/runtime-debug/2026-05-XX-account-settings-shell-business-flow/` + 截图        |      |
-| T11 | [Doc]                           | spec.md 同步修订(FR-005 / FR-011 / FR-019 / Assumption / Open Q,per plan § spec.md 同步修订段)+ tasks.md 全勾 ✅                                                           | `spec.md` + `tasks.md`                                                                     |      |
+| #   | 层级                            | 任务                                                                                                                                                                       | 文件                                                                                       | 状态                                       |
+| --- | ------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------ | ------------------------------------------ |
+| T1  | [Auth-Store]                    | `useAuthStore` 加 `phone` 字段 + `setPhone` action + `clearSession` 同步加 phone + persist `partialize` 加 phone(per plan 决策 1 + 8)                                      | `packages/auth/src/store.ts` + `apps/native/lib/auth/store.test.ts`                        | ✅                                         |
+| T2  | [Auth-UseCase]                  | `loadProfile` 改:同时 `setPhone(response.phone ?? null)`(per plan 决策 1);plan-impl 阶段先验 generated `getMe()` type 含 phone                                             | `packages/auth/src/usecases.ts` + `apps/native/lib/auth/usecases.test.ts`                  | ✅                                         |
+| T3  | [Format-Lib]                    | `maskPhone` 函数 + 表驱动测试 7 case(per plan 决策 6 + spec FR-010 + CL-002;实现采用国码白名单 per T3 决策 A)                                                              | `apps/native/lib/format/phone.ts` + `phone.test.ts`                                        | ✅                                         |
+| T4  | [Settings/Layout + Page]        | `settings/_layout.tsx`(Stack) + `settings/index.tsx`(主页 3 cards + footer 双链接,per spec FR-001 ~ FR-004 + FR-006)                                                       | `apps/native/app/(app)/settings/_layout.tsx` + `settings/index.tsx` + tests                | ✅                                         |
+| T5  | [Settings/Logout]               | `handleLogout` 流程(Alert 二次确认 + best-effort + race guard,per spec FR-005 + FR-019 + plan 决策 2 + 9)                                                                  | `settings/index.tsx`(扩展)+ `__tests__/handleLogout.test.tsx`                              | ✅                                         |
+| T6  | [AccountSecurity/Layout + Page] | `account-security/_layout.tsx` + `account-security/index.tsx`(3 cards + 反枚举,per spec FR-007 + FR-018 + Q4)                                                              | `settings/account-security/_layout.tsx` + `account-security/index.tsx` + tests             | ✅                                         |
+| T7  | [AccountSecurity/Phone]         | `account-security/phone.tsx`(mask 渲染 + null fallback,per spec FR-008 + FR-018)                                                                                           | `settings/account-security/phone.tsx` + `phone.test.tsx`                                   | ✅                                         |
+| T8  | [Legal/Layout + Pages]          | `legal/_layout.tsx` + `legal/personal-info.tsx` + `legal/third-party.tsx`(标题 + 占位文案,per spec FR-009 + FR-011 + Q6)                                                   | `settings/legal/_layout.tsx` + `legal/personal-info.tsx` + `legal/third-party.tsx` + tests | ✅                                         |
+| T9  | [Integration]                   | 集成测 — settings 全流(settings → account-security → phone → 退出登录)+ 反枚举静态分析(per spec SC-007 / SC-010 / US9 / SC-005)。stack 返回行为 + 底 tab 隐藏 cut to T10。 | `__tests__/integration/account-settings-shell-flow.test.tsx`                               | ✅                                         |
+| T10 | [Smoke]                         | Playwright 真后端冒烟 — 已 onboarded → ⚙️ → settings → account-security → phone → 返回 → 退出登录 → Alert → 确定 → 跳 login(per spec SC-006)                               | `apps/native/runtime-debug/2026-05-XX-account-settings-shell-business-flow/` + 截图        | 🟡 blocked on staging deploy(后续小 PR 跑) |
+| T11 | [Doc]                           | spec.md 同步修订(FR-005 / FR-011 / FR-019 / Assumption / Open Q,per plan § spec.md 同步修订段)+ tasks.md 全勾 ✅                                                           | `spec.md` + `tasks.md`                                                                     |                                            |
 
 ### Mockup PHASE 2 阶段(再下 session PR — UI 完成)
 
@@ -712,7 +712,13 @@ rg -n "from '@nvy/ui'" apps/native/app/\(app\)/settings/
 
 ---
 
-## T10 — Playwright 真后端冒烟(per spec SC-006)
+## T10 🟡 — Playwright 真后端冒烟(per spec SC-006)— blocked on staging deploy
+
+> **本 PR 不跑**:server PR #139(`/me` 加 phone)已 merge 进 main,但 release-please cycle → build-image → deploy 需要等发版节奏触发,prod `api.xiaocaishen.me/v3/api-docs` 当前还是旧 spec(无 phone)。Playwright 真后端冒烟必须打 deployed staging,故本任务延后。
+>
+> **触发条件**:server release tag(`v*.*.*`)被 push 后 build-image + deploy 完成 + curl prod `/v3/api-docs` 验证含 phone 字段。
+>
+> **后续动作**:单独开小 PR 跑 T10,进 `tasks.md` 把 🟡 改 ✅。本 PR T11 spec sync 段已记录此延后。
 
 ### T10-impl:`apps/native/runtime-debug/2026-05-XX-account-settings-shell-business-flow/`
 
