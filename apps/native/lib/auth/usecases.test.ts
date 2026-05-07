@@ -65,6 +65,7 @@ describe('auth usecases — loadProfile / updateDisplayName / phoneSmsAuth chain
       accessToken: null,
       refreshToken: null,
       displayName: null,
+      phone: null,
       isAuthenticated: false,
     });
   });
@@ -74,7 +75,33 @@ describe('auth usecases — loadProfile / updateDisplayName / phoneSmsAuth chain
   });
 
   describe('loadProfile', () => {
-    it('happy: writes response.displayName to store', async () => {
+    it('happy: writes response.displayName + phone to store', async () => {
+      mocks.getMe.mockResolvedValue({
+        accountId: 1,
+        phone: '+8613800138000',
+        displayName: '小明',
+        status: 'ACTIVE',
+        createdAt: '2026-05-05T00:00:00Z',
+      });
+      await loadProfile();
+      expect(useAuthStore.getState().displayName).toBe('小明');
+      expect(useAuthStore.getState().phone).toBe('+8613800138000');
+    });
+
+    it('null displayName from server → store.displayName === null; phone still written', async () => {
+      mocks.getMe.mockResolvedValue({
+        accountId: 1,
+        phone: '+8613800138000',
+        displayName: null,
+        status: 'ACTIVE',
+        createdAt: '2026-05-05T00:00:00Z',
+      });
+      await loadProfile();
+      expect(useAuthStore.getState().displayName).toBeNull();
+      expect(useAuthStore.getState().phone).toBe('+8613800138000');
+    });
+
+    it('absent phone from server → store.phone === null (per T2 + plan 决策 1)', async () => {
       mocks.getMe.mockResolvedValue({
         accountId: 1,
         displayName: '小明',
@@ -82,18 +109,7 @@ describe('auth usecases — loadProfile / updateDisplayName / phoneSmsAuth chain
         createdAt: '2026-05-05T00:00:00Z',
       });
       await loadProfile();
-      expect(useAuthStore.getState().displayName).toBe('小明');
-    });
-
-    it('null displayName from server → store.displayName === null', async () => {
-      mocks.getMe.mockResolvedValue({
-        accountId: 1,
-        displayName: null,
-        status: 'ACTIVE',
-        createdAt: '2026-05-05T00:00:00Z',
-      });
-      await loadProfile();
-      expect(useAuthStore.getState().displayName).toBeNull();
+      expect(useAuthStore.getState().phone).toBeNull();
     });
 
     it('401 re-thrown (refresh middleware exhausted) — does not pollute store', async () => {
@@ -148,6 +164,7 @@ describe('auth usecases — loadProfile / updateDisplayName / phoneSmsAuth chain
       });
       mocks.getMe.mockResolvedValue({
         accountId: 1,
+        phone: '+8613800138000',
         displayName: '小明',
         status: 'ACTIVE',
         createdAt: '2026-05-05T00:00:00Z',
@@ -161,6 +178,7 @@ describe('auth usecases — loadProfile / updateDisplayName / phoneSmsAuth chain
       expect(state.refreshToken).toBe('r');
       expect(state.isAuthenticated).toBe(true);
       expect(state.displayName).toBe('小明');
+      expect(state.phone).toBe('+8613800138000');
     });
 
     it('phoneSmsAuth success + getMe failure → session set, loadProfile error swallowed (AuthGate fallback)', async () => {

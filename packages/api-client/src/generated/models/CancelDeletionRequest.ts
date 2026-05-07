@@ -17,37 +17,37 @@ import { mapValues } from '../runtime';
 /**
  * 
  * @export
- * @interface PhoneSmsAuthRequest
+ * @interface CancelDeletionRequest
  */
-export interface PhoneSmsAuthRequest {
+export interface CancelDeletionRequest {
     /**
      * 
      * @type {string}
-     * @memberof PhoneSmsAuthRequest
+     * @memberof CancelDeletionRequest
      */
     phone: string;
     /**
      * 
      * @type {string}
-     * @memberof PhoneSmsAuthRequest
+     * @memberof CancelDeletionRequest
      */
     code: string;
 }
 
 /**
- * Check if a given object implements the PhoneSmsAuthRequest interface.
+ * Check if a given object implements the CancelDeletionRequest interface.
  */
-export function instanceOfPhoneSmsAuthRequest(value: object): value is PhoneSmsAuthRequest {
+export function instanceOfCancelDeletionRequest(value: object): value is CancelDeletionRequest {
     if (!('phone' in value) || value['phone'] === undefined) return false;
     if (!('code' in value) || value['code'] === undefined) return false;
     return true;
 }
 
-export function PhoneSmsAuthRequestFromJSON(json: any): PhoneSmsAuthRequest {
-    return PhoneSmsAuthRequestFromJSONTyped(json, false);
+export function CancelDeletionRequestFromJSON(json: any): CancelDeletionRequest {
+    return CancelDeletionRequestFromJSONTyped(json, false);
 }
 
-export function PhoneSmsAuthRequestFromJSONTyped(json: any, ignoreDiscriminator: boolean): PhoneSmsAuthRequest {
+export function CancelDeletionRequestFromJSONTyped(json: any, ignoreDiscriminator: boolean): CancelDeletionRequest {
     if (json == null) {
         return json;
     }
@@ -58,11 +58,11 @@ export function PhoneSmsAuthRequestFromJSONTyped(json: any, ignoreDiscriminator:
     };
 }
 
-export function PhoneSmsAuthRequestToJSON(json: any): PhoneSmsAuthRequest {
-    return PhoneSmsAuthRequestToJSONTyped(json, false);
+export function CancelDeletionRequestToJSON(json: any): CancelDeletionRequest {
+    return CancelDeletionRequestToJSONTyped(json, false);
 }
 
-export function PhoneSmsAuthRequestToJSONTyped(value?: PhoneSmsAuthRequest | null, ignoreDiscriminator: boolean = false): any {
+export function CancelDeletionRequestToJSONTyped(value?: CancelDeletionRequest | null, ignoreDiscriminator: boolean = false): any {
     if (value == null) {
         return value;
     }
