@@ -1,4 +1,3 @@
-// PHASE 1 PLACEHOLDER — business flow validated; visuals pending mockup.
 import { Stack } from 'expo-router';
 
 export default function SettingsLayout() {

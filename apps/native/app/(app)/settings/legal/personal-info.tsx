@@ -1,4 +1,3 @@
-// PHASE 1 PLACEHOLDER — business flow validated; visuals pending mockup.
 import { ScrollView, Text } from 'react-native';
 
 const COPY = {
@@ -7,8 +6,8 @@ const COPY = {
 
 export default function PersonalInfoListScreen() {
   return (
-    <ScrollView>
-      <Text>{COPY.body}</Text>
+    <ScrollView className="flex-1 bg-surface" contentContainerClassName="px-xl pt-2xl">
+      <Text className="text-sm text-ink-muted leading-relaxed text-center">{COPY.body}</Text>
     </ScrollView>
   );
 }

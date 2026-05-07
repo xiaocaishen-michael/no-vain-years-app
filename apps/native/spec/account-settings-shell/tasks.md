@@ -42,18 +42,18 @@
 | T10 | [Smoke]                         | Playwright 真后端冒烟 — 已 onboarded → ⚙️ → settings → account-security → phone → 返回 → 退出登录 → Alert → 确定 → 跳 login(per spec SC-006)                               | `apps/native/runtime-debug/2026-05-XX-account-settings-shell-business-flow/` + 截图        | 🟡 blocked on staging deploy(后续小 PR 跑) |
 | T11 | [Doc]                           | spec.md FR-010 改国码白名单(per T3 决策 A)+ 加 2026-05-07 +3 修订记录;plan.md 决策 6 实现段升级国码白名单 + 解释贪心 regex 失败;tasks.md 全勾 ✅(T10 仍 🟡)                | `spec.md` + `plan.md` + `tasks.md`                                                         | ✅                                         |
 
-### Mockup PHASE 2 阶段(再下 session PR — UI 完成)
+### Mockup PHASE 2 阶段(本 PR — UI 完成,T_mock + T12 + T13 + T14 + T15)
 
-> 占位空表;由 mockup-prompt 阶段填充。参考 my-profile tasks.md `T_mock` / `T10` ~ `T13` 5 任务模式(mockup-prompt → bundle / handoff → packages/ui 评估 → 改写 page → plan.md 回填 → 视觉冒烟)。
+> 2026-05-07 PHASE 2 翻译期落地;参考 my-profile tasks.md `T_mock` / `T10` ~ `T13` 5 任务模式。drift 政策 + 翻译 gotcha 见 [`design/handoff.md`](./design/handoff.md);视觉冒烟报告见 [`apps/native/runtime-debug/2026-05-07-account-settings-shell-mockup-translation/README.md`](../../runtime-debug/2026-05-07-account-settings-shell-mockup-translation/README.md)。
 
-| #      | 层级           | 任务                                                                                                      | 文件                                                                        | 状态    |
-| ------ | -------------- | --------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------- | ------- |
-| T_mock | [Mockup]       | Claude Design 出 settings + account-security + phone + legal 共 5 page mockup + bundle + handoff.md       | `design/source/` + `design/mockup-prompt.md` + `design/handoff.md`          | 🟡 占位 |
-| T12    | [packages/ui]  | 评估新组件归属(`<SettingsListCard>` / `<ListRow>` / 等;per spec FR-013 PHASE 1 不抽 — PHASE 2 评估)       | `design/handoff.md` § 复用清单                                              | 🟡 占位 |
-| T13    | [App]          | 改写 5 page — 删 PHASE 1 PLACEHOLDER banner + 接入新组件 + token-based className(per ADR-0014 NativeWind) | `settings/index.tsx` + `account-security/index.tsx` + `phone.tsx` + 法规 ×2 | 🟡 占位 |
-| T14    | [Plan]         | plan.md UI 段从 4 边界占位回填为完整 UI 结构                                                              | `apps/native/spec/account-settings-shell/plan.md` § UI 结构                 | 🟡 占位 |
-| T15    | [Visual smoke] | 5+ 状态截图(各 page 默认状态 / Alert 弹窗 / disabled 项视觉 / phone mask 状态)                            | `runtime-debug/2026-05-XX-account-settings-shell-mockup-translation/`       | 🟡 占位 |
-| T16    | [视觉回归]     | 视情况引入 visual regression(M2 后)                                                                       | TBD                                                                         | 🟡 评估 |
+| #      | 层级           | 任务                                                                                                                                                                                    | 文件                                                                                                               | 状态    |
+| ------ | -------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------ | ------- |
+| T_mock | [Mockup]       | Claude Design 出 settings + account-security + phone + legal 共 5 page mockup + bundle + handoff.md                                                                                     | `design/source/` + `design/mockup-prompt.md` + `design/handoff.md`                                                 | ✅      |
+| T12    | [packages/ui]  | 评估新组件归属(`<SettingsListCard>` / `<ListRow>` / 等;per spec FR-013 PHASE 1 不抽 — PHASE 2 评估)                                                                                     | `design/handoff.md` § 复用清单                                                                                     | ✅      |
+| T13    | [App]          | 改写 5 page — 删 PHASE 1 PLACEHOLDER banner + 抽 `components/settings/primitives.tsx`(Card/Row/Divider)+ token-based className(per ADR-0014 NativeWind)                                 | `settings/index.tsx` + `account-security/index.tsx` + `phone.tsx` + 法规 ×2 + `components/settings/primitives.tsx` | ✅      |
+| T14    | [Plan]         | plan.md UI 段从 4 边界占位回填为完整 UI 结构                                                                                                                                            | `apps/native/spec/account-settings-shell/plan.md` § UI 结构                                                        | ✅      |
+| T15    | [Visual smoke] | 5 状态截图(settings / account-security / phone-mask / legal-personal-info / legal-third-party)— 真后端 dev + Playwright + DB cleanup;0 console errors / 0 page errors / 0 network fails | `runtime-debug/2026-05-07-account-settings-shell-mockup-translation/`                                              | ✅      |
+| T16    | [视觉回归]     | 视情况引入 visual regression(M2 后)                                                                                                                                                     | TBD                                                                                                                | 🟡 评估 |
 
 ---
 
@@ -811,3 +811,4 @@ manual 检查 17 张截图 + console 无 critical error;Web `window.confirm` 视
 ## 变更记录
 
 - **2026-05-07**:本 tasks 首次创建。基于 spec.md(round 1 clarify CL-001 ~ CL-004 已完成)+ plan.md(10 关键决策)拆 11 个 impl tasks(T1 ~ T11)+ 3 个 docs tasks(T_doc1-3)+ 5 个 mockup tasks(T_mock / T12-T16)占位空表。每 task 30min-2h,TDD 节奏(测试绑定到实现);每 task 完成同 commit 加 ✅(per meta sdd.md § /implement 闭环 6 步)。
+- **2026-05-07 PHASE 2**:mockup translation 完成 — T_mock(bundle 落 `design/source/` + `handoff.md` 7 段)/ T12(`Card`/`Row`/`Divider`/`StackHeader` 不抽 packages/ui,落 `apps/native/components/settings/primitives.tsx`)/ T13(改写 5 page;3 项 drift:`<StackHeader>` 自画 / `<LogoutAlert>` modal / Phone 副标题 均不翻译,以 PHASE 1 + spec 为准)/ T14(plan.md UI 段从 4 边界占位回填完整版)/ T15(视觉冒烟 5 page 5 截图,真后端 dev + Playwright + DB cleanup;0 errors)。typecheck + 181/181 测试 GREEN。T16 仍 🟡 评估(M2 后视情况引入 visual regression CI)。

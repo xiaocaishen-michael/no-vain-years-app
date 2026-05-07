@@ -1,4 +1,3 @@
-// PHASE 1 PLACEHOLDER — business flow validated; visuals pending mockup.
 import { ScrollView, Text } from 'react-native';
 
 import { useAuthStore } from '@nvy/auth';
@@ -10,8 +9,11 @@ export default function PhoneScreen() {
   const masked = maskPhone(phone);
 
   return (
-    <ScrollView>
-      <Text>{masked}</Text>
+    <ScrollView
+      className="flex-1 bg-surface"
+      contentContainerClassName="flex-1 items-center justify-center px-lg"
+    >
+      <Text className="text-2xl font-semibold text-ink font-mono tracking-wide">{masked}</Text>
     </ScrollView>
   );
 }
