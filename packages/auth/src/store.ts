@@ -25,10 +25,12 @@ export interface AuthState {
   accessToken: string | null;
   refreshToken: string | null;
   displayName: string | null;
+  phone: string | null;
   isAuthenticated: boolean;
   setSession: (session: Session) => void;
   setAccessToken: (token: string) => void;
   setDisplayName: (name: string | null) => void;
+  setPhone: (phone: string | null) => void;
   clearSession: () => void;
 }
 
@@ -39,17 +41,20 @@ export const useAuthStore = create<AuthState>()(
       accessToken: null,
       refreshToken: null,
       displayName: null,
+      phone: null,
       isAuthenticated: false,
       setSession: ({ accountId, accessToken, refreshToken }) =>
         set({ accountId, accessToken, refreshToken, isAuthenticated: true }),
       setAccessToken: (token) => set({ accessToken: token }),
       setDisplayName: (name) => set({ displayName: name }),
+      setPhone: (phone) => set({ phone }),
       clearSession: () =>
         set({
           accountId: null,
           accessToken: null,
           refreshToken: null,
           displayName: null,
+          phone: null,
           isAuthenticated: false,
         }),
     }),
@@ -62,6 +67,7 @@ export const useAuthStore = create<AuthState>()(
         accountId: state.accountId,
         refreshToken: state.refreshToken,
         displayName: state.displayName,
+        phone: state.phone,
       }),
       onRehydrateStorage: () => (state) => {
         if (state?.refreshToken && state.accountId !== null) {

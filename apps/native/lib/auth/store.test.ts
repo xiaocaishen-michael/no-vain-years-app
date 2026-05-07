@@ -28,6 +28,7 @@ describe('useAuthStore — displayName field (T1 / FR-002)', () => {
       accessToken: null,
       refreshToken: null,
       displayName: null,
+      phone: null,
       isAuthenticated: false,
     });
   });
@@ -83,5 +84,69 @@ describe('useAuthStore — displayName field (T1 / FR-002)', () => {
     expect(raw).toBeTruthy();
     const parsed = JSON.parse(raw!) as { state: { displayName?: string | null } };
     expect(parsed.state.displayName).toBe('小明');
+  });
+});
+
+describe('useAuthStore — phone field (T1 / account-settings-shell FR-008)', () => {
+  beforeEach(() => {
+    window.localStorage.clear();
+    useAuthStore.setState({
+      accountId: null,
+      accessToken: null,
+      refreshToken: null,
+      displayName: null,
+      phone: null,
+      isAuthenticated: false,
+    });
+  });
+
+  afterEach(() => {
+    window.localStorage.clear();
+  });
+
+  it('initial phone === null', () => {
+    expect(useAuthStore.getState().phone).toBeNull();
+  });
+
+  it('setPhone("+8613812345678") writes to state', () => {
+    useAuthStore.getState().setPhone('+8613812345678');
+    expect(useAuthStore.getState().phone).toBe('+8613812345678');
+  });
+
+  it('setPhone(null) clears state', () => {
+    useAuthStore.getState().setPhone('+8613812345678');
+    useAuthStore.getState().setPhone(null);
+    expect(useAuthStore.getState().phone).toBeNull();
+  });
+
+  it('clearSession synchronously clears phone along with tokens', () => {
+    useAuthStore.getState().setSession({
+      accountId: 1,
+      accessToken: 'a',
+      refreshToken: 'r',
+    });
+    useAuthStore.getState().setPhone('+8613812345678');
+    expect(useAuthStore.getState().phone).toBe('+8613812345678');
+
+    useAuthStore.getState().clearSession();
+
+    const state = useAuthStore.getState();
+    expect(state.accountId).toBeNull();
+    expect(state.phone).toBeNull();
+  });
+
+  it('persist whitelist includes phone (serialized to localStorage)', async () => {
+    useAuthStore.getState().setSession({
+      accountId: 1,
+      accessToken: 'a',
+      refreshToken: 'r',
+    });
+    useAuthStore.getState().setPhone('+8613812345678');
+    await flushPersist();
+
+    const raw = window.localStorage.getItem(PERSIST_KEY);
+    expect(raw).toBeTruthy();
+    const parsed = JSON.parse(raw!) as { state: { phone?: string | null } };
+    expect(parsed.state.phone).toBe('+8613812345678');
   });
 });

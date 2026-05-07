@@ -30,7 +30,7 @@
 
 | #   | 层级                            | 任务                                                                                                                                                                  | 文件                                                                                       | 状态 |
 | --- | ------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------ | ---- |
-| T1  | [Auth-Store]                    | `useAuthStore` 加 `phone` 字段 + `setPhone` action + `clearSession` 同步加 phone + persist `partialize` 加 phone(per plan 决策 1 + 8)                                 | `packages/auth/src/store.ts` + `store.test.ts`                                             |      |
+| T1  | [Auth-Store]                    | `useAuthStore` 加 `phone` 字段 + `setPhone` action + `clearSession` 同步加 phone + persist `partialize` 加 phone(per plan 决策 1 + 8)                                 | `packages/auth/src/store.ts` + `apps/native/lib/auth/store.test.ts`                        | ✅   |
 | T2  | [Auth-UseCase]                  | `loadProfile` 改:同时 `setPhone(response.phone ?? null)`(per plan 决策 1);plan-impl 阶段先验 generated `getMe()` type 含 phone                                        | `packages/auth/src/usecases.ts` + 既有测试加 phone 断言                                    |      |
 | T3  | [Format-Lib]                    | `maskPhone` 函数 generic 实现 + 表驱动测试(per plan 决策 6 + spec FR-010 + CL-002)                                                                                    | `apps/native/lib/format/phone.ts` + `phone.test.ts`                                        |      |
 | T4  | [Settings/Layout + Page]        | `settings/_layout.tsx`(Stack) + `settings/index.tsx`(主页 3 cards + footer 双链接,per spec FR-001 ~ FR-004 + FR-006)                                                  | `apps/native/app/(app)/settings/_layout.tsx` + `settings/index.tsx` + tests                |      |
@@ -57,7 +57,7 @@
 
 ---
 
-## T1 — `useAuthStore` 加 `phone` 字段(per plan 决策 1 + 8)
+## T1 ✅ — `useAuthStore` 加 `phone` 字段(per plan 决策 1 + 8)
 
 **TDD**:先扩测试 case,再改实现。
 
