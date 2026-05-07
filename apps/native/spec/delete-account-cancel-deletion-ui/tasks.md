@@ -1,7 +1,7 @@
 # Tasks: Delete Account & Cancel Deletion UI (spec C)
 
 > **Companions**: [`spec.md`](./spec.md) / [`plan.md`](./plan.md) / [`design/handoff.md`](./design/handoff.md)
-> **Status**: PHASE 1 T0-T10 + T12 ✅ shipped 2026-05-07(PR [#78](https://github.com/xiaocaishen-michael/no-vain-years-app/pull/78));**PHASE 2 T_mock + T13 + T14 + T15 + T16-doc ✅(本 PR)**;T11 + T16-smoke 🟡 deferred(等 server release 0.2.0 production deploy + manual stack 起)
+> **Status**: PHASE 1 T0-T10 + T12 ✅ shipped 2026-05-07(PR [#78](https://github.com/xiaocaishen-michael/no-vain-years-app/pull/78));PHASE 2 T_mock + T13 + T14 + T15 + T16-doc ✅ shipped 2026-05-07(PR [#79](https://github.com/xiaocaishen-michael/no-vain-years-app/pull/79));**T16-smoke ✅ 2026-05-08(本 PR)**;T11 真后端冒烟 🟡 deferred(等 server release 0.2.0 production deploy)
 > **Implementation PR**: PHASE 1 = PR [#78](https://github.com/xiaocaishen-michael/no-vain-years-app/pull/78);PHASE 2 = feature/spec-c-mockup-translation(本会话,见各 task `Commit` 字段;PR # 待 push 后回填)
 > **里程碑依赖**(spec C impl session 才开):
 >
@@ -577,24 +577,22 @@
 
 ---
 
-### T16-smoke 🟡 [Visual smoke] 6 状态截图 + run.mjs(deferred,同 T11)
+### T16-smoke ✅ [Visual smoke] 6 状态截图 + run.mjs
 
-**前置**:T16-doc 完成 + 真后端 stack 起(server :8080 dev / metro :8081 / docker postgres+redis;Playwright 安装)
+**前置**:T16-doc 完成 + metro :8081(server / docker 不必起,run.mjs 全 mock-based + localStorage inject)
 
-**Deferral reason**(2026-05-07):本 spec C visual smoke 与 onboarding T_smoke / my-profile T13 同套路 — 需 docker compose dev + server dev profile + metro web bundle + Playwright。本 session(AI-driven)未启 stack;留作下次 manual session(用户起完 stack 后跑 run.mjs)。**T11(真后端冒烟)+ T16-smoke 共享 stack 启动成本,可同 session 跑**;最佳触发点 = server release 0.2.0 production deploy。
+**完成笔记**(2026-05-08):
 
-**步骤**(future manual run):
-
-1. 写 `apps/native/runtime-debug/2026-05-07-delete-cancel-mockup-translation/run.mjs`:沿用 onboarding T_smoke 套路(`page.route` 拦请求 + 各状态 force render);6 状态构造详见 README.md
-2. 跑 Playwright headless chromium 生成 6 PNG → 落本目录
-3. manual 检查 6 PNG 视觉态稳定 + console 无 critical error
-4. 改 tasks.md:T16-smoke 🟡 → ✅ + 顶部 Status 行更新
+1. 写 `apps/native/runtime-debug/2026-05-07-delete-cancel-mockup-translation/run.mjs`(mock-based + Phase A 走 SPA 内部 nav 避 setParams race + Phase B 用 `localStorage.setItem('nvy-auth', ...)` inject 绕过 login)
+2. 跑 Playwright headless chromium → 6 PNG 落地 + 0 pageErrors / 0 consoleErrors / 0 networkFails
+3. **State 03 替代决策**(实测必然):原 spec submit-error 路径不可达 — `deleteAccount()` 无条件 finally `clearSession` → AuthGate 同 React commit 内 `router.replace('/(auth)/login')` → DeleteAccountScreen 在 ErrorRow 第一次 paint 之前就 unmount。Playwright 4 种 capture 策略(default polling / raf polling / 50ms multi-probe / history block)实证全失败。替代:用 send-code 429 rate-limit 错误路径(无 clearSession 副作用)→ 同 ErrorRow + 同 CodeInput err 红 ring 视觉,差异在 ErrorRow 文案(`操作太频繁` vs `验证码错误`)+ SubmitButton disabled vs active。submit-error 视觉差异由 component-level 单测 `delete-account-errors.test.ts` 'invalid_code' 分支补齐。详见 `runtime-debug/2026-05-07-delete-cancel-mockup-translation/README.md` § State 03 替代说明
+4. README 同步更新:状态 ✅ + 替代说明 7 段 + 用法 + 状态构造策略
 
 **Verify**:
 
-- `ls apps/native/runtime-debug/2026-05-07-delete-cancel-mockup-translation/*.png | wc -l` == 6
-- 6 PNG manual review 通过(default / cooldown / error / prefilled / deeplink / freeze-modal)
-- `rg "✅" apps/native/spec/delete-account-cancel-deletion-ui/tasks.md` 加 1 (T16-smoke ✅)
+- `ls apps/native/runtime-debug/2026-05-07-delete-cancel-mockup-translation/*.png | wc -l` == 6 ✓
+- 6 PNG 视觉态对齐 mockup(handoff.md § 3 ↔ FR/SC 表)— 01/02/04/05/06 严格对齐;03 spec 替代+文档说明
+- `rg "✅" apps/native/spec/delete-account-cancel-deletion-ui/tasks.md` 加 1 (T16-smoke ✅) ✓
 
 **Commit**:`test(account): delete-cancel visual smoke 6 状态 (spec C T16-smoke)`
 
