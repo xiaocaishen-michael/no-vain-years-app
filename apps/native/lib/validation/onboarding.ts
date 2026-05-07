@@ -46,6 +46,10 @@ const ONBOARDING_TOAST: Record<ApiErrorKind, string> = {
   invalid: '昵称不合法，请重试',
   rate_limit: '请求过于频繁，请稍后再试',
   network: '网络异常，请重试',
+  // 'frozen' won't reach onboarding (caller is post-login authenticated; FROZEN
+  // accounts are blocked at login per spec C). Map to generic fallback in case
+  // server adds the code elsewhere.
+  frozen: '账号处于注销冻结期',
   unknown: '提交失败，请稍后重试',
 };
 

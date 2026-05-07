@@ -265,6 +265,67 @@ describe('useLoginForm', () => {
     });
   });
 
+  describe('frozen account modal (spec C T5+T6 / US4 acceptance 1-2 / FR-010 / FR-011)', () => {
+    it('initial state: showFrozenModal === false', () => {
+      const { result } = renderHook(() => useLoginForm());
+      expect(result.current.showFrozenModal).toBe(false);
+    });
+
+    it('US4-1+2: 403 + ACCOUNT_IN_FREEZE_PERIOD body → showFrozenModal=true, no ErrorRow', async () => {
+      const response = new Response(JSON.stringify({ code: 'ACCOUNT_IN_FREEZE_PERIOD' }), {
+        status: 403,
+      });
+      mocks.phoneSmsAuth.mockImplementationOnce(async () => {
+        throw new ResponseError(response, 'frozen');
+      });
+
+      const { result } = renderHook(() => useLoginForm());
+      await act(async () => {
+        await result.current.submit('+8613800138000', '123456');
+      });
+
+      expect(result.current.showFrozenModal).toBe(true);
+      expect(result.current.errorToast).toBeNull();
+      expect(result.current.errorScope).toBeNull();
+      expect(result.current.state).toBe('idle');
+    });
+
+    it('US4-5: other errors do NOT trigger modal (反例 — 401 → ErrorRow path)', async () => {
+      mocks.phoneSmsAuth.mockImplementationOnce(async () => {
+        throw new ResponseError(new Response(null, { status: 401 }), 'invalid');
+      });
+
+      const { result } = renderHook(() => useLoginForm());
+      await act(async () => {
+        await result.current.submit('+8613800138000', '123456');
+      });
+
+      expect(result.current.showFrozenModal).toBe(false);
+      expect(result.current.state).toBe('error');
+      expect(result.current.errorToast).toBe('手机号或验证码错误');
+    });
+
+    it('clearFrozenModal resets the flag (T6 [保持] handler reuses this)', async () => {
+      const response = new Response(JSON.stringify({ code: 'ACCOUNT_IN_FREEZE_PERIOD' }), {
+        status: 403,
+      });
+      mocks.phoneSmsAuth.mockImplementationOnce(async () => {
+        throw new ResponseError(response, 'frozen');
+      });
+
+      const { result } = renderHook(() => useLoginForm());
+      await act(async () => {
+        await result.current.submit('+8613800138000', '123456');
+      });
+      expect(result.current.showFrozenModal).toBe(true);
+
+      act(() => {
+        result.current.clearFrozenModal();
+      });
+      expect(result.current.showFrozenModal).toBe(false);
+    });
+  });
+
   describe('cleanup', () => {
     it('does not throw or warn on timer tick after unmount', async () => {
       vi.useFakeTimers();

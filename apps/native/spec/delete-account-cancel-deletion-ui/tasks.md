@@ -163,7 +163,9 @@
 
 ---
 
-### T5 [Login-Map] login flow `mapApiError` 加 'frozen' 分支 + 单测
+### T5 ✅ [Login-Map] login flow `mapApiError` 加 'frozen' 分支 + 单测
+
+> **Drift note (impl)**: ResponseError body 异步读取需求 → 加 sync `mapApiError(e, bodyCode?)` + async helper `readErrorCode(e)`,caller(`use-login-form.handleApiError`)await body 后传给 sync mapper(避 mapApiError 全函数 async 导致 onboarding.ts 调用面破坏)。`useLoginForm` 加 `showFrozenModal` / `clearFrozenModal` 状态(T6 freeze modal 拼装入口)。
 
 **前置**:T1 完成(packages/auth 4 wrapper 落地;无 spec D 阻塞 — 本 T 是 client 映射逻辑,可基于 mock 跑)
 
