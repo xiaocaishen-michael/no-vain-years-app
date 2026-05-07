@@ -37,7 +37,7 @@
 | T5  | [Settings/Logout]               | `handleLogout` 流程(Alert 二次确认 + best-effort + race guard,per spec FR-005 + FR-019 + plan 决策 2 + 9)                                                             | `settings/index.tsx`(扩展)+ `__tests__/handleLogout.test.tsx`                              | ✅   |
 | T6  | [AccountSecurity/Layout + Page] | `account-security/_layout.tsx` + `account-security/index.tsx`(3 cards + 反枚举,per spec FR-007 + FR-018 + Q4)                                                         | `settings/account-security/_layout.tsx` + `account-security/index.tsx` + tests             | ✅   |
 | T7  | [AccountSecurity/Phone]         | `account-security/phone.tsx`(mask 渲染 + null fallback,per spec FR-008 + FR-018)                                                                                      | `settings/account-security/phone.tsx` + `phone.test.tsx`                                   | ✅   |
-| T8  | [Legal/Layout + Pages]          | `legal/_layout.tsx` + `legal/personal-info.tsx` + `legal/third-party.tsx`(标题 + 占位文案,per spec FR-009 + FR-011 + Q6)                                              | `settings/legal/_layout.tsx` + `legal/personal-info.tsx` + `legal/third-party.tsx` + tests |      |
+| T8  | [Legal/Layout + Pages]          | `legal/_layout.tsx` + `legal/personal-info.tsx` + `legal/third-party.tsx`(标题 + 占位文案,per spec FR-009 + FR-011 + Q6)                                              | `settings/legal/_layout.tsx` + `legal/personal-info.tsx` + `legal/third-party.tsx` + tests | ✅   |
 | T9  | [Integration]                   | 集成测 — settings 全流(settings → account-security → phone → 返回 → 退出登录)+ stack 返回行为 + 底 tab 隐藏 + 反枚举静态分析(per spec SC-007 / SC-010 / US9 / SC-005) | `__tests__/integration/account-settings-shell-flow.test.tsx`                               |      |
 | T10 | [Smoke]                         | Playwright 真后端冒烟 — 已 onboarded → ⚙️ → settings → account-security → phone → 返回 → 退出登录 → Alert → 确定 → 跳 login(per spec SC-006)                          | `apps/native/runtime-debug/2026-05-XX-account-settings-shell-business-flow/` + 截图        |      |
 | T11 | [Doc]                           | spec.md 同步修订(FR-005 / FR-011 / FR-019 / Assumption / Open Q,per plan § spec.md 同步修订段)+ tasks.md 全勾 ✅                                                      | `spec.md` + `tasks.md`                                                                     |      |
@@ -611,7 +611,7 @@ export default function PhoneScreen() {
 
 ---
 
-## T8 — `legal/_layout` + 2 法规占位页(per spec FR-009 + FR-011 + Q6)
+## T8 ✅ — `legal/_layout` + 2 法规占位页(per spec FR-009 + FR-011 + Q6)
 
 **TDD**:法规 page test 先红。
 
