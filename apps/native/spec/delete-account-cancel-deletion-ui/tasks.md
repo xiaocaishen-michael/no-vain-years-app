@@ -1,7 +1,7 @@
 # Tasks: Delete Account & Cancel Deletion UI (spec C)
 
 > **Companions**: [`spec.md`](./spec.md) / [`plan.md`](./plan.md) / [`design/handoff.md`](./design/handoff.md)
-> **Status**: PHASE 1 T0-T10 + T12 ✅ shipped 2026-05-07(PR [#78](https://github.com/xiaocaishen-michael/no-vain-years-app/pull/78));**PHASE 2 T_mock + T13 ✅(本 PR)+ T14/T15/T16 in-progress**;T11 🟡 deferred(等 server release 0.2.0 production deploy)
+> **Status**: PHASE 1 T0-T10 + T12 ✅ shipped 2026-05-07(PR [#78](https://github.com/xiaocaishen-michael/no-vain-years-app/pull/78));**PHASE 2 T_mock + T13 + T14 ✅(本 PR)+ T15/T16 in-progress**;T11 🟡 deferred(等 server release 0.2.0 production deploy)
 > **Implementation PR**: PHASE 1 = PR [#78](https://github.com/xiaocaishen-michael/no-vain-years-app/pull/78);PHASE 2 = feature/spec-c-mockup-translation(本会话,见各 task `Commit` 字段;PR # 待 push 后回填)
 > **里程碑依赖**(spec C impl session 才开):
 >
@@ -487,7 +487,7 @@
 
 ---
 
-### T14 [App] 翻译 `cancel-deletion.tsx` — recover 撤销 page UI 完成(brand vs T13 destructive 对比)
+### T14 ✅ [App] 翻译 `cancel-deletion.tsx` — recover 撤销 page UI 完成(brand vs T13 destructive 对比)
 
 **前置**:T13 完成
 
