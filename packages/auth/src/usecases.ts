@@ -64,13 +64,20 @@ export async function phoneSmsAuth(phone: string, code: string): Promise<LoginRe
   return session;
 }
 
-// Reads the authenticated user's profile and writes displayName to the store.
-// 401 from /me means the refresh middleware exhausted retries — re-thrown so
-// callers can drop session / redirect to login. Network errors also re-thrown
-// (callers like phoneSmsAuth swallow to keep login flow resilient).
+// Reads the authenticated user's profile and writes displayName + phone to
+// the store. 401 from /me means the refresh middleware exhausted retries —
+// re-thrown so callers can drop session / redirect to login. Network errors
+// also re-thrown (callers like phoneSmsAuth swallow to keep login flow
+// resilient).
+//
+// phone (per account-settings-shell spec / plan 决策 1): server returns the
+// caller's E.164 raw phone in /me; we mirror it into the store so the 账号
+// 与安全 page can render maskPhone() without a roundtrip. Absent on response
+// → null (only ANONYMIZED rows lack phone, gated upstream by FR-009).
 export async function loadProfile(): Promise<void> {
   const response = await getAccountProfileApi().getMe();
   useAuthStore.getState().setDisplayName(response.displayName ?? null);
+  useAuthStore.getState().setPhone(response.phone ?? null);
 }
 
 // Updates displayName via PATCH /me. Server returns the canonical profile;
