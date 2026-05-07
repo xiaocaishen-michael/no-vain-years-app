@@ -63,6 +63,9 @@ export const colors = {
   'hero-overlay': 'rgba(15,18,28,0.36)',
   'white-soft': 'rgba(255,255,255,0.72)',
   'white-strong': 'rgba(255,255,255,0.92)',
+  // spec C T15 — freeze modal scrim (per design/handoff.md § 4).
+  // Slightly darker than hero-overlay (0.48 vs 0.36) for modal focus.
+  'modal-overlay': 'rgba(15,18,28,0.48)',
 };
 
 export const spacing = {
@@ -93,6 +96,8 @@ export const boxShadow = {
   cta: '0 4px 12px -2px rgba(36,86,229,0.25)',
   // Avatar 圆形边缘软光（per spec my-profile T11 / handoff.md § 4）
   'hero-ring': '0 4px 16px -4px rgba(0,0,0,0.18)',
+  // spec C T15 — freeze modal card elevation (per design/handoff.md § 4).
+  modal: '0 12px 32px -8px rgba(15,18,28,0.28), 0 4px 12px -4px rgba(15,18,28,0.18)',
 };
 
 export const tokens = {
