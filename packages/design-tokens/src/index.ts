@@ -57,6 +57,12 @@ export const colors = {
     DEFAULT: '#EF4444',
     soft: '#FDECEC',
   },
+  // my-profile alpha variants (per spec my-profile T11 / handoff.md § 4).
+  // Flat keys (no ramp) — used as bg-hero-overlay / text-white-soft / text-white-strong
+  // for white-on-blur legibility in Hero. Not part of any color ramp.
+  'hero-overlay': 'rgba(15,18,28,0.36)',
+  'white-soft': 'rgba(255,255,255,0.72)',
+  'white-strong': 'rgba(255,255,255,0.92)',
 };
 
 export const spacing = {
@@ -85,6 +91,8 @@ export const fontFamily = {
 export const boxShadow = {
   card: '0 1px 2px 0 rgba(17,24,39,.05), 0 1px 3px 0 rgba(17,24,39,.04)',
   cta: '0 4px 12px -2px rgba(36,86,229,0.25)',
+  // Avatar 圆形边缘软光（per spec my-profile T11 / handoff.md § 4）
+  'hero-ring': '0 4px 16px -4px rgba(0,0,0,0.18)',
 };
 
 export const tokens = {

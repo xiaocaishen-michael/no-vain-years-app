@@ -37,9 +37,26 @@ vi.mock('expo-router', () => {
   return { Tabs: MockTabs };
 });
 
+// react-native-svg renders inert in happy-dom; tabBarIcon factory only needs
+// to return a valid React element when invoked.
+vi.mock('react-native-svg', async () => {
+  const ReactM = (await import('react')).default;
+  const passthrough =
+    (tag: string) =>
+    ({ children }: { children?: React.ReactNode }) =>
+      ReactM.createElement(tag, null, children);
+  return {
+    default: passthrough('svg'),
+    Svg: passthrough('svg'),
+    Circle: passthrough('circle'),
+    G: passthrough('g'),
+    Path: passthrough('path'),
+  };
+});
+
 import TabsLayout from '../_layout';
 
-describe('TabsLayout (spec my-profile T2 / FR-001 / FR-012 / CL-003)', () => {
+describe('TabsLayout (spec my-profile T2 / FR-001 / FR-012 / CL-003 + PHASE 2 mockup)', () => {
   beforeEach(() => {
     capturedScreens.length = 0;
     Object.keys(capturedGlobalOptions).forEach((k) => delete capturedGlobalOptions[k]);
@@ -65,15 +82,32 @@ describe('TabsLayout (spec my-profile T2 / FR-001 / FR-012 / CL-003)', () => {
     ]);
   });
 
-  it('has no tabBarIcon on any screen (per SC-008)', () => {
+  it('has tabBarIcon function on each screen (per PHASE 2 mockup translation)', () => {
     render(<TabsLayout />);
     capturedScreens.forEach((s) => {
-      expect(s.options['tabBarIcon']).toBeUndefined();
+      expect(typeof s.options['tabBarIcon']).toBe('function');
     });
+  });
+
+  it('tabBarIcon factory returns a React element when invoked', () => {
+    render(<TabsLayout />);
+    const profileScreen = capturedScreens.find((s) => s.name === 'profile');
+    const iconFactory = profileScreen?.options['tabBarIcon'] as
+      | ((p: { color: string; focused: boolean }) => React.ReactElement | null)
+      | undefined;
+    const el = iconFactory?.({ color: '#000', focused: true });
+    expect(el).toBeTruthy();
+    expect(React.isValidElement(el)).toBe(true);
   });
 
   it('sets headerShown: false in global screenOptions (per FR-012)', () => {
     render(<TabsLayout />);
     expect(capturedGlobalOptions['headerShown']).toBe(false);
+  });
+
+  it('sets brand-500 active and ink-subtle inactive tint colors', () => {
+    render(<TabsLayout />);
+    expect(capturedGlobalOptions['tabBarActiveTintColor']).toBe('#2456E5');
+    expect(capturedGlobalOptions['tabBarInactiveTintColor']).toBe('#999999');
   });
 });
