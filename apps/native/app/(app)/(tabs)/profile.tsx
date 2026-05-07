@@ -1,14 +1,28 @@
-// PHASE 1 PLACEHOLDER — business flow validated; visuals pending mockup.
-import { useState } from 'react';
-import { Pressable, ScrollView, Text, View } from 'react-native';
+import { useEffect, useState } from 'react';
+import {
+  type NativeScrollEvent,
+  type NativeSyntheticEvent,
+  Pressable,
+  ScrollView,
+  Text,
+  View,
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { useAuthStore } from '@nvy/auth';
+import Svg, { Circle, Defs, G, LinearGradient, Line, Path, Rect, Stop } from 'react-native-svg';
+import Animated, {
+  Easing,
+  useAnimatedStyle,
+  useSharedValue,
+  withTiming,
+} from 'react-native-reanimated';
+import { tokens } from '@nvy/design-tokens';
 
 const COPY = {
   unnamed: '未命名',
-  followers: '5 关注',
-  fans: '12 粉丝',
+  follow: '关注',
+  fans: '粉丝',
   topNavMenuLabel: '菜单',
   topNavSearchLabel: '搜索',
   topNavSettingsLabel: '设置',
@@ -18,108 +32,294 @@ const COPY = {
 
 type TabKey = 'notes' | 'graph' | 'kb';
 
+const TABS: { key: TabKey; label: string }[] = [
+  { key: 'notes', label: COPY.tabs.notes },
+  { key: 'graph', label: COPY.tabs.graph },
+  { key: 'kb', label: COPY.tabs.kb },
+];
+const TAB_W = 88;
+const INDICATOR_W = 24;
+const HERO_HEIGHT = 280;
+// Trigger sticky-on-blur swap when Hero is mostly off-screen (leave nav-height buffer).
+const STICKY_THRESHOLD = HERO_HEIGHT - 56;
+
+const FOLLOWING_COUNT = 5;
+const FOLLOWERS_COUNT = 12;
+
+const stroke = (c: string, w = 2) =>
+  ({
+    stroke: c,
+    strokeWidth: w,
+    strokeLinecap: 'round',
+    strokeLinejoin: 'round',
+    fill: 'none',
+  }) as const;
+
+function IconMenu({ color }: { color: string }) {
+  return (
+    <Svg width={22} height={22} viewBox="0 0 24 24">
+      <G {...stroke(color, 2)}>
+        <Line x1={4} y1={7} x2={20} y2={7} />
+        <Line x1={4} y1={12} x2={20} y2={12} />
+        <Line x1={4} y1={17} x2={20} y2={17} />
+      </G>
+    </Svg>
+  );
+}
+
+function IconSearch({ color }: { color: string }) {
+  return (
+    <Svg width={22} height={22} viewBox="0 0 24 24">
+      <G {...stroke(color, 2)}>
+        <Circle cx={11} cy={11} r={7} />
+        <Path d="M20 20 L16 16" />
+      </G>
+    </Svg>
+  );
+}
+
+function IconGear({ color }: { color: string }) {
+  return (
+    <Svg width={22} height={22} viewBox="0 0 24 24">
+      <G {...stroke(color, 1.6)}>
+        <Circle cx={12} cy={12} r={3} />
+        <Path d="M12 2.5v3 M12 18.5v3 M2.5 12h3 M18.5 12h3 M5.2 5.2l2.1 2.1 M16.7 16.7l2.1 2.1 M5.2 18.8l2.1-2.1 M16.7 7.3l2.1-2.1" />
+      </G>
+    </Svg>
+  );
+}
+
+// SVG gradient stand-in for blurred photo (FR-006 photo not implemented;
+// M2+ swap to <ImageBackground source={...} blurRadius={20}>).
+function HeroBlurBackdrop() {
+  return (
+    <Svg width="100%" height="100%" viewBox="0 0 360 320" preserveAspectRatio="xMidYMid slice">
+      <Defs>
+        <LinearGradient id="heroBg" x1="0" y1="0" x2="1" y2="1">
+          <Stop offset="0%" stopColor="#3B5BD9" />
+          <Stop offset="55%" stopColor="#7B5BC9" />
+          <Stop offset="100%" stopColor="#D98A6B" />
+        </LinearGradient>
+        <LinearGradient id="heroBlobs" x1="0" y1="0" x2="0" y2="1">
+          <Stop offset="0%" stopColor="#FFFFFF" stopOpacity="0.16" />
+          <Stop offset="100%" stopColor="#FFFFFF" stopOpacity="0" />
+        </LinearGradient>
+      </Defs>
+      <Rect width="360" height="320" fill="url(#heroBg)" />
+      <Circle cx="80" cy="60" r="90" fill="url(#heroBlobs)" />
+      <Circle cx="290" cy="40" r="70" fill="url(#heroBlobs)" />
+      <Circle cx="220" cy="160" r="120" fill="url(#heroBlobs)" />
+      <Circle cx="60" cy="220" r="80" fill="url(#heroBlobs)" />
+    </Svg>
+  );
+}
+
+function AvatarPlaceholder({
+  displayName,
+  onPress,
+}: {
+  displayName: string | null | undefined;
+  onPress: () => void;
+}) {
+  const initial = displayName ? [...displayName][0] : null;
+  return (
+    <Pressable
+      onPress={onPress}
+      accessibilityRole="imagebutton"
+      accessibilityLabel="头像"
+      accessibilityHint="点击更换"
+      className="w-[72px] h-[72px] rounded-full bg-white p-[3px] shadow-hero-ring"
+    >
+      <View className="flex-1 rounded-full bg-brand-500 items-center justify-center">
+        {initial ? (
+          <Text className="text-white text-2xl font-semibold tracking-tight">{initial}</Text>
+        ) : (
+          <Text className="text-2xl">👤</Text>
+        )}
+      </View>
+    </Pressable>
+  );
+}
+
+function TopNav({ onBlur, onSettingsPress }: { onBlur: boolean; onSettingsPress: () => void }) {
+  const iconColor = onBlur ? tokens.colors.surface.DEFAULT : tokens.colors.ink.DEFAULT;
+  return (
+    <View
+      className={
+        onBlur
+          ? 'flex-row items-center justify-between h-12 px-md bg-transparent'
+          : 'flex-row items-center justify-between h-12 px-md bg-surface border-b border-line-soft'
+      }
+    >
+      <Pressable
+        accessibilityRole="button"
+        accessibilityLabel={COPY.topNavMenuLabel}
+        accessibilityState={{ disabled: true }}
+        className="w-10 h-10 items-center justify-center"
+      >
+        <IconMenu color={iconColor} />
+      </Pressable>
+      <View className="flex-1" />
+      <View className="flex-row items-center gap-1">
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={COPY.topNavSearchLabel}
+          accessibilityState={{ disabled: true }}
+          className="w-10 h-10 items-center justify-center"
+        >
+          <IconSearch color={iconColor} />
+        </Pressable>
+        <Pressable
+          onPress={onSettingsPress}
+          accessibilityRole="button"
+          accessibilityLabel={COPY.topNavSettingsLabel}
+          className="w-10 h-10 items-center justify-center"
+        >
+          <IconGear color={iconColor} />
+        </Pressable>
+      </View>
+    </View>
+  );
+}
+
+function SlideTabs({ active, onChange }: { active: TabKey; onChange: (k: TabKey) => void }) {
+  const idx = TABS.findIndex((t) => t.key === active);
+  const offset = useSharedValue(idx * TAB_W + (TAB_W - INDICATOR_W) / 2);
+
+  useEffect(() => {
+    offset.value = withTiming(idx * TAB_W + (TAB_W - INDICATOR_W) / 2, {
+      duration: 240,
+      easing: Easing.out(Easing.cubic),
+    });
+  }, [idx, offset]);
+
+  const indicatorStyle = useAnimatedStyle(() => ({
+    transform: [{ translateX: offset.value }],
+  }));
+
+  return (
+    <View className="bg-surface border-b border-line-soft">
+      <View className="flex-row self-center pt-2">
+        {TABS.map((t) => {
+          const on = t.key === active;
+          return (
+            <Pressable
+              key={t.key}
+              onPress={() => onChange(t.key)}
+              accessibilityRole="tab"
+              accessibilityState={{ selected: on }}
+              accessibilityLabel={t.label}
+              className="w-[88px] items-center pb-3"
+            >
+              <Text
+                className={
+                  on ? 'text-base font-semibold text-ink' : 'text-base font-medium text-ink-muted'
+                }
+              >
+                {t.label}
+              </Text>
+            </Pressable>
+          );
+        })}
+        <Animated.View
+          style={indicatorStyle}
+          className="absolute bottom-0 left-0 h-[3px] w-[24px] rounded-full bg-brand-500"
+        />
+      </View>
+    </View>
+  );
+}
+
+function TabPlaceholder({ tab }: { tab: TabKey }) {
+  const copy = `${COPY.tabs[tab]}${COPY.tabPlaceholderSuffix}`;
+  return (
+    <View className="flex-1 items-center justify-center py-2xl gap-3">
+      <View className="w-14 h-14 rounded-full bg-surface-sunken items-center justify-center">
+        <View className="w-6 h-6 rounded-full bg-line-strong" />
+      </View>
+      <Text className="text-sm text-ink-muted">{copy}</Text>
+    </View>
+  );
+}
+
+function Hero({
+  displayName,
+  onAvatarPress,
+  onBackgroundPress,
+}: {
+  displayName: string | null | undefined;
+  onAvatarPress: () => void;
+  onBackgroundPress: () => void;
+}) {
+  return (
+    <View className="h-[280px] relative overflow-hidden">
+      <View className="absolute inset-0">
+        <HeroBlurBackdrop />
+      </View>
+      <View className="absolute inset-0 bg-hero-overlay" />
+      <Pressable
+        onPress={onBackgroundPress}
+        accessibilityRole="imagebutton"
+        accessibilityLabel="背景图"
+        accessibilityHint="点击更换"
+        className="absolute inset-0"
+      />
+      <View className="flex-1 items-center justify-end pb-8 px-md">
+        <AvatarPlaceholder displayName={displayName} onPress={onAvatarPress} />
+        <Text
+          className="text-[22px] font-bold text-white-strong mt-3 tracking-tight"
+          numberOfLines={1}
+          ellipsizeMode="tail"
+        >
+          {displayName ?? COPY.unnamed}
+        </Text>
+        <View className="flex-row items-center gap-md mt-2">
+          <View className="flex-row items-center gap-1">
+            <Text className="text-sm font-semibold text-white-strong">{FOLLOWING_COUNT}</Text>
+            <Text className="text-xs text-white-soft">{COPY.follow}</Text>
+          </View>
+          <View className="w-px h-3 bg-white-soft" />
+          <View className="flex-row items-center gap-1">
+            <Text className="text-sm font-semibold text-white-strong">{FOLLOWERS_COUNT}</Text>
+            <Text className="text-xs text-white-soft">{COPY.fans}</Text>
+          </View>
+        </View>
+      </View>
+    </View>
+  );
+}
+
 export default function ProfileScreen() {
   const router = useRouter();
   const displayName = useAuthStore((s) => s.displayName);
   const [activeTab, setActiveTab] = useState<TabKey>('notes');
+  const [scrollY, setScrollY] = useState(0);
+  const isSticky = scrollY >= STICKY_THRESHOLD;
 
   const noop = () => undefined;
   const pushSettings = () => router.push('/(app)/settings');
 
   return (
-    <SafeAreaView edges={['top']} style={{ flex: 1 }}>
-      <ScrollView stickyHeaderIndices={[2]} style={{ flex: 1 }}>
-        {/* index 0: TopNav */}
-        <View style={{ flexDirection: 'row', alignItems: 'center', padding: 16 }}>
-          <Pressable
-            onPress={noop}
-            accessibilityRole="button"
-            accessibilityLabel={COPY.topNavMenuLabel}
-            accessibilityState={{ disabled: true }}
-          >
-            {({ pressed }) => <Text style={{ opacity: pressed ? 0.3 : 0.5 }}>≡</Text>}
-          </Pressable>
-          <View style={{ flex: 1 }} />
-          <Pressable
-            onPress={noop}
-            accessibilityRole="button"
-            accessibilityLabel={COPY.topNavSearchLabel}
-            accessibilityState={{ disabled: true }}
-          >
-            {({ pressed }) => <Text style={{ opacity: pressed ? 0.3 : 0.5 }}>🔍</Text>}
-          </Pressable>
-          <Pressable
-            onPress={pushSettings}
-            accessibilityRole="button"
-            accessibilityLabel={COPY.topNavSettingsLabel}
-            style={{ marginLeft: 16 }}
-          >
-            <Text>⚙️</Text>
-          </Pressable>
-        </View>
-
-        {/* index 1: Hero */}
-        <View style={{ alignItems: 'center', padding: 24 }}>
-          <Pressable
-            onPress={noop}
-            accessibilityRole="imagebutton"
-            accessibilityLabel="背景图"
-            accessibilityHint="点击更换"
-            style={{ position: 'absolute', top: 0, right: 0, bottom: 0, left: 0 }}
-          />
-          <Pressable
-            onPress={noop}
-            accessibilityRole="imagebutton"
-            accessibilityLabel="头像"
-            accessibilityHint="点击更换"
-          >
-            <Text style={{ fontSize: 48 }}>👤</Text>
-          </Pressable>
-          <Text style={{ marginTop: 8 }} numberOfLines={1} ellipsizeMode="tail">
-            {displayName ?? COPY.unnamed}
-          </Text>
-          <View style={{ flexDirection: 'row', marginTop: 8 }}>
-            <Text>{COPY.followers}</Text>
-            <Text style={{ marginLeft: 16 }}>{COPY.fans}</Text>
-          </View>
-        </View>
-
-        {/* index 2: SlideTabs (sticky) */}
-        <View style={{ flexDirection: 'row', backgroundColor: 'white', borderBottomWidth: 1 }}>
-          {(['notes', 'graph', 'kb'] as TabKey[]).map((key) => (
-            <Pressable
-              key={key}
-              onPress={() => setActiveTab(key)}
-              accessibilityRole="tab"
-              accessibilityState={{ selected: activeTab === key }}
-              accessibilityLabel={COPY.tabs[key]}
-              style={{ flex: 1, padding: 12, alignItems: 'center' }}
-            >
-              <Text style={{ fontWeight: activeTab === key ? 'bold' : 'normal' }}>
-                {COPY.tabs[key]}
-              </Text>
-              {activeTab === key && (
-                <View
-                  style={{
-                    height: 2,
-                    backgroundColor: 'black',
-                    marginTop: 4,
-                    alignSelf: 'stretch',
-                  }}
-                />
-              )}
-            </Pressable>
-          ))}
-        </View>
-
-        {/* index 3: TabContent */}
-        <View style={{ padding: 24, alignItems: 'center' }}>
-          <Text>
-            {COPY.tabs[activeTab]}
-            {COPY.tabPlaceholderSuffix}
-          </Text>
+    <SafeAreaView
+      edges={['top']}
+      style={{ flex: 1, backgroundColor: tokens.colors.surface.DEFAULT }}
+    >
+      <ScrollView
+        stickyHeaderIndices={[1]}
+        scrollEventThrottle={16}
+        onScroll={(e: NativeSyntheticEvent<NativeScrollEvent>) =>
+          setScrollY(e.nativeEvent.contentOffset.y)
+        }
+      >
+        <Hero displayName={displayName} onAvatarPress={noop} onBackgroundPress={noop} />
+        <SlideTabs active={activeTab} onChange={setActiveTab} />
+        <View className="bg-surface min-h-[260px]">
+          <TabPlaceholder tab={activeTab} />
         </View>
       </ScrollView>
+      <View className="absolute top-0 left-0 right-0">
+        <TopNav onBlur={!isSticky} onSettingsPress={pushSettings} />
+      </View>
     </SafeAreaView>
   );
 }

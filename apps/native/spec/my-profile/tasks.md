@@ -45,14 +45,14 @@
 
 > 占位空表;由 mockup-prompt 阶段填充。参考 onboarding tasks.md T_mock / T8-T11 的 5 任务模式(mockup-prompt → bundle / handoff → packages/ui 评估 → 改写 page → plan.md 回填 → 视觉冒烟)。
 
-| #      | 层级           | 任务                                                                                                                   | 文件                                                               | 状态    |
-| ------ | -------------- | ---------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------ | ------- |
-| T_mock | [Mockup]       | Claude Design 出 my-profile 页 mockup(顶 nav + Hero + slide tabs + 底 tab visualization)+ bundle + handoff.md          | `design/source/` + `design/mockup-prompt.md` + `design/handoff.md` | pending |
-| T10    | [packages/ui]  | 评估新组件归属(`<TopNav>` / `<SlideTabsRow>` / `<ProfileHero>` 是抽 packages/ui 还是 inline,per FR-011)                | `design/handoff.md` § 复用清单                                     | pending |
-| T11    | [App]          | 改写 `(tabs)/profile.tsx` — 删 PHASE 1 PLACEHOLDER banner + 接入新组件 + token-based className + photo blur 沉浸式背景 | `(tabs)/profile.tsx`                                               | pending |
-| T12    | [Plan]         | plan.md UI 段从 4 边界占位回填为完整 UI 结构                                                                           | `apps/native/spec/my-profile/plan.md` § UI 结构                    | pending |
-| T13    | [Visual smoke] | 4 状态截图(default / 滚动到 sticky / 切到 graph tab / 切到 kb tab + 顶 nav 各 disabled 反馈)                           | `runtime-debug/2026-05-XX-my-profile-mockup-translation/`          | pending |
-| T14    | [视觉回归]     | 视情况引入 visual regression(M2 后)                                                                                    | TBD                                                                | 🟡 评估 |
+| #        | 层级           | 任务                                                                                                                   | 文件                                                               | 状态     |
+| -------- | -------------- | ---------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------ | -------- |
+| ✅T_mock | [Mockup]       | Claude Design 出 my-profile 页 mockup(顶 nav + Hero + slide tabs + 底 tab visualization)+ bundle + handoff.md          | `design/source/` + `design/mockup-prompt.md` + `design/handoff.md` | ✅ 本 PR |
+| ✅T10    | [packages/ui]  | 评估新组件归属(`<TopNav>` / `<SlideTabsRow>` / `<ProfileHero>` 是抽 packages/ui 还是 inline,per FR-011)                | `design/handoff.md` § 复用清单                                     | ✅ 本 PR |
+| ✅T11    | [App]          | 改写 `(tabs)/profile.tsx` — 删 PHASE 1 PLACEHOLDER banner + 接入新组件 + token-based className + photo blur 沉浸式背景 | `(tabs)/profile.tsx`                                               | ✅ 本 PR |
+| ✅T12    | [Plan]         | plan.md UI 段从 4 边界占位回填为完整 UI 结构                                                                           | `apps/native/spec/my-profile/plan.md` § UI 结构                    | ✅ 本 PR |
+| T13      | [Visual smoke] | 4 状态截图(default / 滚动到 sticky / 切到 graph tab / 切到 kb tab + 顶 nav 各 disabled 反馈)                           | `runtime-debug/2026-05-XX-my-profile-mockup-translation/`          | pending  |
+| T14      | [视觉回归]     | 视情况引入 visual regression(M2 后)                                                                                    | TBD                                                                | 🟡 评估  |
 
 ---
 
