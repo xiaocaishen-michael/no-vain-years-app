@@ -134,7 +134,7 @@
 
 ---
 
-### T4 [Submit-A] delete-account 提交 + clearSession + 跳 (auth)/login + 单测
+### T4 ✅ [Submit-A] delete-account 提交 + clearSession + 跳 (auth)/login + 单测
 
 **前置**:T3 完成
 

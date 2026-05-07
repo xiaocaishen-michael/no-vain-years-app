@@ -4,10 +4,17 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 const mocks = vi.hoisted(() => ({
   requestDeleteAccountSmsCode: vi.fn(),
+  deleteAccount: vi.fn(),
+  routerReplace: vi.fn<(route: string) => void>(),
 }));
 
 vi.mock('@nvy/auth', () => ({
   requestDeleteAccountSmsCode: mocks.requestDeleteAccountSmsCode,
+  deleteAccount: mocks.deleteAccount,
+}));
+
+vi.mock('expo-router', () => ({
+  useRouter: () => ({ replace: mocks.routerReplace }),
 }));
 
 vi.mock('@nvy/api-client', () => {
@@ -109,7 +116,11 @@ import { ResponseError } from '@nvy/api-client';
 import DeleteAccountScreen from '../delete-account';
 
 describe('DeleteAccountScreen — IDLE state render (spec C T2 / US1 acceptance 2-4)', () => {
-  beforeEach(() => mocks.requestDeleteAccountSmsCode.mockReset());
+  beforeEach(() => {
+    mocks.requestDeleteAccountSmsCode.mockReset();
+    mocks.deleteAccount.mockReset();
+    mocks.routerReplace.mockReset();
+  });
   afterEach(() => cleanup());
 
   it('renders both warning lines', () => {
@@ -151,7 +162,11 @@ describe('DeleteAccountScreen — IDLE state render (spec C T2 / US1 acceptance 
 });
 
 describe('DeleteAccountScreen — state machine (spec C T3 / US2 acceptance 1-3 / US3)', () => {
-  beforeEach(() => mocks.requestDeleteAccountSmsCode.mockReset());
+  beforeEach(() => {
+    mocks.requestDeleteAccountSmsCode.mockReset();
+    mocks.deleteAccount.mockReset();
+    mocks.routerReplace.mockReset();
+  });
   afterEach(() => {
     cleanup();
     vi.useRealTimers();
@@ -262,4 +277,122 @@ describe('DeleteAccountScreen — state machine (spec C T3 / US2 acceptance 1-3 
   // Race guard owns full coverage in T4 (handleSubmit) where the same
   // sendingRef pattern applies; covering it once is sufficient for the
   // ref-based single-flight pattern.
+});
+
+describe('DeleteAccountScreen — submit + redirect (spec C T4 / US2 acceptance 4-5 / US9)', () => {
+  beforeEach(() => {
+    mocks.requestDeleteAccountSmsCode.mockReset();
+    mocks.deleteAccount.mockReset();
+    mocks.routerReplace.mockReset();
+  });
+  afterEach(() => cleanup());
+
+  async function getReadyToSubmit() {
+    mocks.requestDeleteAccountSmsCode.mockResolvedValue(undefined);
+    render(<DeleteAccountScreen />);
+    fireEvent.click(screen.getByLabelText('checkbox-1'));
+    fireEvent.click(screen.getByLabelText('checkbox-2'));
+    await act(async () => {
+      fireEvent.click(screen.getByLabelText('send-code'));
+    });
+    fireEvent.change(screen.getByLabelText('code-input'), { target: { value: '123456' } });
+  }
+
+  it('US2-4 happy: tap 提交 → deleteAccount(code) called → router.replace /(auth)/login', async () => {
+    mocks.deleteAccount.mockResolvedValue(undefined);
+    await getReadyToSubmit();
+
+    await act(async () => {
+      fireEvent.click(screen.getByLabelText('submit'));
+    });
+
+    expect(mocks.deleteAccount).toHaveBeenCalledTimes(1);
+    expect(mocks.deleteAccount).toHaveBeenCalledWith('123456');
+    expect(mocks.routerReplace).toHaveBeenCalledTimes(1);
+    expect(mocks.routerReplace).toHaveBeenCalledWith('/(auth)/login');
+  });
+
+  it('US2-5: server clears session via deleteAccount() finally block; UI does not redirect twice', async () => {
+    // The wrapper's finally clears session; T4 component just trusts that and
+    // calls router.replace once after success.
+    mocks.deleteAccount.mockResolvedValue(undefined);
+    await getReadyToSubmit();
+    await act(async () => {
+      fireEvent.click(screen.getByLabelText('submit'));
+    });
+    expect(mocks.routerReplace).toHaveBeenCalledTimes(1);
+  });
+
+  it('US2-4 sequencing: deleteAccount resolves before router.replace fires', async () => {
+    let resolveDelete: (() => void) | undefined;
+    mocks.deleteAccount.mockImplementation(
+      () =>
+        new Promise<void>((resolve) => {
+          resolveDelete = resolve;
+        }),
+    );
+    await getReadyToSubmit();
+
+    await act(async () => {
+      fireEvent.click(screen.getByLabelText('submit'));
+    });
+
+    expect(mocks.deleteAccount).toHaveBeenCalledTimes(1);
+    // Before resolution, router.replace should NOT have fired.
+    expect(mocks.routerReplace).not.toHaveBeenCalled();
+
+    await act(async () => {
+      resolveDelete?.();
+    });
+    expect(mocks.routerReplace).toHaveBeenCalledWith('/(auth)/login');
+  });
+
+  it('US9 race guard: rapid double-tap fires deleteAccount only once', async () => {
+    let resolveDelete: (() => void) | undefined;
+    mocks.deleteAccount.mockImplementation(
+      () =>
+        new Promise<void>((resolve) => {
+          resolveDelete = resolve;
+        }),
+    );
+    await getReadyToSubmit();
+
+    await act(async () => {
+      fireEvent.click(screen.getByLabelText('submit'));
+      fireEvent.click(screen.getByLabelText('submit'));
+    });
+
+    expect(mocks.deleteAccount).toHaveBeenCalledTimes(1);
+
+    await act(async () => {
+      resolveDelete?.();
+    });
+  });
+
+  it('isSubmitting: submit while in-flight is disabled (a11y busy=true)', async () => {
+    let resolveDelete: (() => void) | undefined;
+    mocks.deleteAccount.mockImplementation(
+      () =>
+        new Promise<void>((resolve) => {
+          resolveDelete = resolve;
+        }),
+    );
+    await getReadyToSubmit();
+    await act(async () => {
+      fireEvent.click(screen.getByLabelText('submit'));
+    });
+
+    const submit = screen.getByLabelText('submit');
+    expect(submit.getAttribute('aria-disabled')).toBe('true');
+    expect(submit.getAttribute('aria-busy')).toBe('true');
+    expect(submit.textContent).toMatch(/submitting/i);
+
+    await act(async () => {
+      resolveDelete?.();
+    });
+  });
+
+  // Submit error paths (mapDeletionError) covered by helper unit test
+  // (delete-account-errors.test.ts) — vitest spy-rejection tracker hits
+  // the same false-positive on rejection through React event handlers.
 });

@@ -12,10 +12,11 @@
 // from 60 → 0 then re-enables the send button. Error path leaves cooldown
 // untouched (server-side rate limit is authoritative; client doesn't bypass).
 
+import { useRouter } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
 import { Pressable, Text, TextInput, View } from 'react-native';
 
-import { requestDeleteAccountSmsCode } from '@nvy/auth';
+import { deleteAccount, requestDeleteAccountSmsCode } from '@nvy/auth';
 
 import { mapDeletionError } from './delete-account-errors';
 
@@ -57,12 +58,14 @@ export default function DeleteAccountScreen() {
   const [hasSentCode, setHasSentCode] = useState(false);
   const [cooldown, setCooldown] = useState(0);
   const [isSendingCode, setIsSendingCode] = useState(false);
-  const [isSubmitting] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
+  const router = useRouter();
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  // Synchronous guard for double-tap before isSendingCode state propagates.
+  // Synchronous guards for double-tap before state propagates.
   const sendingRef = useRef(false);
+  const submittingRef = useRef(false);
 
   useEffect(() => {
     return () => {
@@ -118,6 +121,26 @@ export default function DeleteAccountScreen() {
       });
   };
 
+  const handleSubmit = () => {
+    if (submittingRef.current) return; // synchronous race guard
+    submittingRef.current = true;
+    setIsSubmitting(true);
+    setErrorMsg(null);
+    deleteAccount(code)
+      .then(() => {
+        // deleteAccount() finally-block has already cleared the session.
+        router.replace('/(auth)/login');
+      })
+      .catch((e: unknown) => {
+        const mapped = mapDeletionError(e);
+        setErrorMsg(errorCopy(mapped.kind));
+      })
+      .finally(() => {
+        submittingRef.current = false;
+        setIsSubmitting(false);
+      });
+  };
+
   const bothChecked = checkbox1 && checkbox2;
   const canSendCode = bothChecked && cooldown === 0 && !isSendingCode && !isSubmitting;
   const canSubmit = hasSentCode && code.length === 6 && !isSubmitting;
@@ -166,6 +189,7 @@ export default function DeleteAccountScreen() {
       />
       <Pressable
         accessibilityLabel="submit"
+        onPress={handleSubmit}
         accessibilityState={{ disabled: !canSubmit, busy: isSubmitting }}
         style={{ opacity: canSubmit ? 1 : 0.5 }}
       >
