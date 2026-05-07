@@ -39,7 +39,7 @@ const SMS_COUNTDOWN_SECONDS = 60;
 
 // Successful auth → @nvy/auth.phoneSmsAuth sets store.session via setSession();
 // AuthGate (apps/native/app/_layout.tsx) detects isAuthenticated change and
-// performs router.replace('/(app)') automatically. Hook does NOT navigate.
+// performs router.replace('/(app)/(tabs)/profile') automatically. Hook does NOT navigate.
 export function useLoginForm(): UseLoginFormResult {
   const [state, setState] = useState<AuthState>('idle');
   const [errorToast, setErrorToast] = useState<string | null>(null);
