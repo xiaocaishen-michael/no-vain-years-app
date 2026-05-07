@@ -100,7 +100,9 @@
 
 ---
 
-### T3 [Form-A] delete-account form state machine + 单测
+### T3 ✅ [Form-A] delete-account form state machine + 单测
+
+> **Drift note (impl)**: 错误路径单测从 component-level(delete-account.test.tsx)迁移到 helper-level(delete-account-errors.test.ts) — vitest spy-rejection tracker 把 mock 拒绝当成 unhandled rejection 报告(即使 component 用 .then().catch() 拦截),迁到 mapDeletionError 直测覆盖更稳。component 层保留 chained reject→resolve 的 US3-4 retry-clear 验证。
 
 **前置**:T2 完成
 

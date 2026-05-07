@@ -1,15 +1,23 @@
 // PHASE 1 PLACEHOLDER — business flow validated; visuals pending mockup.
 //
 // Per ADR-0017 类 1 (标准 UI) 边界: bare RN components, zero packages/ui
-// imports, zero hex/px/font literals. State machine + cooldown wiring lands
-// in T3; submission + clearSession + redirect lands in T4. T2 surface = IDLE
-// state only — both Pressables disabled, code input disabled, no handlers
-// fire any side effects.
+// imports, zero hex/px/font literals. State machine wired in T3 (this
+// commit); submission + clearSession + redirect lands in T4.
+//
+// State machine (per plan.md):
+//   IDLE → CHECKBOX_HALF → CHECKBOX_FULL → CODE_SENDING → CODE_SENT
+//        → CODE_TYPING → CODE_READY → SUBMITTING → SUCCESS / SUBMIT_ERROR
+//
+// 60s cooldown after send-code success: setInterval ticks the countdown
+// from 60 → 0 then re-enables the send button. Error path leaves cooldown
+// untouched (server-side rate limit is authoritative; client doesn't bypass).
 
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Pressable, Text, TextInput, View } from 'react-native';
 
-import type { MappedDeletionError } from './delete-account-errors';
+import { requestDeleteAccountSmsCode } from '@nvy/auth';
+
+import { mapDeletionError } from './delete-account-errors';
 
 const COPY = {
   warning1: '注销后账号进入 15 天冻结期，期间可登录撤销恢复',
@@ -27,8 +35,10 @@ const COPY = {
   errorUnknown: '发生未知错误',
 } as const;
 
-export function errorCopy(mapped: MappedDeletionError): string {
-  switch (mapped.kind) {
+const COOLDOWN_SECONDS = 60;
+
+function errorCopy(kind: 'rate_limit' | 'invalid_code' | 'network' | 'unknown'): string {
+  switch (kind) {
     case 'rate_limit':
       return COPY.errorRateLimit;
     case 'invalid_code':
@@ -44,13 +54,72 @@ export default function DeleteAccountScreen() {
   const [checkbox1, setCheckbox1] = useState(false);
   const [checkbox2, setCheckbox2] = useState(false);
   const [code, setCode] = useState('');
-  const [hasSentCode] = useState(false);
-  const [cooldown] = useState(0);
+  const [hasSentCode, setHasSentCode] = useState(false);
+  const [cooldown, setCooldown] = useState(0);
+  const [isSendingCode, setIsSendingCode] = useState(false);
   const [isSubmitting] = useState(false);
-  const [errorMsg] = useState<string | null>(null);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+
+  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  // Synchronous guard for double-tap before isSendingCode state propagates.
+  const sendingRef = useRef(false);
+
+  useEffect(() => {
+    return () => {
+      if (intervalRef.current !== null) {
+        clearInterval(intervalRef.current);
+      }
+    };
+  }, []);
+
+  const startCooldown = () => {
+    setCooldown(COOLDOWN_SECONDS);
+    if (intervalRef.current !== null) clearInterval(intervalRef.current);
+    intervalRef.current = setInterval(() => {
+      setCooldown((s) => {
+        if (s <= 1) {
+          if (intervalRef.current !== null) {
+            clearInterval(intervalRef.current);
+            intervalRef.current = null;
+          }
+          return 0;
+        }
+        return s - 1;
+      });
+    }, 1000);
+  };
+
+  // Promise chain rather than async/await: vitest's spy infrastructure
+  // tracks rejected promises returned by mocks even when the consumer catches
+  // them via async/await wrapping. Direct .then/.catch attaches the handler to
+  // the original promise, which the rejection tracker recognizes.
+  const handleSendCode = () => {
+    if (sendingRef.current) return; // synchronous race guard
+    sendingRef.current = true;
+    setIsSendingCode(true);
+    setErrorMsg(null);
+    requestDeleteAccountSmsCode()
+      .then(() => {
+        setHasSentCode(true);
+        startCooldown();
+      })
+      .catch((e: unknown) => {
+        const mapped = mapDeletionError(e);
+        setErrorMsg(errorCopy(mapped.kind));
+        // Per US3 acceptance 1: on 429 the server already counted the
+        // request, kick the cooldown locally too to prevent further hammering.
+        if (mapped.kind === 'rate_limit') {
+          startCooldown();
+        }
+      })
+      .finally(() => {
+        sendingRef.current = false;
+        setIsSendingCode(false);
+      });
+  };
 
   const bothChecked = checkbox1 && checkbox2;
-  const canSendCode = bothChecked && cooldown === 0 && !isSubmitting;
+  const canSendCode = bothChecked && cooldown === 0 && !isSendingCode && !isSubmitting;
   const canSubmit = hasSentCode && code.length === 6 && !isSubmitting;
 
   return (
@@ -79,6 +148,7 @@ export default function DeleteAccountScreen() {
       </Pressable>
       <Pressable
         accessibilityLabel="send-code"
+        onPress={handleSendCode}
         accessibilityState={{ disabled: !canSendCode }}
         style={{ opacity: canSendCode ? 1 : 0.5 }}
       >
@@ -101,7 +171,7 @@ export default function DeleteAccountScreen() {
       >
         <Text>{isSubmitting ? COPY.submitting : COPY.submit}</Text>
       </Pressable>
-      {errorMsg !== null && <Text>{errorMsg}</Text>}
+      {errorMsg !== null && <Text accessibilityLabel="error-row">{errorMsg}</Text>}
     </View>
   );
 }
