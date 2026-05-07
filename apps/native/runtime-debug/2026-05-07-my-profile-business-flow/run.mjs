@@ -115,7 +115,7 @@ try {
 
   // --- Scroll to trigger sticky tabs ---
   step('scroll down to trigger stickyHeaderIndices sticky behaviour');
-  await page.evaluate(() => window.scrollTo({ top: 200, behavior: 'smooth' }));
+  await page.mouse.wheel(0, 200);
   await page.waitForTimeout(800);
 
   step('shot 04-sticky-tabs-scrolled');
