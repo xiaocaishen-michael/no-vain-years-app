@@ -13,7 +13,7 @@
 
 ## 任务列表(共 12 task,预计 1.5-2 work-day)
 
-### T0 [SDK] `pnpm api:gen` 拉取 spec D ship 后的最新 OpenAPI 生成 SDK
+### T0 ✅ [SDK] `pnpm api:gen` 拉取 spec D ship 后的最新 OpenAPI 生成 SDK
 
 **前置**:spec D server PR ship + production 部署 + `/v3/api-docs` 暴露最新 spec(含 AccountDeletionControllerApi + CancelDeletionControllerApi)
 

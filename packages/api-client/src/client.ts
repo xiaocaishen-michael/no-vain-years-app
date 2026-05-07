@@ -13,9 +13,11 @@
 // (for typed APIs in usecases.ts), so the dependency must flow one way.
 
 import { AccountAuthControllerApi } from './generated/apis/AccountAuthControllerApi';
+import { AccountDeletionControllerApi } from './generated/apis/AccountDeletionControllerApi';
 import { AccountProfileControllerApi } from './generated/apis/AccountProfileControllerApi';
 import { AccountSmsCodeControllerApi } from './generated/apis/AccountSmsCodeControllerApi';
 import { AuthControllerApi } from './generated/apis/AuthControllerApi';
+import { CancelDeletionControllerApi } from './generated/apis/CancelDeletionControllerApi';
 import { Configuration, type Middleware, type ResponseContext } from './generated/runtime';
 
 export const DEFAULT_BASE_URL = 'https://api.xiaocaishen.me';
@@ -154,6 +156,14 @@ export function getAccountAuthApi(): AccountAuthControllerApi {
 
 export function getAccountProfileApi(): AccountProfileControllerApi {
   return new AccountProfileControllerApi(getConfig());
+}
+
+export function getAccountDeletionApi(): AccountDeletionControllerApi {
+  return new AccountDeletionControllerApi(getConfig());
+}
+
+export function getCancelDeletionApi(): CancelDeletionControllerApi {
+  return new CancelDeletionControllerApi(getConfig());
 }
 
 export function resetClientForTests(): void {
