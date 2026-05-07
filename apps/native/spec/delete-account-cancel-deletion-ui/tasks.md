@@ -325,7 +325,7 @@
 
 ---
 
-### T10 [Integration] 跨 component 集成测(login flow → modal → cancel-deletion → home)
+### T10 ✅ [Integration] 跨 component 集成测(login flow → modal → cancel-deletion → home)
 
 **前置**:T2-T9 完成
 
