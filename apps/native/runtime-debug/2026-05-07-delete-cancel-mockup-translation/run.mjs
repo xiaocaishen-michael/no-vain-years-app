@@ -292,6 +292,8 @@ try {
   step('inject nvy-auth into localStorage');
   await page.evaluate(
     ({ phone, displayName }) => {
+      // page.evaluate callback runs in browser context; ESLint sees this as Node (.mjs)
+      // eslint-disable-next-line no-undef
       window.localStorage.setItem(
         'nvy-auth',
         JSON.stringify({
