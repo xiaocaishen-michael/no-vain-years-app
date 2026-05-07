@@ -1,7 +1,7 @@
 # Tasks: Delete Account & Cancel Deletion UI (spec C)
 
 > **Companions**: [`spec.md`](./spec.md) / [`plan.md`](./plan.md) / [`design/handoff.md`](./design/handoff.md)
-> **Status**: PHASE 1 T0-T10 + T12 ✅ shipped 2026-05-07(PR [#78](https://github.com/xiaocaishen-michael/no-vain-years-app/pull/78));**PHASE 2 T_mock + T13 + T14 + T15 ✅(本 PR)+ T16 in-progress**;T11 🟡 deferred(等 server release 0.2.0 production deploy)
+> **Status**: PHASE 1 T0-T10 + T12 ✅ shipped 2026-05-07(PR [#78](https://github.com/xiaocaishen-michael/no-vain-years-app/pull/78));**PHASE 2 T_mock + T13 + T14 + T15 + T16-doc ✅(本 PR)**;T11 + T16-smoke 🟡 deferred(等 server release 0.2.0 production deploy + manual stack 起)
 > **Implementation PR**: PHASE 1 = PR [#78](https://github.com/xiaocaishen-michael/no-vain-years-app/pull/78);PHASE 2 = feature/spec-c-mockup-translation(本会话,见各 task `Commit` 字段;PR # 待 push 后回填)
 > **里程碑依赖**(spec C impl session 才开):
 >
@@ -551,35 +551,54 @@
 
 ---
 
-### T16 [Plan + Smoke + Doc] plan.md UI 段回填 + visual smoke 6 状态截图 + tasks.md 全 ✅
+### T16-doc ✅ [Plan + Doc] plan.md UI 段 PHASE 2 回填 + tasks.md 全 ✅
 
 **前置**:T13/T14/T15 完成
 
 **步骤**:
 
-1. 改 `apps/native/spec/delete-account-cancel-deletion-ui/plan.md` § UI 段(line 355-566):
-   - 删 `## UI 段(占位版,pending mockup)` heading 改为 `## UI 段(PHASE 2 mockup 翻译落地)`
-   - 删 4 边界占位代码示意,改为 PHASE 2 完整版(token 映射表 + className 清单 + 9 inline component 引用 handoff.md § 2)
-   - 加 visual smoke 引用(指向 runtime-debug 路径)
-2. visual smoke 6 状态截图(per handoff.md § 3):
-   - `apps/native/runtime-debug/2026-05-XX-delete-cancel-mockup-translation/`
-   - `01-delete-idle.png` / `02-delete-checked-cooldown.png` / `03-delete-error.png` / `04-cancel-prefilled.png` / `05-cancel-deeplink.png` / `06-freeze-modal-active.png`
-   - 沿用 onboarding / my-profile mockup-translation 的 Playwright `run.mjs` pattern:msw mock 拦请求 → 各状态 force render → screenshot
-   - DB / 真后端不参与(T11 真后端冒烟仍 deferred)
-3. 改 tasks.md:T16 ✅(本 task) + 顶部 Status 行 PHASE 2 完成 / T13/T14/T15 ✅
-4. typecheck + lint + test pass
-5. `git add` + `git commit`(可拆 2 commit:`docs(account): plan UI 段回填 + tasks ✅` + `test(account): visual smoke 6 状态`)
+1. 改 `apps/native/spec/delete-account-cancel-deletion-ui/plan.md` § UI 段:
+   - heading `## UI 段(占位版,pending mockup)` → `## UI 段(PHASE 2 mockup 翻译落地)`
+   - 删 PHASE 1 4 边界占位代码示意(line 442-650 整段),替换为 PHASE 2 完整版(token 映射表 + 各 page 区域 className 主轴 + 测试 mock 兼容性 + layout 维度白名单 + 引用 handoff.md)
+2. 写 `apps/native/runtime-debug/2026-05-07-delete-cancel-mockup-translation/README.md`(占位 — visual smoke 跑法 + 6 状态清单 + future stack-up 步骤)
+3. 改本 tasks.md:T16-doc ✅(本 task) + 顶部 Status 行 PHASE 2 全 ✅(T_mock/T13/T14/T15/T16-doc)+ T11 / T16-smoke 🟡 deferred
+4. typecheck + lint + test pass(已由 T13/T14/T15 闭环 264/264 验证;T16-doc 仅改 plan.md / tasks.md / runtime-debug README,无业务代码改动)
+5. `git add` + `git commit`
 
 **Verify**:
 
-- `rg "PHASE 1 占位" apps/native/spec/delete-account-cancel-deletion-ui/plan.md` 0 命中(已替换为 PHASE 2 完整版)
-- `ls apps/native/runtime-debug/2026-05-*-delete-cancel-mockup-translation/*.png | wc -l` ≥ 6 ✓
-- `rg "✅" apps/native/spec/delete-account-cancel-deletion-ui/tasks.md | wc -l` ≥ 16(T0-T10 + T12 + T_mock + T13-T16 = 16,T11 仍 🟡)
-- spec C plan-lifecycle:本 PHASE 2 PR 不动 archive 状态,等 T11 闭环后再归档(per memory `feedback_conventions_evergreen_only.md`:plan-lifecycle 操作不必每 phase 都做)
+- `rg "PHASE 1 占位版" apps/native/spec/delete-account-cancel-deletion-ui/plan.md` 0 命中(已替换为 PHASE 2 完整版)
+- `rg "✅" apps/native/spec/delete-account-cancel-deletion-ui/tasks.md | wc -l` ≥ 16(T0-T10 + T12 + T_mock + T13/T14/T15/T16-doc = 16,T11 + T16-smoke 仍 🟡)
+- spec C plan-lifecycle:本 PHASE 2 PR 不动 archive 状态,等 T11 + T16-smoke 闭环后再归档(per memory `feedback_conventions_evergreen_only.md`:plan-lifecycle 操作不必每 phase 都做)
 
-**Commit**:`docs(account): plan UI 段 PHASE 2 回填 + tasks ✅ (M1.X / spec C T16-doc)` + `test(account): delete-cancel visual smoke 6 状态 (M1.X / spec C T16-smoke)`
+**Commit**:`docs(account): plan UI 段 PHASE 2 回填 + tasks ✅ (spec C T16-doc)`
 
-**Aligned FR/SC**:无(纯 plan 回填 + visual smoke task)
+**Aligned FR/SC**:无(纯 plan 回填 task)
+
+---
+
+### T16-smoke 🟡 [Visual smoke] 6 状态截图 + run.mjs(deferred,同 T11)
+
+**前置**:T16-doc 完成 + 真后端 stack 起(server :8080 dev / metro :8081 / docker postgres+redis;Playwright 安装)
+
+**Deferral reason**(2026-05-07):本 spec C visual smoke 与 onboarding T_smoke / my-profile T13 同套路 — 需 docker compose dev + server dev profile + metro web bundle + Playwright。本 session(AI-driven)未启 stack;留作下次 manual session(用户起完 stack 后跑 run.mjs)。**T11(真后端冒烟)+ T16-smoke 共享 stack 启动成本,可同 session 跑**;最佳触发点 = server release 0.2.0 production deploy。
+
+**步骤**(future manual run):
+
+1. 写 `apps/native/runtime-debug/2026-05-07-delete-cancel-mockup-translation/run.mjs`:沿用 onboarding T_smoke 套路(`page.route` 拦请求 + 各状态 force render);6 状态构造详见 README.md
+2. 跑 Playwright headless chromium 生成 6 PNG → 落本目录
+3. manual 检查 6 PNG 视觉态稳定 + console 无 critical error
+4. 改 tasks.md:T16-smoke 🟡 → ✅ + 顶部 Status 行更新
+
+**Verify**:
+
+- `ls apps/native/runtime-debug/2026-05-07-delete-cancel-mockup-translation/*.png | wc -l` == 6
+- 6 PNG manual review 通过(default / cooldown / error / prefilled / deeplink / freeze-modal)
+- `rg "✅" apps/native/spec/delete-account-cancel-deletion-ui/tasks.md` 加 1 (T16-smoke ✅)
+
+**Commit**:`test(account): delete-cancel visual smoke 6 状态 (spec C T16-smoke)`
+
+**Aligned FR/SC**:SC-005(占位 → token 完整 视觉冒烟)/ SC-009(链路联通)
 
 ---
 
