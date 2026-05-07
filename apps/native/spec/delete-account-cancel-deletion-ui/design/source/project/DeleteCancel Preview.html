@@ -1,0 +1,737 @@
+<!doctype html>
+<html lang="zh">
+<head>
+<meta charset="utf-8"/>
+<title>account-center · DeleteCancel · 6 states</title>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<style>
+html, body { margin: 0; min-height: 100%; background: #F2F4F7; font-family: Inter, "Noto Sans SC", -apple-system, BlinkMacSystemFont, "PingFang SC", sans-serif; color: #1A1A1A; }
+#root { min-height: 100vh; }
+button { font: inherit; }
+</style>
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel" data-presets="env,react">
+// ─── tokens shim (mirrors Settings Preview / my-profile / login v2 base) ──
+const NVY_TOKENS = {
+  color: {
+    "brand-50":"#EEF3FE","brand-100":"#D5E0FC","brand-200":"#ABC1F9",
+    "brand-300":"#7DA0F5","brand-400":"#4F7EEF","brand-500":"#2456E5",
+    "brand-600":"#1D47C2","brand-700":"#173BA0","brand-soft":"#E8EEFD",
+    "ink":"#1A1A1A","ink-muted":"#666666","ink-subtle":"#999999",
+    "line":"#E5E7EB","line-strong":"#D1D5DB","line-soft":"#EEF0F3",
+    "surface":"#FFFFFF","surface-alt":"#F9F9F9","surface-sunken":"#F2F4F7",
+    "ok":"#10B981","ok-soft":"#E7F8F1",
+    "err":"#EF4444","err-soft":"#FDECEC",
+    "warn":"#F59E0B","warn-soft":"#FEF3DC",
+    "accent":"#FF8C00","accent-soft":"#FFF1DE",
+    "white":"#FFFFFF","transparent":"transparent",
+    // proposed additions for this spec — see banner notes at top of preview
+    "modal-overlay":"rgba(15,18,28,0.48)",
+  },
+  space: { xs:4, sm:8, md:16, lg:24, xl:32, "2xl":48, "3xl":64 },
+  num: { 0:0, 0.5:2, 1:4, 1.5:6, 2:8, 2.5:10, 3:12, 3.5:14, 4:16, 5:20, 6:24, 7:28, 8:32, 9:36, 10:40, 11:44, 12:48, 14:56, 16:64, 20:80, 24:96, 32:128 },
+  fontSize: { "[10px]":10,"[11px]":11,"[13px]":13, xs:12, sm:14, base:16, lg:18, xl:20, "2xl":24, "3xl":30 },
+  fontWeight: { normal:400, medium:500, semibold:600, bold:700 },
+  shadow: {
+    card: "0 1px 2px 0 rgba(17,24,39,.05), 0 1px 3px 0 rgba(17,24,39,.04)",
+    cta:  "0 4px 12px -2px rgba(36,86,229,0.25)",
+    modal:"0 12px 32px -8px rgba(15,18,28,0.28), 0 4px 12px -4px rgba(15,18,28,0.18)",
+  },
+};
+
+function nvyParseClasses(c) {
+  if (!c) return {};
+  const s = {}; for (const t of String(c).split(/\s+/).filter(Boolean)) applyToken(t, s);
+  return s;
+}
+function applyToken(t, s) {
+  let m;
+  if (t === "flex-1") { s.flex = 1; return; }
+  if (t === "flex-row") { s.display="flex"; s.flexDirection="row"; return; }
+  if (t === "flex-col") { s.display="flex"; s.flexDirection="column"; return; }
+  if (t === "flex-wrap") { s.flexWrap="wrap"; return; }
+  if (t === "items-start") { s.alignItems="flex-start"; return; }
+  if (t === "items-center") { s.alignItems="center"; return; }
+  if (t === "items-end") { s.alignItems="flex-end"; return; }
+  if (t === "justify-center") { s.justifyContent="center"; return; }
+  if (t === "justify-between") { s.justifyContent="space-between"; return; }
+  if (t === "justify-end") { s.justifyContent="flex-end"; return; }
+  if (t === "self-center") { s.alignSelf="center"; return; }
+  if (t === "self-stretch") { s.alignSelf="stretch"; return; }
+  if (t === "relative") { s.position="relative"; return; }
+  if (t === "absolute") { s.position="absolute"; return; }
+  if (t === "overflow-hidden") { s.overflow="hidden"; return; }
+  if (t === "leading-snug") { s.lineHeight=1.4; return; }
+  if (t === "leading-relaxed") { s.lineHeight=1.6; return; }
+  if (t === "leading-loose") { s.lineHeight=1.75; return; }
+  if (t === "tracking-tight") { s.letterSpacing="-0.015em"; return; }
+  if (t === "tracking-wide") { s.letterSpacing="0.025em"; return; }
+  if (t === "tracking-wider") { s.letterSpacing="0.05em"; return; }
+  if (t === "tracking-widest") { s.letterSpacing="0.12em"; return; }
+  if (t === "text-center") { s.textAlign="center"; return; }
+  if ((m = t.match(/^gap-(\S+)$/)))  { const v = sizeFor(m[1]); if (v != null) s.gap = v; return; }
+  if ((m = t.match(/^p-(\S+)$/)))    { const v = sizeFor(m[1]); if (v != null) s.padding = v; return; }
+  if ((m = t.match(/^px-(\S+)$/)))   { const v = sizeFor(m[1]); if (v != null) { s.paddingLeft=v; s.paddingRight=v; } return; }
+  if ((m = t.match(/^py-(\S+)$/)))   { const v = sizeFor(m[1]); if (v != null) { s.paddingTop=v; s.paddingBottom=v; } return; }
+  if ((m = t.match(/^pt-(\S+)$/)))   { const v = sizeFor(m[1]); if (v != null) s.paddingTop = v; return; }
+  if ((m = t.match(/^pb-(\S+)$/)))   { const v = sizeFor(m[1]); if (v != null) s.paddingBottom = v; return; }
+  if ((m = t.match(/^pl-(\S+)$/)))   { const v = sizeFor(m[1]); if (v != null) s.paddingLeft = v; return; }
+  if ((m = t.match(/^pr-(\S+)$/)))   { const v = sizeFor(m[1]); if (v != null) s.paddingRight = v; return; }
+  if ((m = t.match(/^m-(\S+)$/)))    { const v = sizeFor(m[1]); if (v != null) s.margin = v; return; }
+  if ((m = t.match(/^mt-(\S+)$/)))   { const v = sizeFor(m[1]); if (v != null) s.marginTop = v; return; }
+  if ((m = t.match(/^mb-(\S+)$/)))   { const v = sizeFor(m[1]); if (v != null) s.marginBottom = v; return; }
+  if ((m = t.match(/^ml-(\S+)$/)))   { const v = sizeFor(m[1]); if (v != null) s.marginLeft = v; return; }
+  if ((m = t.match(/^mr-(\S+)$/)))   { const v = sizeFor(m[1]); if (v != null) s.marginRight = v; return; }
+  if ((m = t.match(/^w-(\S+)$/)))    { const v = wOrH(m[1]); if (v != null) s.width = v; return; }
+  if ((m = t.match(/^h-(\S+)$/)))    { const v = wOrH(m[1]); if (v != null) s.height = v; return; }
+  if ((m = t.match(/^max-w-(\S+)$/))){ const v = maxW(m[1]); if (v != null) s.maxWidth = v; return; }
+  if (t === "h-px") { s.height = 1; return; }
+  if (t === "w-px") { s.width = 1; return; }
+  if ((m = t.match(/^top-(\S+)$/)))    { const v = sizeFor(m[1]); if (v != null) s.top = v; return; }
+  if ((m = t.match(/^bottom-(\S+)$/))) { const v = sizeFor(m[1]); if (v != null) s.bottom = v; return; }
+  if ((m = t.match(/^left-(\S+)$/)))   { const v = sizeFor(m[1]); if (v != null) s.left = v; return; }
+  if ((m = t.match(/^right-(\S+)$/)))  { const v = sizeFor(m[1]); if (v != null) s.right = v; return; }
+
+  if ((m = t.match(/^bg-(.+)$/)))    { const c = colorOrAlpha(m[1]); if (c) s.backgroundColor = c; return; }
+  if ((m = t.match(/^text-(.+)$/)))  {
+    if (NVY_TOKENS.fontSize[m[1]] != null) { s.fontSize = NVY_TOKENS.fontSize[m[1]]; return; }
+    if (m[1] === "white") { s.color = "#fff"; return; }
+    const c = colorOrAlpha(m[1]); if (c) s.color = c; return;
+  }
+  if ((m = t.match(/^font-(\S+)$/))) {
+    if (m[1] === "sans") { s.fontFamily = 'Inter, "Noto Sans SC", -apple-system, sans-serif'; return; }
+    if (m[1] === "mono") { s.fontFamily = '"JetBrains Mono", "SF Mono", Menlo, monospace'; return; }
+    if (NVY_TOKENS.fontWeight[m[1]]) { s.fontWeight = NVY_TOKENS.fontWeight[m[1]]; return; }
+    return;
+  }
+  if (t === "border")    { s.borderWidth=1; s.borderStyle="solid"; if (!s.borderColor) s.borderColor=NVY_TOKENS.color.line; return; }
+  if (t === "border-2")  { s.borderWidth=2; s.borderStyle="solid"; if (!s.borderColor) s.borderColor=NVY_TOKENS.color.line; return; }
+  if (t === "border-b")  { s.borderBottomWidth=1; s.borderStyle="solid"; if (!s.borderColor) s.borderColor=NVY_TOKENS.color.line; return; }
+  if (t === "border-t")  { s.borderTopWidth=1; s.borderStyle="solid"; if (!s.borderColor) s.borderColor=NVY_TOKENS.color.line; return; }
+  if (t === "border-l-2"){ s.borderLeftWidth=2; s.borderStyle="solid"; if (!s.borderColor) s.borderColor=NVY_TOKENS.color.line; return; }
+  if ((m = t.match(/^border-(.+)$/))) { const c = colorOrAlpha(m[1]); if (c) s.borderColor = c; return; }
+  if (t === "rounded-full") { s.borderRadius=9999; return; }
+  if (t === "rounded-xs")   { s.borderRadius=4; return; }
+  if (t === "rounded-sm")   { s.borderRadius=8; return; }
+  if (t === "rounded-md")   { s.borderRadius=12; return; }
+  if (t === "rounded-lg")   { s.borderRadius=16; return; }
+  if (t === "rounded-xl")   { s.borderRadius=12; return; }
+  if (t === "rounded-2xl")  { s.borderRadius=16; return; }
+  if ((m = t.match(/^rounded-\[(\d+)px\]$/))) { s.borderRadius = parseFloat(m[1]); return; }
+  if (t === "shadow-sm" || t === "shadow-card") { s.boxShadow = NVY_TOKENS.shadow.card; return; }
+  if (t === "shadow-cta")    { s.boxShadow = NVY_TOKENS.shadow.cta; return; }
+  if (t === "shadow-modal")  { s.boxShadow = NVY_TOKENS.shadow.modal; return; }
+  if (t === "inset-0") { s.top=0; s.right=0; s.bottom=0; s.left=0; return; }
+  if ((m = t.match(/^min-h-\[(\d+)px\]$/))) { s.minHeight = parseInt(m[1],10); return; }
+  if ((m = t.match(/^opacity-(\d+)$/))) { s.opacity = parseInt(m[1],10) / 100; return; }
+}
+function sizeFor(t) {
+  if (NVY_TOKENS.space[t] != null) return NVY_TOKENS.space[t];
+  if (t in NVY_TOKENS.num) return NVY_TOKENS.num[t];
+  const m = String(t).match(/^\[(\d+)px\]$/); if (m) return parseInt(m[1],10);
+  return null;
+}
+function wOrH(t) { if (t==="full") return "100%"; if (t==="auto") return "auto"; return sizeFor(t); }
+function maxW(t) {
+  const map = { xs:320, sm:384, md:448, lg:512, xl:576, "2xl":672, "[280px]":280, "[300px]":300, "[360px]":360, "[760px]":760, "[860px]":860, "[1700px]":1700, "[2400px]":2400 };
+  if (map[t] != null) return map[t];
+  const m = t.match(/^\[(\d+)px\]$/); if (m) return parseInt(m[1],10);
+  return null;
+}
+function colorOrAlpha(t) {
+  const m = t.match(/^(.+)\/(\d+)$/);
+  if (m) {
+    const base = NVY_TOKENS.color[m[1]] || (m[1]==="white" ? "#FFFFFF" : null);
+    if (!base) return null;
+    return hexToRgba(base, parseInt(m[2],10)/100);
+  }
+  if (NVY_TOKENS.color[t]) return NVY_TOKENS.color[t];
+  return null;
+}
+function hexToRgba(hex, a) {
+  if (hex.startsWith("rgba")) return hex;
+  const c = hex.replace("#",""); const v = c.length===3 ? c.split("").map(x=>x+x).join("") : c;
+  return `rgba(${parseInt(v.slice(0,2),16)},${parseInt(v.slice(2,4),16)},${parseInt(v.slice(4,6),16)},${a})`;
+}
+
+// ─── RN shim ─────────────────────────────────────────────────────────────
+const View = React.forwardRef(function View({ className, style, children, ...rest }, ref) {
+  const s = { display:"flex", flexDirection:"column", boxSizing:"border-box", ...nvyParseClasses(className), ...(style||{}) };
+  return <div ref={ref} style={s} {...rest}>{children}</div>;
+});
+const Text = React.forwardRef(function Text({ className, style, children, onPress, ...rest }, ref) {
+  const s = { fontFamily:'Inter, "Noto Sans SC", -apple-system, sans-serif', color:"#1A1A1A", fontSize:14, margin:0, padding:0,
+    ...nvyParseClasses(className), ...(style||{}) };
+  return <span ref={ref} style={s} onClick={onPress} {...rest}>{children}</span>;
+});
+const Pressable = React.forwardRef(function Pressable({ className, style, children, onPress, disabled, hitSlop, accessibilityState, ...rest }, ref) {
+  const s = { display:"flex", flexDirection:"column", boxSizing:"border-box",
+    cursor: disabled ? "not-allowed" : "pointer", userSelect:"none",
+    background:"transparent", border:0, padding:0, font:"inherit", color:"inherit", textAlign:"left",
+    ...nvyParseClasses(className), ...(style||{}) };
+  return <button ref={ref} type="button" style={s} onClick={disabled ? undefined : onPress} disabled={disabled} {...rest}>{children}</button>;
+});
+const ScrollView = React.forwardRef(function ScrollView({ className, style, contentContainerClassName, contentContainerStyle, children, ...rest }, ref) {
+  const s = { display:"flex", flexDirection:"column", overflow:"auto", boxSizing:"border-box", ...nvyParseClasses(className), ...(style||{}) };
+  const c = { display:"flex", flexDirection:"column", boxSizing:"border-box", ...nvyParseClasses(contentContainerClassName), ...(contentContainerStyle||{}) };
+  return <div ref={ref} style={s} {...rest}><div style={c}>{children}</div></div>;
+});
+
+// ─── SVG glyphs ──────────────────────────────────────────────────────────
+const Svg = ({ width, height, viewBox, children, ...rest }) =>
+  <svg xmlns="http://www.w3.org/2000/svg" width={width} height={height} viewBox={viewBox} {...rest}>{children}</svg>;
+const stroke = (c, w=2) => ({ stroke:c, strokeWidth:w, fill:"none", strokeLinecap:"round", strokeLinejoin:"round" });
+
+function IconBack({ color="#1A1A1A" }) {
+  return <Svg width={22} height={22} viewBox="0 0 24 24"><path d="M15 6 L9 12 L15 18" {...stroke(color,2)}/></Svg>;
+}
+function IconCheckSquare({ size=20, color="#2456E5" }) {
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24">
+      <rect x="3" y="3" width="18" height="18" rx="4" fill={color}/>
+      <path d="M7.5 12.5 L10.7 15.5 L16.8 9" stroke="#FFFFFF" strokeWidth="2.4" fill="none" strokeLinecap="round" strokeLinejoin="round"/>
+    </Svg>
+  );
+}
+function IconEmptySquare({ size=20, color="#D1D5DB" }) {
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24">
+      <rect x="3.5" y="3.5" width="17" height="17" rx="4" fill="#FFFFFF" stroke={color} strokeWidth="1.5"/>
+    </Svg>
+  );
+}
+function IconLock({ size=14, color="#999999" }) {
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24">
+      <rect x="4.5" y="10" width="15" height="10" rx="2" fill="none" stroke={color} strokeWidth="1.6"/>
+      <path d="M8 10 V7 a4 4 0 0 1 8 0 V10" stroke={color} strokeWidth="1.6" fill="none" strokeLinecap="round"/>
+    </Svg>
+  );
+}
+function IconAlert({ size=18, color="#EF4444" }) {
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24">
+      <path d="M12 3 L22 20 L2 20 Z" fill="none" stroke={color} strokeWidth="1.8" strokeLinejoin="round"/>
+      <path d="M12 10 V14" stroke={color} strokeWidth="1.8" strokeLinecap="round"/>
+      <circle cx="12" cy="17" r="1.1" fill={color}/>
+    </Svg>
+  );
+}
+
+// ─── IOSFrame ────────────────────────────────────────────────────────────
+function IOSFrame({ width=360, height=780, children }) {
+  return (
+    <View className="bg-ink p-2 shadow-card" style={{ width: width+16, alignSelf:"flex-start", borderRadius: 44 }}>
+      <View className="bg-surface overflow-hidden relative" style={{ width, height, borderRadius: 36 }}>
+        <View className="flex-row items-center justify-between bg-surface" style={{ paddingLeft:28, paddingRight:28, paddingTop:12, paddingBottom:6, zIndex:2 }}>
+          <Text className="text-xs font-semibold text-ink font-mono">9:41</Text>
+          <View className="flex-row items-center gap-1">
+            <Text className="text-[10px] text-ink">●●●●</Text>
+            <Text className="text-[10px] text-ink">100%</Text>
+          </View>
+        </View>
+        <View className="absolute rounded-full bg-ink" style={{ top:8, left:"50%", transform:"translateX(-50%)", width:96, height:28, zIndex:3 }}/>
+        <View className="flex-1 relative">{children}</View>
+        <View className="items-center bg-surface" style={{ paddingTop:4, paddingBottom:8 }}>
+          <View className="rounded-full bg-ink" style={{ width:128, height:4 }}/>
+        </View>
+      </View>
+    </View>
+  );
+}
+
+// ─── StackHeader ─────────────────────────────────────────────────────────
+function StackHeader({ title, showBack=true }) {
+  return (
+    <View className="flex-row items-center bg-surface border-b border-line-soft px-sm" style={{ height: 48 }}>
+      {showBack ? (
+        <Pressable className="items-center justify-center" style={{ width:40, height:40 }}>
+          <IconBack/>
+        </Pressable>
+      ) : <View style={{ width:40, height:40 }}/>}
+      <View className="flex-1 items-center">
+        <Text className="text-base font-semibold text-ink">{title}</Text>
+      </View>
+      <View style={{ width:40, height:40 }}/>
+    </View>
+  );
+}
+
+// ─── shared form atoms ──────────────────────────────────────────────────
+
+// Warning block — destructive ⚠ heading + 2 段, red-ish err/warn divergence:
+//   - 段 1 (recoverable warning) — warn token (15 天可撤销)
+//   - 段 2 (irreversible)        — err token (匿名化不可逆)
+function WarningBlock() {
+  return (
+    <View className="rounded-md bg-err-soft border border-err/20" style={{ padding:14, gap:10 }}>
+      <View className="flex-row items-center gap-2">
+        <IconAlert size={16}/>
+        <Text className="text-[13px] font-semibold text-err tracking-wide">高风险操作 · 请仔细阅读</Text>
+      </View>
+      <View className="flex-row" style={{ gap:8 }}>
+        <View className="rounded-full bg-warn" style={{ width:6, height:6, marginTop:8, flexShrink:0 }}/>
+        <Text className="text-sm text-ink leading-relaxed" style={{ flex:1 }}>
+          注销后账号进入 <Text className="font-semibold text-ink">15 天冻结期</Text>，期间可登录撤销恢复
+        </Text>
+      </View>
+      <View className="flex-row" style={{ gap:8 }}>
+        <View className="rounded-full bg-err" style={{ width:6, height:6, marginTop:8, flexShrink:0 }}/>
+        <Text className="text-sm text-ink leading-relaxed" style={{ flex:1 }}>
+          冻结期满后账号数据将<Text className="font-semibold text-err">永久匿名化</Text>，不可恢复
+        </Text>
+      </View>
+    </View>
+  );
+}
+
+function CheckboxRow({ checked, label }) {
+  return (
+    <Pressable className="flex-row items-start" style={{ gap:10, paddingTop:6, paddingBottom:6 }}>
+      <View style={{ marginTop:1, flexShrink:0 }}>
+        {checked ? <IconCheckSquare size={20} color="#2456E5"/> : <IconEmptySquare size={20}/>}
+      </View>
+      <Text className="text-sm text-ink leading-relaxed" style={{ flex:1 }}>{label}</Text>
+    </Pressable>
+  );
+}
+
+// 6-cell OTP-style code input (proposed new vs. login v2 SmsInput single-input)
+function CodeInput({ value="", focusIdx=null, disabled=false, tone="brand" }) {
+  const cells = Array.from({ length: 6 }, (_, i) => value[i] || "");
+  const focusedRingColor = tone === "err" ? "#EF4444" : "#2456E5";
+  return (
+    <View className="flex-row" style={{ gap:8 }}>
+      {cells.map((ch, i) => {
+        const isFocused = focusIdx === i;
+        const isFilled  = !!ch;
+        const bg     = disabled ? "#F2F4F7" : "#FFFFFF";
+        const border = isFocused ? focusedRingColor : (isFilled ? "#1A1A1A" : (disabled ? "#E5E7EB" : "#D1D5DB"));
+        const color  = disabled ? "#999999" : "#1A1A1A";
+        return (
+          <View key={i}
+            style={{
+              flex:1, height:48, borderRadius:10,
+              borderWidth: isFocused ? 2 : 1, borderStyle:"solid", borderColor: border,
+              backgroundColor: bg, alignItems:"center", justifyContent:"center",
+              boxShadow: isFocused ? `0 0 0 3px ${hexToRgba(focusedRingColor, 0.12)}` : "none",
+            }}>
+            <Text className="font-mono font-semibold" style={{ fontSize:20, color }}>
+              {ch || (isFocused ? "" : "")}
+            </Text>
+            {isFocused && !ch ? (
+              <View className="absolute" style={{ width:1.5, height:22, backgroundColor:focusedRingColor, opacity:0.85 }}/>
+            ) : null}
+          </View>
+        );
+      })}
+    </View>
+  );
+}
+
+// Code-send button — 3 states: default brand-text / cooldown ink-subtle / disabled.
+// Visual = ghost text-style on right of label (Stripe / WeChat pattern).
+function SendCodeRow({ label="发送验证码", state="default", cooldown=60 }) {
+  // state ∈ "default" (brand active) | "disabled" | "cooldown"
+  const isDisabled = state === "disabled";
+  const isCooldown = state === "cooldown";
+  const fg =
+    isDisabled ? "#999999" :
+    isCooldown ? "#666666" :
+    "#2456E5";
+  const text = isCooldown ? `${cooldown}s 后可重发` : label;
+  return (
+    <View className="flex-row items-center justify-between" style={{
+      height:48, borderRadius:10, borderWidth:1, borderStyle:"solid",
+      borderColor: isDisabled ? "#E5E7EB" : (isCooldown ? "#E5E7EB" : "#D5E0FC"),
+      backgroundColor: isCooldown ? "#F9F9F9" : (isDisabled ? "#F9F9F9" : "#FFFFFF"),
+      paddingLeft:16, paddingRight:16,
+    }}>
+      <Text className="text-sm font-medium font-mono" style={{ color: isDisabled ? "#999999" : "#666666" }}>
+        SMS · 6 位验证码
+      </Text>
+      <Text className="text-sm font-medium" style={{ color: fg }}>{text}</Text>
+    </View>
+  );
+}
+
+function PrimaryButton({ label, tone="brand", disabled=false }) {
+  // tone: "brand" (recover / cancel-deletion) | "destructive" (delete-account) | "destructive-ghost"
+  let bg, color, border = "transparent", shadow = "none", weight = 600;
+  if (disabled) {
+    bg = "#F2F4F7"; color = "#999999";
+  } else if (tone === "destructive") {
+    bg = "#EF4444"; color = "#FFFFFF"; shadow = "0 4px 12px -2px rgba(239,68,68,0.32)";
+  } else if (tone === "destructive-ghost") {
+    bg = "#FFFFFF"; color = "#EF4444"; border = "#EF4444";
+  } else {
+    bg = "#2456E5"; color = "#FFFFFF"; shadow = NVY_TOKENS.shadow.cta;
+  }
+  return (
+    <View style={{
+      height:52, borderRadius:12,
+      backgroundColor: bg, borderWidth: border==="transparent"?0:1.5, borderStyle:"solid", borderColor: border,
+      alignItems:"center", justifyContent:"center", boxShadow: shadow,
+    }}>
+      <Text style={{ color, fontSize:16, fontWeight: weight, letterSpacing: "0.02em" }}>{label}</Text>
+    </View>
+  );
+}
+
+function ErrorRow({ msg, tone="err" }) {
+  if (!msg) return null;
+  const col = tone === "err" ? "#EF4444" : "#F59E0B";
+  const bg  = tone === "err" ? "#FDECEC" : "#FEF3DC";
+  return (
+    <View className="flex-row items-center rounded-sm" style={{ gap:8, padding:10, backgroundColor:bg }}>
+      <IconAlert size={14} color={col}/>
+      <Text className="text-[13px] font-medium" style={{ color: col, flex:1 }}>{msg}</Text>
+    </View>
+  );
+}
+
+function PhoneInputBlock({ mode="prefilled", value="+86 138****5678" }) {
+  const isLocked = mode === "prefilled";
+  return (
+    <View>
+      <Text className="text-[11px] font-mono text-ink-muted tracking-wider" style={{ marginBottom:6 }}>
+        {isLocked ? "PHONE · 已绑定 (read-only)" : "PHONE · 请输入手机号"}
+      </Text>
+      <View className="flex-row items-center" style={{
+        height:48, borderRadius:10, borderWidth:1, borderStyle:"solid",
+        borderColor: isLocked ? "#E5E7EB" : "#D1D5DB",
+        backgroundColor: isLocked ? "#F2F4F7" : "#FFFFFF",
+        paddingLeft:14, paddingRight:14, gap:10,
+      }}>
+        {isLocked ? <IconLock size={14}/> : null}
+        <Text className="font-mono" style={{
+          fontSize:16, color: isLocked ? "#1A1A1A" : "#999999",
+          letterSpacing:"0.02em", flex:1, fontWeight: isLocked ? 600 : 400,
+        }}>
+          {value || "请输入手机号（如 +86 138...）"}
+        </Text>
+      </View>
+    </View>
+  );
+}
+
+function SectionLabel({ children, num }) {
+  return (
+    <View className="flex-row items-center" style={{ gap:8, marginBottom:8 }}>
+      <Text className="text-[10px] font-mono font-semibold text-ink-subtle tracking-widest">{num}</Text>
+      <Text className="text-[11px] font-mono text-ink-muted tracking-wider">{children}</Text>
+    </View>
+  );
+}
+
+// ─── Page 1 — DeleteAccountScreen ────────────────────────────────────────
+function DeleteAccountScreen({ state="idle" }) {
+  // state ∈ "idle" | "checked-cooldown" | "error"
+  const checked = state !== "idle";
+  const codeState   = state === "idle" ? "disabled" : "active";
+  const sendState   =
+    state === "idle"             ? "disabled" :
+    state === "checked-cooldown" ? "cooldown" :
+    state === "error"            ? "cooldown" : "default";
+  const cooldown = state === "checked-cooldown" ? 45 : (state === "error" ? 12 : 60);
+  const codeValue = state === "error" ? "493718" : (state === "checked-cooldown" ? "" : "");
+  const submitDisabled = state !== "error";
+  const errMsg    = state === "error" ? "验证码错误，请重新输入" : null;
+
+  return (
+    <View className="flex-1 bg-surface">
+      <StackHeader title="注销账号"/>
+      <ScrollView className="flex-1" contentContainerClassName="px-md pt-md pb-xl gap-md">
+
+        <SectionLabel num="01">RISK · 风险告知</SectionLabel>
+        <WarningBlock/>
+
+        <View style={{ height:8 }}/>
+        <SectionLabel num="02">CONFIRM · 双重知晓确认</SectionLabel>
+        <View className="rounded-md border border-line-soft bg-surface-alt" style={{ padding:12 }}>
+          <CheckboxRow checked={checked} label="我已知晓 15 天冻结期内可登录撤销恢复"/>
+          <View className="bg-line-soft" style={{ height:1, marginLeft:30 }}/>
+          <CheckboxRow checked={checked} label="我已知晓期满后数据匿名化、不可恢复"/>
+        </View>
+
+        <View style={{ height:8 }}/>
+        <SectionLabel num="03">VERIFY · 短信验证</SectionLabel>
+        <View style={{ gap:10 }}>
+          <SendCodeRow state={sendState} cooldown={cooldown}/>
+          <CodeInput
+            value={codeValue}
+            focusIdx={state === "checked-cooldown" ? 0 : null}
+            disabled={state === "idle"}
+            tone={state === "error" ? "err" : "brand"}
+          />
+        </View>
+
+        {errMsg ? <ErrorRow msg={errMsg}/> : null}
+
+        <View style={{ height:8 }}/>
+        <PrimaryButton
+          label={state === "error" ? "确认注销" : "确认注销"}
+          tone="destructive"
+          disabled={submitDisabled}
+        />
+        <Text className="text-[11px] text-ink-subtle text-center" style={{ marginTop:4 }}>
+          点击「确认注销」即表示同意进入 15 天冻结期
+        </Text>
+      </ScrollView>
+    </View>
+  );
+}
+
+// ─── Page 2 — CancelDeletionScreen ───────────────────────────────────────
+function CancelDeletionScreen({ state="prefilled-cooldown" }) {
+  // state ∈ "prefilled-cooldown" | "deeplink-empty"
+  const isPrefilled = state === "prefilled-cooldown";
+  const sendState   = isPrefilled ? "cooldown" : "disabled";
+  const codeDisabled = !isPrefilled;
+  return (
+    <View className="flex-1 bg-surface">
+      <StackHeader title="撤销注销"/>
+      <ScrollView className="flex-1" contentContainerClassName="px-md pt-md pb-xl gap-md">
+
+        <View className="rounded-md border-l-2 border-brand-500 bg-brand-soft" style={{ padding:12, paddingLeft:14, gap:4 }}>
+          <Text className="text-[13px] font-semibold text-brand-700">恢复账号</Text>
+          <Text className="text-sm text-ink leading-relaxed">
+            请通过手机号验证码撤销注销，恢复账号
+          </Text>
+        </View>
+
+        <View style={{ height:8 }}/>
+        <SectionLabel num="01">PHONE · 手机号</SectionLabel>
+        <PhoneInputBlock mode={isPrefilled ? "prefilled" : "edit"} value={isPrefilled ? "+86 138****5678" : ""}/>
+        {isPrefilled ? (
+          <Text className="text-[11px] text-ink-subtle" style={{ marginTop:-4 }}>
+            ⓘ 已从冻结期 modal 自动填入，不可修改
+          </Text>
+        ) : (
+          <Text className="text-[11px] text-ink-subtle" style={{ marginTop:-4 }}>
+            ⓘ 请输入注销时使用的手机号
+          </Text>
+        )}
+
+        <View style={{ height:8 }}/>
+        <SectionLabel num="02">VERIFY · 短信验证</SectionLabel>
+        <View style={{ gap:10 }}>
+          <SendCodeRow state={sendState} cooldown={42}/>
+          <CodeInput
+            value=""
+            focusIdx={isPrefilled ? 0 : null}
+            disabled={codeDisabled}
+          />
+        </View>
+
+        <View style={{ height:8 }}/>
+        <PrimaryButton label="撤销注销" tone="brand" disabled/>
+        <Text className="text-[11px] text-ink-subtle text-center" style={{ marginTop:4 }}>
+          所有错误统一显示「凭证或验证码无效」（反枚举）
+        </Text>
+      </ScrollView>
+    </View>
+  );
+}
+
+// ─── Page 3 — Login + FreezeModal ────────────────────────────────────────
+function LoginFormPlaceholder() {
+  // 低饱和占位 (per spec: 不重画 login form)
+  return (
+    <View className="flex-1 bg-surface px-md" style={{ opacity: 0.55 }}>
+      <View style={{ height:12 }}/>
+      <View className="items-center" style={{ paddingTop:24, paddingBottom:24 }}>
+        <View className="rounded-md bg-brand-500" style={{ width:48, height:48 }}/>
+        <View className="bg-line-soft rounded-sm" style={{ width:120, height:14, marginTop:14 }}/>
+        <View className="bg-line-soft rounded-sm" style={{ width:200, height:10, marginTop:8 }}/>
+      </View>
+      <Text className="text-[10px] font-mono text-ink-subtle tracking-widest" style={{ marginBottom:6 }}>
+        PHONE
+      </Text>
+      <View className="rounded-md bg-surface-alt border border-line" style={{ height:48, marginBottom:12 }}/>
+      <Text className="text-[10px] font-mono text-ink-subtle tracking-widest" style={{ marginBottom:6 }}>
+        SMS CODE
+      </Text>
+      <View className="rounded-md bg-surface-alt border border-line" style={{ height:48, marginBottom:18 }}/>
+      <View className="rounded-md bg-brand-500" style={{ height:52 }}/>
+      <View className="items-center" style={{ marginTop:14 }}>
+        <View className="bg-line-soft rounded-sm" style={{ width:140, height:10 }}/>
+      </View>
+    </View>
+  );
+}
+
+function FreezeModalCard() {
+  return (
+    <View className="bg-surface shadow-modal" style={{
+      width: 296, borderRadius:16, padding:20, gap:14,
+    }}>
+      <View style={{ gap:6 }}>
+        <View className="flex-row items-center" style={{ gap:8 }}>
+          <View className="rounded-full" style={{
+            width:28, height:28, alignItems:"center", justifyContent:"center",
+            backgroundColor: "#FEF3DC",
+          }}>
+            <IconAlert size={16} color="#F59E0B"/>
+          </View>
+          <Text className="text-base font-semibold text-ink">账号处于冻结期</Text>
+        </View>
+        <Text className="text-sm text-ink-muted leading-relaxed" style={{ marginTop:4 }}>
+          账号处于注销冻结期，可撤销注销恢复账号
+        </Text>
+      </View>
+
+      <View className="flex-row" style={{ gap:8, marginTop:4 }}>
+        <View style={{ flex:1, height:44, borderRadius:10, borderWidth:1, borderStyle:"solid",
+          borderColor:"#E5E7EB", alignItems:"center", justifyContent:"center", backgroundColor:"#FFFFFF" }}>
+          <Text className="text-sm font-medium text-ink-muted">保持</Text>
+        </View>
+        <View style={{ flex:1, height:44, borderRadius:10, alignItems:"center", justifyContent:"center",
+          backgroundColor:"#2456E5", boxShadow: NVY_TOKENS.shadow.cta }}>
+          <Text className="text-sm font-semibold" style={{ color:"#FFFFFF" }}>撤销</Text>
+        </View>
+      </View>
+    </View>
+  );
+}
+
+function LoginFreezeScreen() {
+  return (
+    <View className="flex-1 bg-surface relative">
+      <StackHeader title="登录" showBack={false}/>
+      <LoginFormPlaceholder/>
+      {/* scrim */}
+      <View className="absolute inset-0" style={{ backgroundColor: "rgba(15,18,28,0.48)" }}/>
+      {/* centered modal */}
+      <View className="absolute inset-0 items-center justify-center" style={{ paddingLeft:24, paddingRight:24 }}>
+        <FreezeModalCard/>
+      </View>
+    </View>
+  );
+}
+
+// ─── State frames index ──────────────────────────────────────────────────
+const FRAMES = [
+  { num:"01", name:"DELETE-IDLE", zh:"注销 · 默认态",
+    desc:"警示卡片 err-soft 底 + ⚠ 红色 heading；双段警示用 warn(15天可撤销)/err(永久匿名化)对比 dot 区分恢复 vs 不可逆。双 checkbox 全空，发码按钮 disabled，code input sunken disabled，提交按钮 destructive 红 disabled 灰色态。底部副文案声明操作含义。",
+    pillBg:"bg-err-soft", pillFg:"text-err", dot:"bg-err",
+    render: () => <DeleteAccountScreen state="idle"/> },
+  { num:"02", name:"DELETE-CHECKED-COOLDOWN", zh:"注销 · 双勾 + 60s 倒计时",
+    desc:"双 checkbox 已勾(brand fill + ✓)，发码按钮转 cooldown 灰色态显示「45s 后可重发」，code input 启用第一格 focused brand ring。提交按钮仍 destructive disabled (输码 6 位前)。",
+    pillBg:"bg-warn-soft", pillFg:"text-warn", dot:"bg-warn",
+    render: () => <DeleteAccountScreen state="checked-cooldown"/> },
+  { num:"03", name:"DELETE-ERROR", zh:"注销 · 提交失败",
+    desc:"已输 6 位 code(493718) → 提交失败，code input 切 err 红 ring 提示，ErrorRow 显示「验证码错误」err-soft 底。提交按钮回到 active destructive 红填色 + cta shadow。反枚举仅 spec 定义于 cancel-deletion，注销 page 错误可分文案。",
+    pillBg:"bg-err-soft", pillFg:"text-err", dot:"bg-err",
+    render: () => <DeleteAccountScreen state="error"/> },
+  { num:"04", name:"CANCEL-PREFILLED", zh:"撤销 · 预填态",
+    desc:"顶部 brand-soft accent bar 表「恢复账号」(对比 delete page 的 err-soft 卡片)。phone read-only sunken bg + 🔒 lock icon + maskPhone(+86 138****5678)。发码已点 cooldown，code input 启用空白第一格 focused。提交按钮 brand primary fill — 与注销红按钮形成「危险 vs 恢复」对比。",
+    pillBg:"bg-brand-soft", pillFg:"text-brand-700", dot:"bg-brand-500",
+    render: () => <CancelDeletionScreen state="prefilled-cooldown"/> },
+  { num:"05", name:"CANCEL-DEEPLINK", zh:"撤销 · 深链空态",
+    desc:"deep-link 直接进入(无 phone param):phone editable 空 + placeholder。发码按钮 disabled until 输完手机号，code input disabled。提交按钮 brand disabled。底部副文案声明反枚举一致响应。",
+    pillBg:"bg-brand-soft", pillFg:"text-brand-700", dot:"bg-brand-500",
+    render: () => <CancelDeletionScreen state="deeplink-empty"/> },
+  { num:"06", name:"FREEZE-MODAL", zh:"冻结期 modal · 嵌入 login",
+    desc:"login form 用 opacity-55 灰白占位代表(per spec 不重画)。overlay = 自定义 modal-overlay token rgba(15,18,28,.48)。card 圆角 16 / shadow-modal / padding 20 / max-w 296。⚠ warn icon + 标题 + 描述 + 双 button:[保持] outline secondary / [撤销] brand primary 在右(iOS / Material 惯例)。",
+    pillBg:"bg-ink/10", pillFg:"text-ink", dot:"bg-ink",
+    render: () => <LoginFreezeScreen/> },
+];
+
+function StateFrame({ spec }) {
+  return (
+    <View className="gap-3" data-screen-label={`${spec.num} ${spec.name}`}>
+      <IOSFrame>{spec.render()}</IOSFrame>
+      <View className="gap-1" style={{ maxWidth: 360 }}>
+        <View className="flex-row items-center gap-2 flex-wrap">
+          <View className={`flex-row items-center gap-1.5 px-2 rounded-full ${spec.pillBg}`} style={{ paddingTop:2, paddingBottom:2 }}>
+            <View className={`rounded-full ${spec.dot}`} style={{ width:6, height:6 }}/>
+            <Text className={`text-[10px] font-semibold font-mono tracking-wider ${spec.pillFg}`}>{spec.name}</Text>
+          </View>
+          <Text className="text-[11px] font-medium font-mono text-ink-subtle">{spec.num}</Text>
+          <Text className="text-sm font-semibold text-ink">· {spec.zh}</Text>
+        </View>
+        <Text className="text-xs text-ink-muted leading-snug">{spec.desc}</Text>
+      </View>
+    </View>
+  );
+}
+
+function DeleteCancelPreview() {
+  return (
+    <ScrollView className="flex-1 bg-surface-sunken">
+      <View className="px-8 py-10 gap-8 items-center">
+        <View className="flex-row flex-wrap justify-between items-end gap-6" style={{ width:"100%", maxWidth:1700 }}>
+          <View className="gap-1.5">
+            <Text className="text-2xl font-bold text-ink tracking-tight" style={{ fontSize: 26 }}>
+              注销 · 撤销 UI · DeleteCancel{"  "}
+              <Text className="font-medium text-ink-muted" style={{ fontSize: 18 }}>· account-center</Text>
+            </Text>
+            <Text className="text-sm text-ink-muted leading-relaxed" style={{ maxWidth: 760 }}>
+              3 个视觉单元 — 注销账号 page / 撤销注销 page / 冻结期 modal — 共 6 状态。
+              复用 account-settings-shell PHASE 2 token base。核心视觉决策:
+              「危险 vs 恢复」按钮强度对比 (注销 = err 填色 / 撤销 = brand 填色)、警示文案 err-soft 卡片化、6 格 OTP-style code input、双 checkbox brand fill+✓。
+            </Text>
+          </View>
+          <View className="flex-row gap-4">
+            <Text className="text-[11px] font-mono text-ink-subtle">
+              <Text className="text-ink-muted font-medium">Frame</Text>{"  "}iPhone · 360×780
+            </Text>
+            <Text className="text-[11px] font-mono text-ink-subtle">
+              <Text className="text-ink-muted font-medium">States</Text>{"  "}6 (3 delete · 2 cancel · 1 modal)
+            </Text>
+          </View>
+        </View>
+
+        {/* Top: delete-account row (3 states) */}
+        <View className="self-stretch items-center">
+          <View className="flex-row flex-wrap justify-center gap-7">
+            {FRAMES.slice(0,3).map(s => <StateFrame key={s.num} spec={s}/>)}
+          </View>
+        </View>
+
+        {/* Bottom: cancel + modal row (3 states) */}
+        <View className="self-stretch items-center">
+          <View className="flex-row flex-wrap justify-center gap-7">
+            {FRAMES.slice(3).map(s => <StateFrame key={s.num} spec={s}/>)}
+          </View>
+        </View>
+
+        {/* Token diff banner */}
+        <View className="gap-2" style={{ maxWidth: 860, marginTop: 8 }}>
+          <Text className="text-xs font-semibold text-ink">Token diff vs account-settings-shell PHASE 2 base</Text>
+          <Text className="text-[11px] text-ink-muted leading-relaxed">
+            <Text className="font-mono text-ink">+1 新 token</Text>{"   ·   "}
+            <Text className="font-mono text-ink">modal-overlay</Text>{" = rgba(15,18,28,0.48) — freeze modal scrim 专用 (现有 hero-overlay@0.36 偏轻，dialog 需要更强 dim)"}{"   ·   "}
+            <Text className="font-mono text-ink">shadow.modal</Text>{" 复合阴影 (复用 card+ 自定义偏移即可，不必新加 token，本预览用内联)"}
+          </Text>
+          <Text className="text-[11px] text-ink-muted leading-relaxed">
+            ❌ 不消费: <Text className="font-mono text-ink">hero-overlay / white-soft / white-strong / shadow.hero-ring</Text>{" "}
+            (无 hero / 无沉浸式背景)。{"  "}
+            ❌ 复用而非新增: destructive 强调 = <Text className="font-mono text-ink">err</Text>，
+            warning bg = <Text className="font-mono text-ink">err-soft</Text>，
+            recover accent = <Text className="font-mono text-ink">brand-500</Text>，
+            recover-soft bar bg = <Text className="font-mono text-ink">brand-soft</Text>，
+            phone-locked bg = <Text className="font-mono text-ink">surface-sunken</Text>。
+          </Text>
+          <Text className="text-[11px] text-ink-muted leading-relaxed" style={{ marginTop:6 }}>
+            <Text className="font-mono text-ink font-semibold">视觉对比锚点</Text>{" — "}
+            注销 page 顶部 = err-soft 警示卡片 + ⚠ 红 heading，提交按钮 = err 红填色 + 红 cta shadow；
+            撤销 page 顶部 = brand-soft accent bar (左 brand-500 边线)，提交按钮 = brand-500 填色 + brand cta shadow。
+            两页在结构上对称 (header + 顶部 banner + sectioned form + 底部 CTA)，但通过 banner tone 与 CTA 填色形成「危险 vs 恢复」一眼分辨。
+          </Text>
+        </View>
+      </View>
+    </ScrollView>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById("root")).render(<DeleteCancelPreview/>);
+</script>
+</body>
+</html>
