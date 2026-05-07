@@ -1,4 +1,4 @@
-import { cleanup, render, screen } from '@testing-library/react';
+import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
 import React from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -6,11 +6,18 @@ const mocks = vi.hoisted(() => ({
   useLocalSearchParams: vi.fn<() => { phone?: string }>(),
   setParams: vi.fn<(params: { phone?: string | undefined }) => void>(),
   routerReplace: vi.fn<(href: string) => void>(),
+  requestCancelDeletionSmsCode: vi.fn(),
+  cancelDeletion: vi.fn(),
 }));
 
 vi.mock('expo-router', () => ({
   useLocalSearchParams: () => mocks.useLocalSearchParams(),
   useRouter: () => ({ setParams: mocks.setParams, replace: mocks.routerReplace }),
+}));
+
+vi.mock('@nvy/auth', () => ({
+  requestCancelDeletionSmsCode: mocks.requestCancelDeletionSmsCode,
+  cancelDeletion: mocks.cancelDeletion,
 }));
 
 vi.mock('react-native', async () => {
@@ -82,6 +89,8 @@ describe('CancelDeletionScreen — IDLE state render (spec C T7 / FR-013 / FR-02
     mocks.useLocalSearchParams.mockReset();
     mocks.setParams.mockReset();
     mocks.routerReplace.mockReset();
+    mocks.requestCancelDeletionSmsCode.mockReset();
+    mocks.cancelDeletion.mockReset();
   });
   afterEach(() => cleanup());
 
@@ -146,5 +155,126 @@ describe('CancelDeletionScreen — IDLE state render (spec C T7 / FR-013 / FR-02
     mocks.useLocalSearchParams.mockReturnValue({});
     render(<CancelDeletionScreen />);
     expect(screen.getByLabelText('submit').getAttribute('aria-disabled')).toBe('true');
+  });
+});
+
+describe('CancelDeletionScreen — state machine (spec C T8 / US7 acceptance 2 / US8 / FR-006 / FR-007)', () => {
+  beforeEach(() => {
+    mocks.useLocalSearchParams.mockReset();
+    mocks.setParams.mockReset();
+    mocks.routerReplace.mockReset();
+    mocks.requestCancelDeletionSmsCode.mockReset();
+    mocks.cancelDeletion.mockReset();
+  });
+  afterEach(() => {
+    cleanup();
+    vi.useRealTimers();
+  });
+
+  it('typing phone (no param path) enables send-code button', () => {
+    mocks.useLocalSearchParams.mockReturnValue({});
+    render(<CancelDeletionScreen />);
+    expect(screen.getByLabelText('send-code').getAttribute('aria-disabled')).toBe('true');
+
+    fireEvent.change(screen.getByLabelText('phone-input'), {
+      target: { value: '+8613800138000' },
+    });
+    expect(screen.getByLabelText('send-code').getAttribute('aria-disabled')).toBeNull();
+  });
+
+  it('US7-2 prefilled path: send-code enabled immediately + tap calls wrapper with phone', async () => {
+    mocks.useLocalSearchParams.mockReturnValue({ phone: '+8613800138000' });
+    mocks.requestCancelDeletionSmsCode.mockResolvedValue(undefined);
+
+    render(<CancelDeletionScreen />);
+    expect(screen.getByLabelText('send-code').getAttribute('aria-disabled')).toBeNull();
+
+    await act(async () => {
+      fireEvent.click(screen.getByLabelText('send-code'));
+    });
+
+    expect(mocks.requestCancelDeletionSmsCode).toHaveBeenCalledWith('+8613800138000');
+  });
+
+  it('FR-007: send-code success → 60s cooldown countdown', async () => {
+    vi.useFakeTimers();
+    mocks.useLocalSearchParams.mockReturnValue({ phone: '+8613800138000' });
+    mocks.requestCancelDeletionSmsCode.mockResolvedValue(undefined);
+
+    render(<CancelDeletionScreen />);
+    await act(async () => {
+      fireEvent.click(screen.getByLabelText('send-code'));
+    });
+
+    expect(screen.getByLabelText('send-code').textContent).toMatch(/60s 后可重发/);
+    expect(screen.getByLabelText('send-code').getAttribute('aria-disabled')).toBe('true');
+
+    await act(async () => {
+      vi.advanceTimersByTime(1000);
+    });
+    expect(screen.getByLabelText('send-code').textContent).toMatch(/59s 后可重发/);
+
+    await act(async () => {
+      vi.advanceTimersByTime(59_000);
+    });
+    expect(screen.getByLabelText('send-code').textContent).toMatch(/^发送验证码$/);
+  });
+
+  it('US7-2: code input enables after send-code success; typing 6 digits enables submit', async () => {
+    mocks.useLocalSearchParams.mockReturnValue({ phone: '+8613800138000' });
+    mocks.requestCancelDeletionSmsCode.mockResolvedValue(undefined);
+
+    render(<CancelDeletionScreen />);
+    await act(async () => {
+      fireEvent.click(screen.getByLabelText('send-code'));
+    });
+
+    const input = screen.getByLabelText('code-input') as HTMLInputElement;
+    expect(input.disabled).toBe(false);
+
+    fireEvent.change(input, { target: { value: '12345' } });
+    expect(screen.getByLabelText('submit').getAttribute('aria-disabled')).toBe('true');
+
+    fireEvent.change(input, { target: { value: '123456' } });
+    expect(screen.getByLabelText('submit').getAttribute('aria-disabled')).toBeNull();
+  });
+
+  it('code input strips non-digit and caps at 6', async () => {
+    mocks.useLocalSearchParams.mockReturnValue({ phone: '+8613800138000' });
+    mocks.requestCancelDeletionSmsCode.mockResolvedValue(undefined);
+
+    render(<CancelDeletionScreen />);
+    await act(async () => {
+      fireEvent.click(screen.getByLabelText('send-code'));
+    });
+
+    const input = screen.getByLabelText('code-input') as HTMLInputElement;
+    fireEvent.change(input, { target: { value: 'a1b2c3d4e5f6g7' } });
+    expect(input.value).toBe('123456');
+  });
+
+  it('SC-008 反枚举: chained reject→resolve uses single "凭证或验证码无效" string for all 4xx kinds', async () => {
+    const ResponseError = (await import('@nvy/api-client')).ResponseError;
+    mocks.useLocalSearchParams.mockReturnValue({ phone: '+8613800138000' });
+    mocks.requestCancelDeletionSmsCode
+      .mockImplementationOnce(async () => {
+        throw new ResponseError(new Response(null, { status: 401 }));
+      })
+      .mockResolvedValueOnce(undefined);
+
+    render(<CancelDeletionScreen />);
+    await act(async () => {
+      fireEvent.click(screen.getByLabelText('send-code'));
+    });
+    expect(screen.getByText(/凭证或验证码无效/)).toBeTruthy();
+    // "phone 未注册" / "已匿名化" 等细分文案不出现
+    expect(screen.queryByText(/未注册/)).toBeNull();
+    expect(screen.queryByText(/匿名化/)).toBeNull();
+
+    // retry → error clears
+    await act(async () => {
+      fireEvent.click(screen.getByLabelText('send-code'));
+    });
+    expect(screen.queryByText(/凭证或验证码无效/)).toBeNull();
   });
 });

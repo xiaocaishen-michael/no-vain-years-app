@@ -264,7 +264,7 @@
 
 ---
 
-### T8 [Form-B] cancel-deletion form state machine + 单测
+### T8 ✅ [Form-B] cancel-deletion form state machine + 单测
 
 **前置**:T7 完成
 
