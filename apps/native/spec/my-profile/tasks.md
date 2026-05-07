@@ -31,7 +31,7 @@
 
 | #   | 层级                 | 任务                                                                                                                         | 文件                                                                    | 状态    |
 | --- | -------------------- | ---------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------- | ------- |
-| T1  | [AuthGate]           | AuthGate 第三态目标改 `(app)/(tabs)/profile`(per FR-002 / SC-002)                                                            | `apps/native/lib/auth/auth-gate-decision.ts` + 同 dir test              | pending |
+| T1  | [AuthGate]           | AuthGate 第三态目标改 `(app)/(tabs)/profile`(per FR-002 / SC-002)                                                            | `apps/native/lib/auth/auth-gate-decision.ts` + 同 dir test              | ✅      |
 | T2  | [Layout]             | 新建 `(tabs)/_layout.tsx` — Tabs × 4 配置(无图标 / `unmountOnBlur=false` / `headerShown=false`,per FR-001 / FR-012 / CL-003) | `apps/native/app/(app)/(tabs)/_layout.tsx` + test                       | pending |
 | T3  | [Placeholder]        | 3 个 placeholder pages — `(tabs)/index.tsx` / `(tabs)/search.tsx` / `(tabs)/pkm.tsx`(per FR-003)                             | `apps/native/app/(app)/(tabs)/{index,search,pkm}.tsx`                   | pending |
 | T4  | [Migration]          | 删 `(app)/index.tsx` + 全仓 grep 引用更新(per 决策 5 / SC-009)                                                               | `apps/native/app/(app)/index.tsx`(删) + grep 命中点                     | pending |

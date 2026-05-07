@@ -54,7 +54,7 @@ describe('decideAuthRoute (T5 / spec FR-001 三态决策)', () => {
 
   // ----- isAuthenticated + displayName !== null branch ----- //
 
-  it('auth + displayName set + inAuthGroup → replace /(app)/', () => {
+  it('auth + displayName set + inAuthGroup → replace /(app)/(tabs)/profile', () => {
     expect(
       decideAuthRoute({
         ...base,
@@ -62,16 +62,16 @@ describe('decideAuthRoute (T5 / spec FR-001 三态决策)', () => {
         displayName: '小明',
         inAuthGroup: true,
       }),
-    ).toEqual({ kind: 'replace', target: '/(app)' });
+    ).toEqual({ kind: 'replace', target: '/(app)/(tabs)/profile' });
   });
 
-  it('auth + displayName set + already in /(app)/ (no group flag) → noop', () => {
+  it('auth + displayName set + already in (tabs) area (no group flag) → noop', () => {
     expect(decideAuthRoute({ ...base, isAuthenticated: true, displayName: '小明' })).toEqual({
       kind: 'noop',
     });
   });
 
-  it('auth + displayName set + inOnboarding → replace /(app)/ (don’t hold them on the gate)', () => {
+  it('auth + displayName set + inOnboarding → replace /(app)/(tabs)/profile (no holding on gate)', () => {
     expect(
       decideAuthRoute({
         ...base,
@@ -79,7 +79,7 @@ describe('decideAuthRoute (T5 / spec FR-001 三态决策)', () => {
         displayName: '小明',
         inOnboarding: true,
       }),
-    ).toEqual({ kind: 'replace', target: '/(app)' });
+    ).toEqual({ kind: 'replace', target: '/(app)/(tabs)/profile' });
   });
 
   // ----- empty-string displayName treated as set (server FR-005 trim guarantees non-empty) ----- //
