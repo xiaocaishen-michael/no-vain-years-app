@@ -5,7 +5,7 @@ export default function AccountSecurityLayout() {
     <Stack screenOptions={{ headerShown: true }}>
       <Stack.Screen name="index" options={{ title: '账号与安全' }} />
       <Stack.Screen name="phone" options={{ title: '手机号' }} />
-      {/* delete-account 由 spec C 落地 — 本 spec 不预占位 */}
+      <Stack.Screen name="delete-account" options={{ title: '注销账号' }} />
     </Stack>
   );
 }

@@ -1,7 +1,13 @@
 import { ApiClientError, FetchError, ResponseError } from '@nvy/api-client';
 import { describe, expect, it } from 'vitest';
 
-import { mapApiError, phoneSmsAuthSchema, PHONE_REGEX } from './login';
+import {
+  FROZEN_ACCOUNT_CODE,
+  mapApiError,
+  phoneSmsAuthSchema,
+  PHONE_REGEX,
+  readErrorCode,
+} from './login';
 
 describe('PHONE_REGEX', () => {
   it.each([
@@ -133,5 +139,63 @@ describe('mapApiError', () => {
     const a = mapApiError(makeResponseError(401)); // 已注册号 + 错码
     const b = mapApiError(makeResponseError(401)); // 未注册号 + 任意码
     expect(a).toEqual(b);
+  });
+
+  // spec C T5 / FR-010 — frozen-account detection via body code (spec D 403 +
+  // ACCOUNT_IN_FREEZE_PERIOD)
+  describe('frozen account detection (spec C T5)', () => {
+    it('US4-1: bodyCode === ACCOUNT_IN_FREEZE_PERIOD → kind: frozen', () => {
+      expect(mapApiError(makeResponseError(403), FROZEN_ACCOUNT_CODE)).toEqual({
+        kind: 'frozen',
+        toast: '账号处于注销冻结期，可撤销注销恢复账号',
+      });
+    });
+
+    it('ApiClientError.code === ACCOUNT_IN_FREEZE_PERIOD → kind: frozen (sync path)', () => {
+      const e = new ApiClientError(403, { code: FROZEN_ACCOUNT_CODE, message: 'frozen' });
+      expect(mapApiError(e)).toEqual({
+        kind: 'frozen',
+        toast: '账号处于注销冻结期，可撤销注销恢复账号',
+      });
+    });
+
+    it('US4-5 反例 — 其他错误码 / 401 / 429 / 5xx 不触发 frozen', () => {
+      // bodyCode 不存在 → 走 status-based mapping
+      expect(mapApiError(makeResponseError(401)).kind).toBe('invalid');
+      expect(mapApiError(makeResponseError(429)).kind).toBe('rate_limit');
+      expect(mapApiError(makeResponseError(500)).kind).toBe('network');
+      // bodyCode 是其他业务码 → 不触发 frozen,反枚举仍生效
+      expect(mapApiError(makeResponseError(401), 'INVALID_CREDENTIALS').kind).toBe('invalid');
+    });
+
+    it('FROZEN_ACCOUNT_CODE 字面量与 server PRD 一致', () => {
+      expect(FROZEN_ACCOUNT_CODE).toBe('ACCOUNT_IN_FREEZE_PERIOD');
+    });
+  });
+});
+
+describe('readErrorCode (spec C T5)', () => {
+  it('extracts body.code from ResponseError', async () => {
+    const response = new Response(JSON.stringify({ code: FROZEN_ACCOUNT_CODE }), { status: 403 });
+    const error = new ResponseError(response, 'frozen');
+    expect(await readErrorCode(error)).toBe(FROZEN_ACCOUNT_CODE);
+  });
+
+  it('returns null for non-JSON body', async () => {
+    const response = new Response('not json', { status: 403 });
+    const error = new ResponseError(response, 'broken');
+    expect(await readErrorCode(error)).toBeNull();
+  });
+
+  it('returns null for body without code field', async () => {
+    const response = new Response(JSON.stringify({ message: 'no code' }), { status: 403 });
+    const error = new ResponseError(response, 'no code');
+    expect(await readErrorCode(error)).toBeNull();
+  });
+
+  it('returns null for non-ResponseError input', async () => {
+    expect(await readErrorCode(new Error('plain'))).toBeNull();
+    expect(await readErrorCode(null)).toBeNull();
+    expect(await readErrorCode(undefined)).toBeNull();
   });
 });

@@ -1,7 +1,8 @@
 # Tasks: Delete Account & Cancel Deletion UI (spec C)
 
 > **Companions**: [`spec.md`](./spec.md) / [`plan.md`](./plan.md)
-> **Status**: pending(`/implement` 阶段每 task 完成同 commit 加 `✅`,per SDD `/implement` 闭环 6 步)
+> **Status**: T0-T10 + T12 ✅ shipped 2026-05-07;T11 🟡 deferred(post-merge,待 server release 0.2.0 production deploy)
+> **Implementation PR**: feature/spec-c-delete-account-cancel-deletion-ui(本会话 12 commit,见各 task `Commit` 字段;PR # 待 push 后回填)
 > **里程碑依赖**(spec C impl session 才开):
 >
 > - **spec B impl ship**(`account-settings-shell` PR — 提供 `account-security/_layout.tsx` 文件 + spec B FR-011 `useAuthStore.phone` 字段扩展)
@@ -13,7 +14,7 @@
 
 ## 任务列表(共 12 task,预计 1.5-2 work-day)
 
-### T0 [SDK] `pnpm api:gen` 拉取 spec D ship 后的最新 OpenAPI 生成 SDK
+### T0 ✅ [SDK] `pnpm api:gen` 拉取 spec D ship 后的最新 OpenAPI 生成 SDK
 
 **前置**:spec D server PR ship + production 部署 + `/v3/api-docs` 暴露最新 spec(含 AccountDeletionControllerApi + CancelDeletionControllerApi)
 
@@ -41,7 +42,7 @@
 
 ---
 
-### T1 [Auth] `packages/auth` 4 wrapper + 单测
+### T1 ✅ [Auth] `packages/auth` 4 wrapper + 单测
 
 **前置**:T0 完成
 
@@ -71,7 +72,9 @@
 
 ---
 
-### T2 [Page-A] `delete-account.tsx` 占位 page + 伴文件 + Stack.Screen 注册 + 单测
+### T2 ✅ [Page-A] `delete-account.tsx` 占位 page + 伴文件 + Stack.Screen 注册 + 单测
+
+> **Drift note (impl)**: 伴文件实际命名 `delete-account-errors.ts`(原 tasks.md 写 `delete-account.ts` 与 `.tsx` 同名,触发 TS 模块解析 `.ts` 优先 + Expo Router app/ 下 `.ts` 扫描歧义 — 重命名规避)。
 
 **前置**:T1 完成 + spec B impl ship(`account-security/_layout.tsx` 文件存在)
 
@@ -98,7 +101,9 @@
 
 ---
 
-### T3 [Form-A] delete-account form state machine + 单测
+### T3 ✅ [Form-A] delete-account form state machine + 单测
+
+> **Drift note (impl)**: 错误路径单测从 component-level(delete-account.test.tsx)迁移到 helper-level(delete-account-errors.test.ts) — vitest spy-rejection tracker 把 mock 拒绝当成 unhandled rejection 报告(即使 component 用 .then().catch() 拦截),迁到 mapDeletionError 直测覆盖更稳。component 层保留 chained reject→resolve 的 US3-4 retry-clear 验证。
 
 **前置**:T2 完成
 
@@ -130,7 +135,7 @@
 
 ---
 
-### T4 [Submit-A] delete-account 提交 + clearSession + 跳 (auth)/login + 单测
+### T4 ✅ [Submit-A] delete-account 提交 + clearSession + 跳 (auth)/login + 单测
 
 **前置**:T3 完成
 
@@ -159,7 +164,9 @@
 
 ---
 
-### T5 [Login-Map] login flow `mapApiError` 加 'frozen' 分支 + 单测
+### T5 ✅ [Login-Map] login flow `mapApiError` 加 'frozen' 分支 + 单测
+
+> **Drift note (impl)**: ResponseError body 异步读取需求 → 加 sync `mapApiError(e, bodyCode?)` + async helper `readErrorCode(e)`,caller(`use-login-form.handleApiError`)await body 后传给 sync mapper(避 mapApiError 全函数 async 导致 onboarding.ts 调用面破坏)。`useLoginForm` 加 `showFrozenModal` / `clearFrozenModal` 状态(T6 freeze modal 拼装入口)。
 
 **前置**:T1 完成(packages/auth 4 wrapper 落地;无 spec D 阻塞 — 本 T 是 client 映射逻辑,可基于 mock 跑)
 
@@ -188,7 +195,7 @@
 
 ---
 
-### T6 [Freeze-Modal] freeze modal 嵌入 `login.tsx` + handlers + 单测
+### T6 ✅ [Freeze-Modal] freeze modal 嵌入 `login.tsx` + handlers + 单测
 
 **前置**:T5 完成
 
@@ -223,7 +230,9 @@
 
 ---
 
-### T7 [Page-B] `cancel-deletion.tsx` 占位 page + 伴文件 + Stack.Screen 注册 + 单测
+### T7 ✅ [Page-B] `cancel-deletion.tsx` 占位 page + 伴文件 + Stack.Screen 注册 + 单测
+
+> **Drift note (impl)**: 同 T2 — 伴文件 `cancel-deletion-errors.ts`(避 `.ts/.tsx` 模块解析冲突)。`_layout.tsx` 改为显式 Stack(原仅 screenOptions),加 `login` + `cancel-deletion` 两个 Screen 显式 title 注册。
 
 **前置**:T1 完成
 
@@ -256,7 +265,7 @@
 
 ---
 
-### T8 [Form-B] cancel-deletion form state machine + 单测
+### T8 ✅ [Form-B] cancel-deletion form state machine + 单测
 
 **前置**:T7 完成
 
@@ -287,7 +296,7 @@
 
 ---
 
-### T9 [Submit-B] cancel-deletion 提交 + setSession + loadProfile + 跳 (app) + 单测
+### T9 ✅ [Submit-B] cancel-deletion 提交 + setSession + loadProfile + 跳 (app) + 单测
 
 **前置**:T8 完成
 
@@ -317,7 +326,7 @@
 
 ---
 
-### T10 [Integration] 跨 component 集成测(login flow → modal → cancel-deletion → home)
+### T10 ✅ [Integration] 跨 component 集成测(login flow → modal → cancel-deletion → home)
 
 **前置**:T2-T9 完成
 
@@ -344,7 +353,15 @@
 
 ---
 
-### T11 [Smoke] 真后端冒烟 + 截图归档
+### T11 🟡 [Smoke] 真后端冒烟 + 截图归档(post-merge deferred)
+
+> **Deferral reason**: 前置 "spec D server production deploy" 未满足 — server 仓 release PR #40(release 0.2.0)仍 OPEN(`autorelease: pending`),production 部署的仍是 v0.1.0(无 ACCOUNT_IN_FREEZE_PERIOD 错误码)。本 impl PR 走 `pnpm api:gen:dev`(localhost spec)生成 SDK,T10 集成测合同性覆盖完整 freeze flow。T11 真后端冒烟应在以下条件满足后跑:
+>
+> 1. server release PR #40 merged + Deploy workflow 绿
+> 2. production `/v3/api-docs` 含两 deletion controller + ACCOUNT_IN_FREEZE_PERIOD 错误码可触发
+> 3. 测试账号准备(phone Y → register / phone X → 注销发起后 FROZEN)
+>
+> 完成后回填本 task 为 ✅ + 截图归档路径(`runtime-debug/<date>-delete-account-cancel-deletion-business-flow/`)。
 
 **前置**:T10 完成 + spec D server 已 production deploy + spec B impl 已 ship + 测试账号准备(测试账号 phone + 提前在 Postman / 等价工具 trigger 注销 → FROZEN 状态)
 
@@ -371,7 +388,7 @@
 
 ---
 
-### T12 [Doc] tasks.md 自勾 ✅ + PR ref + plan-lifecycle 归档
+### T12 ✅ [Doc] tasks.md 自勾 ✅ + PR ref + plan-lifecycle 归档
 
 **前置**:T0-T11 完成 + PR opened
 

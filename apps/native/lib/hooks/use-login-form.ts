@@ -2,7 +2,7 @@ import { getAccountSmsCodeApi } from '@nvy/api-client';
 import { phoneSmsAuth } from '@nvy/auth';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
-import { mapApiError } from '../validation/login';
+import { mapApiError, readErrorCode } from '../validation/login';
 
 // Per ADR-0016 + plan.md 状态机:
 // idle → requesting_sms → sms_sent → submitting → success | error
@@ -22,6 +22,13 @@ export interface UseLoginFormResult {
   errorToast: string | null;
   errorScope: ErrorScope;
   smsCountdown: number;
+  // spec C T5+T6: server returns 403 + ACCOUNT_IN_FREEZE_PERIOD when the
+  // authenticating account is in the deletion freeze period. Surface a flag
+  // so the page can render a 撤销 / 保持 modal instead of the standard
+  // ErrorRow. The modal state is reset by clearFrozenModal (T6 wires the
+  // 撤销 / 保持 buttons through it).
+  showFrozenModal: boolean;
+  clearFrozenModal: () => void;
   requestSms: (phone: string) => Promise<void>;
   submit: (phone: string, smsCode: string) => Promise<void>;
   showPlaceholderToast: (feature: PlaceholderFeature) => void;
@@ -45,6 +52,7 @@ export function useLoginForm(): UseLoginFormResult {
   const [errorToast, setErrorToast] = useState<string | null>(null);
   const [errorScope, setErrorScope] = useState<ErrorScope>(null);
   const [smsCountdown, setSmsCountdown] = useState(0);
+  const [showFrozenModal, setShowFrozenModal] = useState(false);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   useEffect(() => {
@@ -67,11 +75,25 @@ export function useLoginForm(): UseLoginFormResult {
     });
   }, []);
 
-  const handleApiError = useCallback((error: unknown, scope: 'sms' | 'submit') => {
-    const mapped = mapApiError(error);
+  const handleApiError = useCallback(async (error: unknown, scope: 'sms' | 'submit') => {
+    const bodyCode = await readErrorCode(error);
+    const mapped = mapApiError(error, bodyCode);
+    if (mapped.kind === 'frozen') {
+      // spec C T6 routes the user to cancel-deletion via the modal; reset
+      // form state so on [保持] the user re-enters fresh.
+      setShowFrozenModal(true);
+      setErrorToast(null);
+      setErrorScope(null);
+      setState('idle');
+      return;
+    }
     setErrorToast(mapped.toast);
     setErrorScope(scope);
     setState('error');
+  }, []);
+
+  const clearFrozenModal = useCallback(() => {
+    setShowFrozenModal(false);
   }, []);
 
   const startCountdown = useCallback(() => {
@@ -107,7 +129,7 @@ export function useLoginForm(): UseLoginFormResult {
         startCountdown();
         setState('sms_sent');
       } catch (e) {
-        handleApiError(e, 'sms');
+        await handleApiError(e, 'sms');
       }
     },
     [smsCountdown, handleApiError, startCountdown],
@@ -122,7 +144,7 @@ export function useLoginForm(): UseLoginFormResult {
         await phoneSmsAuth(phone, smsCode);
         setState('success');
       } catch (e) {
-        handleApiError(e, 'submit');
+        await handleApiError(e, 'submit');
       }
     },
     [handleApiError],
@@ -137,6 +159,8 @@ export function useLoginForm(): UseLoginFormResult {
     errorToast,
     errorScope,
     smsCountdown,
+    showFrozenModal,
+    clearFrozenModal,
     requestSms,
     submit,
     showPlaceholderToast,

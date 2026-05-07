@@ -6,9 +6,11 @@ export {
   ApiClientError,
   DEFAULT_BASE_URL,
   getAccountAuthApi,
+  getAccountDeletionApi,
   getAccountProfileApi,
   getAccountSmsCodeApi,
   getAuthApi,
+  getCancelDeletionApi,
   resetClientForTests,
   setTokenGetter,
   setTokenRefresher,
@@ -19,10 +21,13 @@ export type { ApiErrorBody } from './client';
 // Consumers MUST import from this entry point — no deep imports into generated/.
 export type {
   AccountProfileResponse,
+  CancelDeletionRequest,
+  DeleteAccountRequest,
   LoginResponse,
   PhoneSmsAuthRequest,
   RefreshTokenRequest,
   RequestSmsCodeRequest,
+  SendCancelDeletionCodeRequest,
   UpdateDisplayNameRequest,
 } from './generated';
 export { FetchError, ResponseError } from './generated';

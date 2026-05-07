@@ -62,4 +62,11 @@ describe('AccountSecurityLayout (spec account-settings-shell T6)', () => {
     expect(phone).toBeDefined();
     expect(phone?.options['title']).toBe('手机号');
   });
+
+  it('registers delete-account screen with title 注销账号 (spec C T2)', () => {
+    render(<AccountSecurityLayout />);
+    const del = capturedScreens.find((s) => s.name === 'delete-account');
+    expect(del).toBeDefined();
+    expect(del?.options['title']).toBe('注销账号');
+  });
 });
