@@ -33,7 +33,7 @@
 | T1  | [Auth-Store]                    | `useAuthStore` 加 `phone` 字段 + `setPhone` action + `clearSession` 同步加 phone + persist `partialize` 加 phone(per plan 决策 1 + 8)                                 | `packages/auth/src/store.ts` + `apps/native/lib/auth/store.test.ts`                        | ✅   |
 | T2  | [Auth-UseCase]                  | `loadProfile` 改:同时 `setPhone(response.phone ?? null)`(per plan 决策 1);plan-impl 阶段先验 generated `getMe()` type 含 phone                                        | `packages/auth/src/usecases.ts` + `apps/native/lib/auth/usecases.test.ts`                  | ✅   |
 | T3  | [Format-Lib]                    | `maskPhone` 函数 + 表驱动测试 7 case(per plan 决策 6 + spec FR-010 + CL-002;实现采用国码白名单 per T3 决策 A)                                                         | `apps/native/lib/format/phone.ts` + `phone.test.ts`                                        | ✅   |
-| T4  | [Settings/Layout + Page]        | `settings/_layout.tsx`(Stack) + `settings/index.tsx`(主页 3 cards + footer 双链接,per spec FR-001 ~ FR-004 + FR-006)                                                  | `apps/native/app/(app)/settings/_layout.tsx` + `settings/index.tsx` + tests                |      |
+| T4  | [Settings/Layout + Page]        | `settings/_layout.tsx`(Stack) + `settings/index.tsx`(主页 3 cards + footer 双链接,per spec FR-001 ~ FR-004 + FR-006)                                                  | `apps/native/app/(app)/settings/_layout.tsx` + `settings/index.tsx` + tests                | ✅   |
 | T5  | [Settings/Logout]               | `handleLogout` 流程(Alert 二次确认 + best-effort + race guard,per spec FR-005 + FR-019 + plan 决策 2 + 9)                                                             | `settings/index.tsx`(扩展)+ `__tests__/handleLogout.test.tsx`                              |      |
 | T6  | [AccountSecurity/Layout + Page] | `account-security/_layout.tsx` + `account-security/index.tsx`(3 cards + 反枚举,per spec FR-007 + FR-018 + Q4)                                                         | `settings/account-security/_layout.tsx` + `account-security/index.tsx` + tests             |      |
 | T7  | [AccountSecurity/Phone]         | `account-security/phone.tsx`(mask 渲染 + null fallback,per spec FR-008 + FR-018)                                                                                      | `settings/account-security/phone.tsx` + `phone.test.tsx`                                   |      |
@@ -216,7 +216,7 @@ export function maskPhone(phone: string | null): string {
 
 ---
 
-## T4 — `settings/_layout.tsx` + `settings/index.tsx` 主页(per spec FR-001 ~ FR-004 + FR-006)
+## T4 ✅ — `settings/_layout.tsx` + `settings/index.tsx` 主页(per spec FR-001 ~ FR-004 + FR-006)
 
 **TDD**:layout test + index test 先红,再实现。
 
