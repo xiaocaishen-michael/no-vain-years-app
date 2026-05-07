@@ -229,7 +229,9 @@
 
 ---
 
-### T7 [Page-B] `cancel-deletion.tsx` 占位 page + 伴文件 + Stack.Screen 注册 + 单测
+### T7 ✅ [Page-B] `cancel-deletion.tsx` 占位 page + 伴文件 + Stack.Screen 注册 + 单测
+
+> **Drift note (impl)**: 同 T2 — 伴文件 `cancel-deletion-errors.ts`(避 `.ts/.tsx` 模块解析冲突)。`_layout.tsx` 改为显式 Stack(原仅 screenOptions),加 `login` + `cancel-deletion` 两个 Screen 显式 title 注册。
 
 **前置**:T1 完成
 
