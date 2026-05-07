@@ -1,7 +1,8 @@
 # Tasks: Delete Account & Cancel Deletion UI (spec C)
 
 > **Companions**: [`spec.md`](./spec.md) / [`plan.md`](./plan.md)
-> **Status**: pending(`/implement` 阶段每 task 完成同 commit 加 `✅`,per SDD `/implement` 闭环 6 步)
+> **Status**: T0-T10 + T12 ✅ shipped 2026-05-07;T11 🟡 deferred(post-merge,待 server release 0.2.0 production deploy)
+> **Implementation PR**: feature/spec-c-delete-account-cancel-deletion-ui(本会话 12 commit,见各 task `Commit` 字段;PR # 待 push 后回填)
 > **里程碑依赖**(spec C impl session 才开):
 >
 > - **spec B impl ship**(`account-settings-shell` PR — 提供 `account-security/_layout.tsx` 文件 + spec B FR-011 `useAuthStore.phone` 字段扩展)
@@ -352,7 +353,15 @@
 
 ---
 
-### T11 [Smoke] 真后端冒烟 + 截图归档
+### T11 🟡 [Smoke] 真后端冒烟 + 截图归档(post-merge deferred)
+
+> **Deferral reason**: 前置 "spec D server production deploy" 未满足 — server 仓 release PR #40(release 0.2.0)仍 OPEN(`autorelease: pending`),production 部署的仍是 v0.1.0(无 ACCOUNT_IN_FREEZE_PERIOD 错误码)。本 impl PR 走 `pnpm api:gen:dev`(localhost spec)生成 SDK,T10 集成测合同性覆盖完整 freeze flow。T11 真后端冒烟应在以下条件满足后跑:
+>
+> 1. server release PR #40 merged + Deploy workflow 绿
+> 2. production `/v3/api-docs` 含两 deletion controller + ACCOUNT_IN_FREEZE_PERIOD 错误码可触发
+> 3. 测试账号准备(phone Y → register / phone X → 注销发起后 FROZEN)
+>
+> 完成后回填本 task 为 ✅ + 截图归档路径(`runtime-debug/<date>-delete-account-cancel-deletion-business-flow/`)。
 
 **前置**:T10 完成 + spec D server 已 production deploy + spec B impl 已 ship + 测试账号准备(测试账号 phone + 提前在 Postman / 等价工具 trigger 注销 → FROZEN 状态)
 
@@ -379,7 +388,7 @@
 
 ---
 
-### T12 [Doc] tasks.md 自勾 ✅ + PR ref + plan-lifecycle 归档
+### T12 ✅ [Doc] tasks.md 自勾 ✅ + PR ref + plan-lifecycle 归档
 
 **前置**:T0-T11 完成 + PR opened
 
