@@ -35,7 +35,7 @@
 | T3  | [Format-Lib]                    | `maskPhone` 函数 + 表驱动测试 7 case(per plan 决策 6 + spec FR-010 + CL-002;实现采用国码白名单 per T3 决策 A)                                                         | `apps/native/lib/format/phone.ts` + `phone.test.ts`                                        | ✅   |
 | T4  | [Settings/Layout + Page]        | `settings/_layout.tsx`(Stack) + `settings/index.tsx`(主页 3 cards + footer 双链接,per spec FR-001 ~ FR-004 + FR-006)                                                  | `apps/native/app/(app)/settings/_layout.tsx` + `settings/index.tsx` + tests                | ✅   |
 | T5  | [Settings/Logout]               | `handleLogout` 流程(Alert 二次确认 + best-effort + race guard,per spec FR-005 + FR-019 + plan 决策 2 + 9)                                                             | `settings/index.tsx`(扩展)+ `__tests__/handleLogout.test.tsx`                              | ✅   |
-| T6  | [AccountSecurity/Layout + Page] | `account-security/_layout.tsx` + `account-security/index.tsx`(3 cards + 反枚举,per spec FR-007 + FR-018 + Q4)                                                         | `settings/account-security/_layout.tsx` + `account-security/index.tsx` + tests             |      |
+| T6  | [AccountSecurity/Layout + Page] | `account-security/_layout.tsx` + `account-security/index.tsx`(3 cards + 反枚举,per spec FR-007 + FR-018 + Q4)                                                         | `settings/account-security/_layout.tsx` + `account-security/index.tsx` + tests             | ✅   |
 | T7  | [AccountSecurity/Phone]         | `account-security/phone.tsx`(mask 渲染 + null fallback,per spec FR-008 + FR-018)                                                                                      | `settings/account-security/phone.tsx` + `phone.test.tsx`                                   |      |
 | T8  | [Legal/Layout + Pages]          | `legal/_layout.tsx` + `legal/personal-info.tsx` + `legal/third-party.tsx`(标题 + 占位文案,per spec FR-009 + FR-011 + Q6)                                              | `settings/legal/_layout.tsx` + `legal/personal-info.tsx` + `legal/third-party.tsx` + tests |      |
 | T9  | [Integration]                   | 集成测 — settings 全流(settings → account-security → phone → 返回 → 退出登录)+ stack 返回行为 + 底 tab 隐藏 + 反枚举静态分析(per spec SC-007 / SC-010 / US9 / SC-005) | `__tests__/integration/account-settings-shell-flow.test.tsx`                               |      |
@@ -424,7 +424,7 @@ handleLogout 已在 T4 settings/index.tsx 内实现(per T4-impl 代码块 `handl
 
 ---
 
-## T6 — `account-security/_layout` + `account-security/index`(per spec FR-007 + FR-018 + Q4)
+## T6 ✅ — `account-security/_layout` + `account-security/index`(per spec FR-007 + FR-018 + Q4)
 
 **TDD**:layout + index test 先红。
 
