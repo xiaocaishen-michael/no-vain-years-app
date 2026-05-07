@@ -88,6 +88,7 @@ flowchart TD
 ### Q1 — 路由结构(嵌套 per-section)
 
 - **决议**: 嵌套(B 选项),共 8 文件
+
   ```text
   apps/native/app/(app)/settings/
   ├── _layout.tsx
@@ -101,6 +102,7 @@ flowchart TD
       ├── personal-info.tsx                  # 《个人信息收集与使用清单》
       └── third-party.tsx                    # 《第三方共享清单》
   ```
+
 - **理由**: spec C 注销 UI 路径 `(app)/settings/account-security/delete-account` 已在 spec A plan.md § 衔接边界锚定,嵌套与之天然对齐;未来加 disabled 子项(实名认证 / 第三方绑定 / 登录设备管理)进 `account-security/` 子目录最自然;legal 子目录给后续法务定稿留扩展空间(可能加更多清单 / 协议文档)
 
 ### Q2 — 退出登录 confirm 形式
@@ -114,6 +116,7 @@ flowchart TD
 ### Q3 — `logoutAll()` 失败容错
 
 - **决议**: best-effort
+
   ```ts
   try {
     await logoutAll();
@@ -122,6 +125,7 @@ flowchart TD
   }
   // 总是清本地 + replace /(auth)/login
   ```
+
 - **理由**: 退出登录是不可逆 UX 期望(用户点了"确定"就期望已退出);refresh_token 即使 server 未作废也无设备触发 refresh,access_token 15min 后失效(per PRD § 6.4 + § 3.4);服务器临时不可用时不该卡用户在已"心理退出"状态;错误日志走 console.warn 即可,不打扰用户
 
 ### Q4 — 手机号 detail 占位页内容
