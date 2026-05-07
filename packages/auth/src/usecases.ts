@@ -7,8 +7,10 @@
 import {
   ApiClientError,
   getAccountAuthApi,
+  getAccountDeletionApi,
   getAccountProfileApi,
   getAuthApi,
+  getCancelDeletionApi,
   ResponseError,
   setTokenGetter,
   setTokenRefresher,
@@ -127,6 +129,60 @@ export async function logoutAll(): Promise<void> {
 // user wants to "log out of this device only".
 export function logoutLocal(): void {
   useAuthStore.getState().clearSession();
+}
+
+// -----------------------------------------------------------------------------
+// Account deletion / cancellation (spec C — delete-account + cancel-deletion UI)
+// -----------------------------------------------------------------------------
+
+// Fires the SMS code for the authenticated 注销账号 flow. Server scope:
+// caller's own active session — Bearer auto-injected by client interceptor.
+// No store mutation.
+export async function requestDeleteAccountSmsCode(): Promise<void> {
+  await getAccountDeletionApi().sendCode1();
+}
+
+// Submits the deletion confirmation code. Server transitions the account to
+// FROZEN and revokes all tokens (server-side). Whether the call succeeds or
+// errors, we clear the local session via finally — server's revoke is
+// authoritative, so any cached token here is stale on success, and on error
+// (401 / 429 / 5xx) we still drop the session: the user crossed the double-
+// checkbox + sent + entered code threshold and we choose log-out-and-retry-on-
+// reload over leaving the UI half-confident in stale tokens.
+export async function deleteAccount(code: string): Promise<void> {
+  try {
+    await getAccountDeletionApi()._delete({
+      deleteAccountRequest: { code },
+    });
+  } finally {
+    useAuthStore.getState().clearSession();
+  }
+}
+
+// Anonymous endpoint: sends SMS code to the supplied phone for cancel-deletion.
+// No Bearer token needed — caller is unauthenticated (FROZEN account, in
+// freeze period). Server reverse-enumerates errors so all failure modes look
+// the same to the client.
+export async function requestCancelDeletionSmsCode(phone: string): Promise<void> {
+  await getCancelDeletionApi().sendCode({
+    sendCancelDeletionCodeRequest: { phone },
+  });
+}
+
+// Anonymous endpoint: submits the cancel-deletion confirmation. On success
+// server flips the account back to ACTIVE and returns a fresh LoginResponse.
+// We mirror phoneSmsAuth's setSession + loadProfile chain so the UI lands on
+// the home screen with displayName + phone in the store (per FR-019).
+export async function cancelDeletion(phone: string, code: string): Promise<LoginResult> {
+  const response = await getCancelDeletionApi().cancel({
+    cancelDeletionRequest: { phone, code },
+  });
+  const session = assertSession(response);
+  useAuthStore.getState().setSession(session);
+  await loadProfile().catch(() => {
+    /* swallow: AuthGate fallback handles displayName === null */
+  });
+  return session;
 }
 
 // Wires the api-client interceptors against this store. Call once at app boot

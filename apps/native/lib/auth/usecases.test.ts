@@ -11,6 +11,10 @@ const mocks = vi.hoisted(() => ({
   getMe: vi.fn(),
   patchMe: vi.fn(),
   phoneSmsAuthApi: vi.fn(),
+  sendDeletionCode: vi.fn(),
+  deleteAccountApi: vi.fn(),
+  sendCancelDeletionCode: vi.fn(),
+  cancelDeletionApi: vi.fn(),
 }));
 
 vi.mock('@nvy/api-client', () => {
@@ -44,6 +48,14 @@ vi.mock('@nvy/api-client', () => {
     getAccountAuthApi: () => ({ phoneSmsAuth: mocks.phoneSmsAuthApi }),
     getAccountProfileApi: () => ({ getMe: mocks.getMe, patchMe: mocks.patchMe }),
     getAuthApi: () => ({ refreshToken: vi.fn(), logoutAll: vi.fn() }),
+    getAccountDeletionApi: () => ({
+      sendCode1: mocks.sendDeletionCode,
+      _delete: mocks.deleteAccountApi,
+    }),
+    getCancelDeletionApi: () => ({
+      sendCode: mocks.sendCancelDeletionCode,
+      cancel: mocks.cancelDeletionApi,
+    }),
     setTokenGetter: vi.fn(),
     setTokenRefresher: vi.fn(),
     ResponseError,
@@ -53,13 +65,26 @@ vi.mock('@nvy/api-client', () => {
 });
 
 import { ResponseError, FetchError } from '@nvy/api-client';
-import { loadProfile, phoneSmsAuth, updateDisplayName, useAuthStore } from '@nvy/auth';
+import {
+  cancelDeletion,
+  deleteAccount,
+  loadProfile,
+  phoneSmsAuth,
+  requestCancelDeletionSmsCode,
+  requestDeleteAccountSmsCode,
+  updateDisplayName,
+  useAuthStore,
+} from '@nvy/auth';
 
 describe('auth usecases — loadProfile / updateDisplayName / phoneSmsAuth chaining (T2 / FR-003 / FR-004)', () => {
   beforeEach(() => {
     mocks.getMe.mockReset();
     mocks.patchMe.mockReset();
     mocks.phoneSmsAuthApi.mockReset();
+    mocks.sendDeletionCode.mockReset();
+    mocks.deleteAccountApi.mockReset();
+    mocks.sendCancelDeletionCode.mockReset();
+    mocks.cancelDeletionApi.mockReset();
     useAuthStore.setState({
       accountId: null,
       accessToken: null,
@@ -152,6 +177,152 @@ describe('auth usecases — loadProfile / updateDisplayName / phoneSmsAuth chain
       mocks.patchMe.mockRejectedValue(new ResponseError(new Response(null, { status: 429 })));
       await expect(updateDisplayName('小明')).rejects.toBeInstanceOf(ResponseError);
       expect(useAuthStore.getState().displayName).toBeNull();
+    });
+  });
+
+  // -------------------------------------------------------------------------
+  // spec C T1 — delete-account / cancel-deletion wrappers
+  // -------------------------------------------------------------------------
+
+  describe('requestDeleteAccountSmsCode (spec C T1 / FR-004 wrapper path)', () => {
+    it('happy: SDK resolves void → wrapper resolves void', async () => {
+      mocks.sendDeletionCode.mockResolvedValue(undefined);
+      await expect(requestDeleteAccountSmsCode()).resolves.toBeUndefined();
+      expect(mocks.sendDeletionCode).toHaveBeenCalledTimes(1);
+    });
+
+    it('429 re-thrown — store unchanged', async () => {
+      useAuthStore.setState({ accessToken: 'a', isAuthenticated: true });
+      mocks.sendDeletionCode.mockRejectedValue(
+        new ResponseError(new Response(null, { status: 429 })),
+      );
+      await expect(requestDeleteAccountSmsCode()).rejects.toBeInstanceOf(ResponseError);
+      expect(useAuthStore.getState().accessToken).toBe('a');
+      expect(useAuthStore.getState().isAuthenticated).toBe(true);
+    });
+  });
+
+  describe('deleteAccount (spec C T1 / FR-008 / decision 1 finally clearSession)', () => {
+    it('happy: SDK resolves → clearSession called → store cleared', async () => {
+      useAuthStore.setState({
+        accountId: 1,
+        accessToken: 'a',
+        refreshToken: 'r',
+        displayName: '小明',
+        phone: '+8613800138000',
+        isAuthenticated: true,
+      });
+      mocks.deleteAccountApi.mockResolvedValue(undefined);
+
+      await expect(deleteAccount('123456')).resolves.toBeUndefined();
+
+      expect(mocks.deleteAccountApi).toHaveBeenCalledWith({
+        deleteAccountRequest: { code: '123456' },
+      });
+      const state = useAuthStore.getState();
+      expect(state.accountId).toBeNull();
+      expect(state.accessToken).toBeNull();
+      expect(state.refreshToken).toBeNull();
+      expect(state.isAuthenticated).toBe(false);
+    });
+
+    it('error path: SDK rejects → clearSession STILL called (per plan finally block)', async () => {
+      useAuthStore.setState({
+        accountId: 1,
+        accessToken: 'a',
+        refreshToken: 'r',
+        displayName: '小明',
+        phone: '+8613800138000',
+        isAuthenticated: true,
+      });
+      mocks.deleteAccountApi.mockRejectedValue(
+        new ResponseError(new Response(null, { status: 401 })),
+      );
+
+      await expect(deleteAccount('123456')).rejects.toBeInstanceOf(ResponseError);
+
+      // finally block guarantees clearSession runs even on error.
+      const state = useAuthStore.getState();
+      expect(state.accountId).toBeNull();
+      expect(state.accessToken).toBeNull();
+      expect(state.isAuthenticated).toBe(false);
+    });
+
+    it('429 also clears session (server has not yet anonymized — but UI loses confidence)', async () => {
+      useAuthStore.setState({ accessToken: 'a', isAuthenticated: true });
+      mocks.deleteAccountApi.mockRejectedValue(
+        new ResponseError(new Response(null, { status: 429 })),
+      );
+      await expect(deleteAccount('123456')).rejects.toBeInstanceOf(ResponseError);
+      expect(useAuthStore.getState().isAuthenticated).toBe(false);
+    });
+  });
+
+  describe('requestCancelDeletionSmsCode (spec C T1 / FR-006 anonymous path)', () => {
+    it('happy: SDK resolves void → wrapper resolves void', async () => {
+      mocks.sendCancelDeletionCode.mockResolvedValue(undefined);
+      await expect(requestCancelDeletionSmsCode('+8613800138000')).resolves.toBeUndefined();
+      expect(mocks.sendCancelDeletionCode).toHaveBeenCalledWith({
+        sendCancelDeletionCodeRequest: { phone: '+8613800138000' },
+      });
+    });
+
+    it('429 re-thrown — store unchanged (anonymous endpoint, no auth state)', async () => {
+      mocks.sendCancelDeletionCode.mockRejectedValue(
+        new ResponseError(new Response(null, { status: 429 })),
+      );
+      await expect(requestCancelDeletionSmsCode('+8613800138000')).rejects.toBeInstanceOf(
+        ResponseError,
+      );
+      expect(useAuthStore.getState().isAuthenticated).toBe(false);
+    });
+  });
+
+  describe('cancelDeletion (spec C T1 / FR-019 setSession + loadProfile chaining)', () => {
+    it('happy: cancel succeeds + getMe succeeds → both session and profile written', async () => {
+      mocks.cancelDeletionApi.mockResolvedValue({
+        accountId: 7,
+        accessToken: 'access',
+        refreshToken: 'refresh',
+      });
+      mocks.getMe.mockResolvedValue({
+        accountId: 7,
+        phone: '+8613800138000',
+        displayName: '小明',
+        status: 'ACTIVE',
+        createdAt: '2026-05-05T00:00:00Z',
+      });
+
+      await cancelDeletion('+8613800138000', '123456');
+
+      expect(mocks.cancelDeletionApi).toHaveBeenCalledWith({
+        cancelDeletionRequest: { phone: '+8613800138000', code: '123456' },
+      });
+      const state = useAuthStore.getState();
+      expect(state.accountId).toBe(7);
+      expect(state.accessToken).toBe('access');
+      expect(state.refreshToken).toBe('refresh');
+      expect(state.isAuthenticated).toBe(true);
+      expect(state.displayName).toBe('小明');
+      expect(state.phone).toBe('+8613800138000');
+    });
+
+    it('cancel throws on incomplete session response → store unchanged', async () => {
+      mocks.cancelDeletionApi.mockResolvedValue({ accountId: 7 });
+      await expect(cancelDeletion('+8613800138000', '123456')).rejects.toThrow(
+        /incomplete session/i,
+      );
+      expect(useAuthStore.getState().isAuthenticated).toBe(false);
+    });
+
+    it('cancel rejects (401 reverse-enum) → store unchanged, error propagates', async () => {
+      mocks.cancelDeletionApi.mockRejectedValue(
+        new ResponseError(new Response(null, { status: 401 })),
+      );
+      await expect(cancelDeletion('+8613800138000', '123456')).rejects.toBeInstanceOf(
+        ResponseError,
+      );
+      expect(useAuthStore.getState().isAuthenticated).toBe(false);
     });
   });
 

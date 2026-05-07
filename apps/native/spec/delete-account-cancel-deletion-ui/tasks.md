@@ -41,7 +41,7 @@
 
 ---
 
-### T1 [Auth] `packages/auth` 4 wrapper + 单测
+### T1 ✅ [Auth] `packages/auth` 4 wrapper + 单测
 
 **前置**:T0 完成
 
