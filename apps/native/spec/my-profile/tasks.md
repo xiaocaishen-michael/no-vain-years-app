@@ -37,8 +37,8 @@
 | T4  | [Migration]          | 删 `(app)/index.tsx` + 全仓 grep 引用更新(per 决策 5 / SC-009)                                                               | `apps/native/app/(app)/index.tsx`(删) + grep 命中点                     | ✅      |
 | T5  | [Profile][Skeleton]  | profile screen 骨架 + 顶 nav + Hero 区(per FR-004 / FR-005 / FR-006 / FR-007 + 决策 2 / 7)                                   | `apps/native/app/(app)/(tabs)/profile.tsx` + test                       | ✅      |
 | T6  | [Profile][SlideTabs] | 三 slide tabs 状态机 + tap 切换 + 内容占位 + a11y(per FR-008 / FR-009 / FR-014 / SC-003)                                     | `(tabs)/profile.tsx`(扩展)+ test                                        | ✅      |
-| T7  | [Profile][Sticky]    | ScrollView `stickyHeaderIndices` 集成(per FR-018 / CL-001 (b))                                                               | `(tabs)/profile.tsx`(扩展)                                              | pending |
-| T8  | [Integration]        | 集成测 + cross-tab activeTab 保持 + logout 后 (tabs) umount(per CL-003 / SC-007 / SC-010)                                    | `__tests__/integration/my-profile-flow.test.tsx`                        | pending |
+| T7  | [Profile][Sticky]    | ScrollView `stickyHeaderIndices` 集成(per FR-018 / CL-001 (b))                                                               | `(tabs)/profile.tsx`(扩展)                                              | ✅      |
+| T8  | [Integration]        | 集成测 + cross-tab activeTab 保持 + logout 后 (tabs) umount(per CL-003 / SC-007 / SC-010)                                    | `__tests__/integration/my-profile-flow.test.tsx`                        | ✅      |
 | T9  | [Smoke]              | Playwright 真后端冒烟 — 已 onboarded 用户 → (tabs)/profile → 切 slide tabs → 点 ⚙️(dev warning 接受)                         | `apps/native/runtime-debug/2026-05-XX-my-profile-business-flow/` + 截图 | pending |
 
 ### Mockup PHASE 2 阶段(再下 session PR — UI 完成)
