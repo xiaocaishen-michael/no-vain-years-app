@@ -1,7 +1,7 @@
 # Tasks: Delete Account & Cancel Deletion UI (spec C)
 
 > **Companions**: [`spec.md`](./spec.md) / [`plan.md`](./plan.md) / [`design/handoff.md`](./design/handoff.md)
-> **Status**: PHASE 1 T0-T10 + T12 ✅ shipped 2026-05-07(PR [#78](https://github.com/xiaocaishen-michael/no-vain-years-app/pull/78));**PHASE 2 T_mock ✅(本 PR)+ T13/T14/T15/T16 in-progress**;T11 🟡 deferred(等 server release 0.2.0 production deploy)
+> **Status**: PHASE 1 T0-T10 + T12 ✅ shipped 2026-05-07(PR [#78](https://github.com/xiaocaishen-michael/no-vain-years-app/pull/78));**PHASE 2 T_mock + T13 ✅(本 PR)+ T14/T15/T16 in-progress**;T11 🟡 deferred(等 server release 0.2.0 production deploy)
 > **Implementation PR**: PHASE 1 = PR [#78](https://github.com/xiaocaishen-michael/no-vain-years-app/pull/78);PHASE 2 = feature/spec-c-mockup-translation(本会话,见各 task `Commit` 字段;PR # 待 push 后回填)
 > **里程碑依赖**(spec C impl session 才开):
 >
@@ -451,7 +451,7 @@
 
 ---
 
-### T13 [App] 翻译 `delete-account.tsx` — destructive 注销 page UI 完成
+### T13 ✅ [App] 翻译 `delete-account.tsx` — destructive 注销 page UI 完成
 
 **前置**:T_mock 完成 + design-tokens 加 `modal-overlay`(若 shadow.modal 也缺则一并加)
 

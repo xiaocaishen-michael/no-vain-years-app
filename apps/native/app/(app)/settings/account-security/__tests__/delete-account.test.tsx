@@ -210,7 +210,9 @@ describe('DeleteAccountScreen — state machine (spec C T3 / US2 acceptance 1-3 
     await act(async () => {
       vi.advanceTimersByTime(59_000);
     });
-    expect(screen.getByLabelText('send-code').textContent).toMatch(/^发送验证码$/);
+    // PHASE 2 T13: send-code button now contains SMS label prefix; partial match.
+    expect(screen.getByLabelText('send-code').textContent).toMatch(/发送验证码/);
+    expect(screen.getByLabelText('send-code').textContent).not.toMatch(/后可重发/);
     expect(screen.getByLabelText('send-code').getAttribute('aria-disabled')).toBeNull();
   });
 
@@ -385,7 +387,8 @@ describe('DeleteAccountScreen — submit + redirect (spec C T4 / US2 acceptance 
     const submit = screen.getByLabelText('submit');
     expect(submit.getAttribute('aria-disabled')).toBe('true');
     expect(submit.getAttribute('aria-busy')).toBe('true');
-    expect(submit.textContent).toMatch(/submitting/i);
+    // PHASE 2 T13: friendly submitting copy '正在注销...' replaces dev placeholder 'submitting...'.
+    expect(submit.textContent).toMatch(/正在注销/);
 
     await act(async () => {
       resolveDelete?.();

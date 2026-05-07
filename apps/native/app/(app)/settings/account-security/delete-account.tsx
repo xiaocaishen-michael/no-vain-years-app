@@ -1,16 +1,11 @@
-// PHASE 1 PLACEHOLDER — business flow validated; visuals pending mockup.
+// PHASE 2 — mockup translation (per spec C T13 / design/handoff.md § 2).
+// Visual system: NativeWind className + design-tokens (brand / err / warn /
+// surface / line / ink). Hex/px literals are confined to layout-only numeric
+// style (height/width on cells & button) per handoff.md § 5.1 gotcha #3.
 //
-// Per ADR-0017 类 1 (标准 UI) 边界: bare RN components, zero packages/ui
-// imports, zero hex/px/font literals. State machine wired in T3 (this
-// commit); submission + clearSession + redirect lands in T4.
-//
-// State machine (per plan.md):
+// State machine (unchanged from PHASE 1 T3):
 //   IDLE → CHECKBOX_HALF → CHECKBOX_FULL → CODE_SENDING → CODE_SENT
 //        → CODE_TYPING → CODE_READY → SUBMITTING → SUCCESS / SUBMIT_ERROR
-//
-// 60s cooldown after send-code success: setInterval ticks the countdown
-// from 60 → 0 then re-enables the send button. Error path leaves cooldown
-// untouched (server-side rate limit is authoritative; client doesn't bypass).
 
 import { useRouter } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
@@ -23,13 +18,17 @@ import { mapDeletionError } from './delete-account-errors';
 const COPY = {
   warning1: '注销后账号进入 15 天冻结期，期间可登录撤销恢复',
   warning2: '冻结期满后账号数据将永久匿名化，不可恢复',
+  warning1Tag: '可撤销',
+  warning2Tag: '不可逆',
   checkbox1: '我已知晓 15 天冻结期可撤销',
   checkbox2: '我已知晓期满后数据匿名化不可逆',
   sendCode: '发送验证码',
   resendCooldown: (s: number) => `${s}s 后可重发`,
+  smsLabel: 'SMS · 6 位验证码',
   codePlaceholder: '请输入 6 位验证码',
   submit: '确认注销',
-  submitting: 'submitting...',
+  submitting: '正在注销...',
+  submitFootnote: '点击「确认注销」即表示同意进入 15 天冻结期',
   errorRateLimit: '操作太频繁，请稍后再试',
   errorInvalidCode: '验证码错误',
   errorNetwork: '网络错误，请重试',
@@ -51,6 +50,204 @@ function errorCopy(kind: 'rate_limit' | 'invalid_code' | 'network' | 'unknown'):
   }
 }
 
+function SectionLabel({ num, children }: { num: string; children: string }) {
+  return (
+    <View className="flex-row items-center gap-sm">
+      <Text className="font-mono font-semibold text-ink-subtle tracking-widest text-xs">{num}</Text>
+      <Text className="font-mono text-ink-muted tracking-wider text-xs">{children}</Text>
+    </View>
+  );
+}
+
+function WarningBlock() {
+  return (
+    <View className="rounded-md bg-err-soft px-md py-md gap-sm">
+      <View className="flex-row items-start gap-sm">
+        <View className="rounded-full bg-warn mt-1.5" style={{ width: 6, height: 6 }} />
+        <View className="flex-1 flex-row flex-wrap items-baseline gap-sm">
+          <Text className="font-semibold text-warn text-sm">{COPY.warning1Tag}</Text>
+          <Text className="text-ink leading-relaxed text-sm">{COPY.warning1}</Text>
+        </View>
+      </View>
+      <View className="flex-row items-start gap-sm">
+        <View className="rounded-full bg-err mt-1.5" style={{ width: 6, height: 6 }} />
+        <View className="flex-1 flex-row flex-wrap items-baseline gap-sm">
+          <Text className="font-semibold text-err text-sm">{COPY.warning2Tag}</Text>
+          <Text className="text-ink leading-relaxed text-sm">{COPY.warning2}</Text>
+        </View>
+      </View>
+    </View>
+  );
+}
+
+function CheckboxRow({
+  checked,
+  label,
+  ariaLabel,
+  onPress,
+}: {
+  checked: boolean;
+  label: string;
+  ariaLabel: string;
+  onPress: () => void;
+}) {
+  return (
+    <Pressable
+      onPress={onPress}
+      accessibilityLabel={ariaLabel}
+      accessibilityRole="checkbox"
+      accessibilityState={{ checked }}
+      className="flex-row items-center gap-sm py-sm"
+    >
+      <View
+        className={
+          checked
+            ? 'rounded-xs bg-brand-500 items-center justify-center'
+            : 'rounded-xs border border-line-strong bg-surface'
+        }
+        style={{ width: 18, height: 18 }}
+      >
+        {checked ? <Text className="font-bold text-surface text-xs">✓</Text> : null}
+      </View>
+      <Text className="flex-1 text-ink text-sm">{label}</Text>
+    </Pressable>
+  );
+}
+
+function SendCodeRow({
+  state,
+  cooldown,
+  onPress,
+}: {
+  state: 'default' | 'disabled' | 'cooldown';
+  cooldown: number;
+  onPress: () => void;
+}) {
+  const isDisabled = state === 'disabled';
+  const isCooldown = state === 'cooldown';
+  const text = isCooldown ? COPY.resendCooldown(cooldown) : COPY.sendCode;
+  const labelTone = isDisabled ? 'text-ink-subtle' : 'text-ink-muted';
+  const ctaTone = isDisabled ? 'text-ink-subtle' : isCooldown ? 'text-ink-muted' : 'text-brand-500';
+  const containerBg =
+    isCooldown || isDisabled ? 'bg-surface-alt border-line' : 'bg-surface border-brand-100';
+  return (
+    <Pressable
+      accessibilityLabel="send-code"
+      accessibilityRole="button"
+      accessibilityState={{ disabled: state !== 'default' }}
+      onPress={onPress}
+      className={`flex-row items-center justify-between rounded-md border px-md ${containerBg}`}
+      style={{ height: 48 }}
+    >
+      <Text className={`font-medium font-mono text-sm ${labelTone}`}>{COPY.smsLabel}</Text>
+      <Text className={`font-medium text-sm ${ctaTone}`}>{text}</Text>
+    </Pressable>
+  );
+}
+
+function CodeInput({
+  value,
+  onChangeText,
+  disabled,
+  tone,
+}: {
+  value: string;
+  onChangeText: (t: string) => void;
+  disabled: boolean;
+  tone: 'brand' | 'err';
+}) {
+  // Single hidden TextInput for keyboard + a11y; 6 visible cells render value.
+  return (
+    <View className="relative">
+      <TextInput
+        accessibilityLabel="code-input"
+        value={value}
+        onChangeText={(t) => onChangeText(t.replace(/\D/g, '').slice(0, 6))}
+        keyboardType="number-pad"
+        inputMode="numeric"
+        maxLength={6}
+        editable={!disabled}
+        placeholder={COPY.codePlaceholder}
+        className="absolute inset-0 z-10 opacity-0"
+      />
+      <View className="flex-row gap-sm pointer-events-none">
+        {[0, 1, 2, 3, 4, 5].map((i) => {
+          const ch = value[i] ?? '';
+          const isFocused = !disabled && i === value.length;
+          const isFilled = ch !== '';
+          const cellBg = disabled ? 'bg-surface-sunken' : 'bg-surface';
+          let cellBorder: string;
+          if (tone === 'err') {
+            cellBorder = 'border-err';
+          } else if (isFocused) {
+            cellBorder = 'border-brand-500';
+          } else if (isFilled) {
+            cellBorder = 'border-ink';
+          } else if (disabled) {
+            cellBorder = 'border-line';
+          } else {
+            cellBorder = 'border-line-strong';
+          }
+          const charTone = disabled ? 'text-ink-subtle' : 'text-ink';
+          return (
+            <View
+              key={`cell-${String(i)}`}
+              className={`flex-1 rounded-sm border-2 items-center justify-center ${cellBg} ${cellBorder}`}
+              style={{ height: 48 }}
+            >
+              <Text className={`font-mono font-semibold text-lg ${charTone}`}>{ch}</Text>
+            </View>
+          );
+        })}
+      </View>
+    </View>
+  );
+}
+
+function ErrorRow({ msg }: { msg: string }) {
+  return (
+    <View
+      className="flex-row items-center gap-sm rounded-sm bg-err-soft px-sm py-sm"
+      accessibilityRole="alert"
+    >
+      <Text className="font-bold text-err text-sm">!</Text>
+      <Text accessibilityLabel="error-row" className="flex-1 font-medium text-err text-sm">
+        {msg}
+      </Text>
+    </View>
+  );
+}
+
+function SubmitButton({
+  disabled,
+  busy,
+  onPress,
+}: {
+  disabled: boolean;
+  busy: boolean;
+  onPress: () => void;
+}) {
+  const enabled = !disabled;
+  const containerCls = enabled
+    ? 'bg-err shadow-cta items-center justify-center rounded-md'
+    : 'bg-surface-sunken items-center justify-center rounded-md';
+  const labelTone = enabled ? 'text-surface' : 'text-ink-subtle';
+  return (
+    <Pressable
+      accessibilityLabel="submit"
+      accessibilityRole="button"
+      accessibilityState={{ disabled, busy }}
+      onPress={onPress}
+      className={containerCls}
+      style={{ height: 52 }}
+    >
+      <Text className={`font-semibold tracking-wide text-base ${labelTone}`}>
+        {busy ? COPY.submitting : COPY.submit}
+      </Text>
+    </Pressable>
+  );
+}
+
 export default function DeleteAccountScreen() {
   const [checkbox1, setCheckbox1] = useState(false);
   const [checkbox2, setCheckbox2] = useState(false);
@@ -63,7 +260,6 @@ export default function DeleteAccountScreen() {
 
   const router = useRouter();
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  // Synchronous guards for double-tap before state propagates.
   const sendingRef = useRef(false);
   const submittingRef = useRef(false);
 
@@ -92,12 +288,8 @@ export default function DeleteAccountScreen() {
     }, 1000);
   };
 
-  // Promise chain rather than async/await: vitest's spy infrastructure
-  // tracks rejected promises returned by mocks even when the consumer catches
-  // them via async/await wrapping. Direct .then/.catch attaches the handler to
-  // the original promise, which the rejection tracker recognizes.
   const handleSendCode = () => {
-    if (sendingRef.current) return; // synchronous race guard
+    if (sendingRef.current) return;
     sendingRef.current = true;
     setIsSendingCode(true);
     setErrorMsg(null);
@@ -109,8 +301,6 @@ export default function DeleteAccountScreen() {
       .catch((e: unknown) => {
         const mapped = mapDeletionError(e);
         setErrorMsg(errorCopy(mapped.kind));
-        // Per US3 acceptance 1: on 429 the server already counted the
-        // request, kick the cooldown locally too to prevent further hammering.
         if (mapped.kind === 'rate_limit') {
           startCooldown();
         }
@@ -122,13 +312,12 @@ export default function DeleteAccountScreen() {
   };
 
   const handleSubmit = () => {
-    if (submittingRef.current) return; // synchronous race guard
+    if (submittingRef.current) return;
     submittingRef.current = true;
     setIsSubmitting(true);
     setErrorMsg(null);
     deleteAccount(code)
       .then(() => {
-        // deleteAccount() finally-block has already cleared the session.
         router.replace('/(auth)/login');
       })
       .catch((e: unknown) => {
@@ -145,57 +334,54 @@ export default function DeleteAccountScreen() {
   const canSendCode = bothChecked && cooldown === 0 && !isSendingCode && !isSubmitting;
   const canSubmit = hasSentCode && code.length === 6 && !isSubmitting;
 
+  let sendCodeState: 'default' | 'disabled' | 'cooldown';
+  if (cooldown > 0) {
+    sendCodeState = 'cooldown';
+  } else if (canSendCode) {
+    sendCodeState = 'default';
+  } else {
+    sendCodeState = 'disabled';
+  }
+
   return (
-    <View>
-      <Text>{COPY.warning1}</Text>
-      <Text>{COPY.warning2}</Text>
-      <Pressable
-        onPress={() => setCheckbox1((v) => !v)}
-        accessibilityLabel="checkbox-1"
-        accessibilityState={{ checked: checkbox1 }}
-      >
-        <Text>
-          {checkbox1 ? '☑ ' : '☐ '}
-          {COPY.checkbox1}
-        </Text>
-      </Pressable>
-      <Pressable
-        onPress={() => setCheckbox2((v) => !v)}
-        accessibilityLabel="checkbox-2"
-        accessibilityState={{ checked: checkbox2 }}
-      >
-        <Text>
-          {checkbox2 ? '☑ ' : '☐ '}
-          {COPY.checkbox2}
-        </Text>
-      </Pressable>
-      <Pressable
-        accessibilityLabel="send-code"
-        onPress={handleSendCode}
-        accessibilityState={{ disabled: !canSendCode }}
-        style={{ opacity: canSendCode ? 1 : 0.5 }}
-      >
-        <Text>{cooldown > 0 ? COPY.resendCooldown(cooldown) : COPY.sendCode}</Text>
-      </Pressable>
-      <TextInput
-        accessibilityLabel="code-input"
-        value={code}
-        onChangeText={(t) => setCode(t.replace(/\D/g, '').slice(0, 6))}
-        keyboardType="number-pad"
-        inputMode="numeric"
-        maxLength={6}
-        editable={hasSentCode && !isSubmitting}
-        placeholder={COPY.codePlaceholder}
-      />
-      <Pressable
-        accessibilityLabel="submit"
-        onPress={handleSubmit}
-        accessibilityState={{ disabled: !canSubmit, busy: isSubmitting }}
-        style={{ opacity: canSubmit ? 1 : 0.5 }}
-      >
-        <Text>{isSubmitting ? COPY.submitting : COPY.submit}</Text>
-      </Pressable>
-      {errorMsg !== null && <Text accessibilityLabel="error-row">{errorMsg}</Text>}
+    <View className="flex-1 bg-surface">
+      <View className="px-md pt-md pb-xl gap-md">
+        <SectionLabel num="01">RISK · 风险告知</SectionLabel>
+        <WarningBlock />
+
+        <SectionLabel num="02">CONFIRM · 双重知晓确认</SectionLabel>
+        <View className="rounded-md border border-line-soft bg-surface-alt px-sm">
+          <CheckboxRow
+            checked={checkbox1}
+            label={COPY.checkbox1}
+            ariaLabel="checkbox-1"
+            onPress={() => setCheckbox1((v) => !v)}
+          />
+          <View className="bg-line-soft" style={{ height: 1, marginLeft: 26 }} />
+          <CheckboxRow
+            checked={checkbox2}
+            label={COPY.checkbox2}
+            ariaLabel="checkbox-2"
+            onPress={() => setCheckbox2((v) => !v)}
+          />
+        </View>
+
+        <SectionLabel num="03">VERIFY · 短信验证</SectionLabel>
+        <View className="gap-sm">
+          <SendCodeRow state={sendCodeState} cooldown={cooldown} onPress={handleSendCode} />
+          <CodeInput
+            value={code}
+            onChangeText={setCode}
+            disabled={!hasSentCode || isSubmitting}
+            tone={errorMsg !== null ? 'err' : 'brand'}
+          />
+        </View>
+
+        {errorMsg !== null && <ErrorRow msg={errorMsg} />}
+
+        <SubmitButton disabled={!canSubmit} busy={isSubmitting} onPress={handleSubmit} />
+        <Text className="text-center text-ink-subtle text-xs">{COPY.submitFootnote}</Text>
+      </View>
     </View>
   );
 }
