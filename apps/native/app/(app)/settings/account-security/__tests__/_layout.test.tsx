@@ -69,4 +69,15 @@ describe('AccountSecurityLayout (spec account-settings-shell T6)', () => {
     expect(del).toBeDefined();
     expect(del?.options['title']).toBe('注销账号');
   });
+
+  it('hides header for login-management — its nested _layout owns the header', () => {
+    // login-management is a nested stack (index + [id]) with its own _layout
+    // providing header titles. Without headerShown:false here the outer stack
+    // would auto-register it with route name 'login-management' as title and
+    // double-stack the header.
+    render(<AccountSecurityLayout />);
+    const lm = capturedScreens.find((s) => s.name === 'login-management');
+    expect(lm).toBeDefined();
+    expect(lm?.options['headerShown']).toBe(false);
+  });
 });
