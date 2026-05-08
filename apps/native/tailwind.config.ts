@@ -18,7 +18,12 @@ const config: Config = {
       spacing: tokens.spacing,
       borderRadius: tokens.borderRadius,
       fontFamily: tokens.fontFamily,
-      boxShadow: tokens.boxShadow,
+      boxShadow: {
+        ...tokens.boxShadow,
+        // device-management spec — RemoveDeviceSheet elevation + error-cta variant
+        'cta-err': '0 4px 12px -2px rgba(239,68,68,0.28)',
+        sheet: '0 -4px 24px -6px rgba(17,24,39,0.18)',
+      },
     },
   },
 };

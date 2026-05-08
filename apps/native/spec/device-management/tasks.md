@@ -131,7 +131,7 @@ export function registerAuthInterceptor(): void {
 
 ---
 
-### T5 [Lib] `formatLastActive` helper
+### T5 ✅ [Lib] `formatLastActive` helper
 
 **File**: `apps/native/lib/format/datetime.ts`（**改**，加 formatLastActive）
 
@@ -148,7 +148,7 @@ export function registerAuthInterceptor(): void {
 
 ---
 
-### T6 [Lib] `mapDeviceError` + `deviceErrorCopy`
+### T6 ✅ [Lib] `mapDeviceError` + `deviceErrorCopy`
 
 **File**: `apps/native/lib/error/device-errors.ts`（**新建**）
 
@@ -232,7 +232,7 @@ function AuthGate({ children }: { children: React.ReactNode }) {
 
 ---
 
-### T9 [Component] `DeviceIcon.tsx` copy from mockup
+### T9 ✅ [Component] `DeviceIcon.tsx` copy from mockup
 
 **File**: `apps/native/app/(app)/settings/account-security/login-management/DeviceIcon.tsx`（**新建**）
 
@@ -244,7 +244,7 @@ function AuthGate({ children }: { children: React.ReactNode }) {
 
 ---
 
-### T10 [Page] `login-management/_layout.tsx`
+### T10 ✅ [Page] `login-management/_layout.tsx`
 
 **File**: `apps/native/app/(app)/settings/account-security/login-management/_layout.tsx`（**新建**）
 
@@ -385,7 +385,7 @@ const COPY = {
 
 ---
 
-### T16 [Wiring] tailwind.config.ts 加 2 新 boxShadow
+### T16 ✅ [Wiring] tailwind.config.ts 加 2 新 boxShadow
 
 **File**: `apps/native/tailwind.config.ts`（**改**，加 `boxShadow.cta-err` + `boxShadow.sheet`）
 
