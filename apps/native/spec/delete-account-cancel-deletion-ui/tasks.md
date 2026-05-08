@@ -1,7 +1,7 @@
 # Tasks: Delete Account & Cancel Deletion UI (spec C)
 
 > **Companions**: [`spec.md`](./spec.md) / [`plan.md`](./plan.md) / [`design/handoff.md`](./design/handoff.md)
-> **Status**: PHASE 1 T0-T10 + T12 ✅ shipped 2026-05-07(PR [#78](https://github.com/xiaocaishen-michael/no-vain-years-app/pull/78));PHASE 2 T_mock + T13 + T14 + T15 + T16-doc ✅ shipped 2026-05-07(PR [#79](https://github.com/xiaocaishen-michael/no-vain-years-app/pull/79));**T16-smoke ✅ 2026-05-08(本 PR)**;T11 真后端冒烟 🟡 deferred(等 server release 0.2.0 production deploy)
+> **Status**: PHASE 1 T0-T10 + T12 ✅ shipped 2026-05-07(PR [#78](https://github.com/xiaocaishen-michael/no-vain-years-app/pull/78));PHASE 2 T_mock + T13 + T14 + T15 + T16-doc ✅ shipped 2026-05-07(PR [#79](https://github.com/xiaocaishen-michael/no-vain-years-app/pull/79));T16-smoke ✅ 2026-05-08(PR [#81](https://github.com/xiaocaishen-michael/no-vain-years-app/pull/81));**T11 真后端 prod 冒烟 ✅ 2026-05-08**(本 PR;release v0.2.0 + spec D `ACCOUNT_IN_FREEZE_PERIOD` 错误码集成验证)
 > **Implementation PR**: PHASE 1 = PR [#78](https://github.com/xiaocaishen-michael/no-vain-years-app/pull/78);PHASE 2 = feature/spec-c-mockup-translation(本会话,见各 task `Commit` 字段;PR # 待 push 后回填)
 > **里程碑依赖**(spec C impl session 才开):
 >
@@ -353,15 +353,13 @@
 
 ---
 
-### T11 🟡 [Smoke] 真后端冒烟 + 截图归档(post-merge deferred)
+### T11 ✅ [Smoke] 真后端 prod 冒烟 + 截图归档
 
-> **Deferral reason**: 前置 "spec D server production deploy" 未满足 — server 仓 release PR #40(release 0.2.0)仍 OPEN(`autorelease: pending`),production 部署的仍是 v0.1.0(无 ACCOUNT_IN_FREEZE_PERIOD 错误码)。本 impl PR 走 `pnpm api:gen:dev`(localhost spec)生成 SDK,T10 集成测合同性覆盖完整 freeze flow。T11 真后端冒烟应在以下条件满足后跑:
+> **Closed 2026-05-08**: 三前置全满足后落地。release PR #40 (v0.2.0) merged at 2026-05-07 23:09 CST + deploy workflow 绿(GHA `Deploy to production ECS in 1m27s`);prod `/v3/api-docs` 含两 deletion controller + `AccountProfileResponse.phone`;`ACCOUNT_IN_FREEZE_PERIOD` 错误码经 `phone-sms-auth` 403 暴露(spec D PR #143 集成生效)。
 >
-> 1. server release PR #40 merged + Deploy workflow 绿
-> 2. production `/v3/api-docs` 含两 deletion controller + ACCOUNT_IN_FREEZE_PERIOD 错误码可触发
-> 3. 测试账号准备(phone Y → register / phone X → 注销发起后 FROZEN)
+> **执行**:单测试账号 `+8613100000008`(phone Y = phone X 同号顺序复用)经历 ACTIVE → FROZEN(path 1 注销)→ ACTIVE(path 2 撤销)三态闭环;4 次 SMS code(SMS 1-4);10 张截图(`02-onboarding` 自动 skip 因 round 1 已 onboard);pageErrors=0 / networkFails=0。详见 [`apps/native/runtime-debug/2026-05-08-delete-account-cancel-deletion-business-flow/README.md`](../../runtime-debug/2026-05-08-delete-account-cancel-deletion-business-flow/README.md)。
 >
-> 完成后回填本 task 为 ✅ + 截图归档路径(`runtime-debug/<date>-delete-account-cancel-deletion-business-flow/`)。
+> **Follow-up**(继承 PR #80):**M3 内测前必须分 staging,destructive case 永远在 staging 跑;prod 留 only-read smoke**。本次 prod 留下 `+8613100000008 测试C` 账号污染(M3 staging 分离时一并清)。
 
 **前置**:T10 完成 + spec D server 已 production deploy + spec B impl 已 ship + 测试账号准备(测试账号 phone + 提前在 Postman / 等价工具 trigger 注销 → FROZEN 状态)
 
