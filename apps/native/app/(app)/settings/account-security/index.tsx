@@ -10,7 +10,7 @@ const COPY = {
   phone: '手机号',
   realname: '实名认证',
   thirdPartyBinding: '第三方账号绑定',
-  loginDevices: '登录设备与授权管理',
+  loginManagement: '登录管理',
   deleteAccount: '注销账号',
   securityTips: '安全小知识',
 };
@@ -37,7 +37,10 @@ export default function AccountSecurityIndex() {
       </Card>
 
       <Card>
-        <Row label={COPY.loginDevices} disabled />
+        <Row
+          label={COPY.loginManagement}
+          onPress={() => router.push('/(app)/settings/account-security/login-management')}
+        />
       </Card>
 
       <Card>

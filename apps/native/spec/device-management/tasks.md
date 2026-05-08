@@ -330,7 +330,7 @@ export default function LoginManagementLayout() {
 
 ---
 
-### T14 [Wiring] `account-security/index.tsx` row 改名 + 启用
+### T14 ✅ [Wiring] `account-security/index.tsx` row 改名 + 启用
 
 **File**: `apps/native/app/(app)/settings/account-security/index.tsx`（**改**）
 
