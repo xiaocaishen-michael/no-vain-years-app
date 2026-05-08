@@ -143,20 +143,24 @@ export async function requestDeleteAccountSmsCode(): Promise<void> {
 }
 
 // Submits the deletion confirmation code. Server transitions the account to
-// FROZEN and revokes all tokens (server-side). Whether the call succeeds or
-// errors, we clear the local session via finally — server's revoke is
-// authoritative, so any cached token here is stale on success, and on error
-// (401 / 429 / 5xx) we still drop the session: the user crossed the double-
-// checkbox + sent + entered code threshold and we choose log-out-and-retry-on-
-// reload over leaving the UI half-confident in stale tokens.
+// FROZEN and revokes all tokens; on SUCCESS we clear the local session
+// (server's revoke is authoritative). On ERROR we INTENTIONALLY KEEP the
+// session so handleSubmit's catch can render mapDeletionError → setErrorMsg
+// ("验证码错误" / "操作太频繁") and the user can retry — clearing here would
+// trigger AuthGate to /(auth)/login before the React render cycle that paints
+// the error,leaving the UI silent (the bug behavior surfaced during dev:
+// user enters wrong code → 401 INVALID_DELETION_CODE → finally clearSession
+// → AuthGate kicks to login → user sees no error,thinks click did nothing).
+//
+// Token-expiry 401 (not business INVALID_DELETION_CODE) is handled separately
+// by the api-client 401 middleware (single-flight refresh + retry once); if
+// refresh ALSO fails refreshTokenFlow's own catch already clears the session
+// for us. So this function is safe to keep token on every other error path.
 export async function deleteAccount(code: string): Promise<void> {
-  try {
-    await getAccountDeletionApi()._delete({
-      deleteAccountRequest: { code },
-    });
-  } finally {
-    useAuthStore.getState().clearSession();
-  }
+  await getAccountDeletionApi()._delete({
+    deleteAccountRequest: { code },
+  });
+  useAuthStore.getState().clearSession();
 }
 
 // Anonymous endpoint: sends SMS code to the supplied phone for cancel-deletion.
