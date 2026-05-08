@@ -25,7 +25,6 @@ const COPY = {
   sendCode: '发送验证码',
   resendCooldown: (s: number) => `${s}s 后可重发`,
   smsLabel: 'SMS · 6 位验证码',
-  codePlaceholder: '请输入 6 位验证码',
   submit: '确认注销',
   submitting: '正在注销...',
   submitFootnote: '点击「确认注销」即表示同意进入 15 天冻结期',
@@ -167,7 +166,6 @@ function CodeInput({
         inputMode="numeric"
         maxLength={6}
         editable={!disabled}
-        placeholder={COPY.codePlaceholder}
         className="absolute inset-0 z-10 opacity-0"
       />
       <View className="flex-row gap-sm pointer-events-none">
