@@ -1,0 +1,1040 @@
+<!doctype html>
+<html lang="zh">
+<head>
+<meta charset="utf-8"/>
+<title>account-center · Login v2 · 4 states</title>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<style>
+html, body { margin: 0; min-height: 100%; background: #F2F4F7; font-family: Inter, "Noto Sans SC", -apple-system, BlinkMacSystemFont, "PingFang SC", sans-serif; color: #1A1A1A; }
+#root { min-height: 100vh; }
+button { font: inherit; }
+</style>
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel" data-presets="env,react">
+// preview/tokens-shim.jsx
+// Translates the no-vain-years Tailwind class names used in the RN .tsx
+// source files into plain CSS-in-JS lookups, so the preview can render
+// without a real Tailwind build. Keep in sync with tailwind.config.js.
+
+const NVY_TOKENS = {
+  color: {
+    "brand-50":  "#EEF3FE",  "brand-100": "#D5E0FC", "brand-200": "#ABC1F9",
+    "brand-300": "#7DA0F5",  "brand-400": "#4F7EEF", "brand-500": "#2456E5",
+    "brand-600": "#1D47C2",  "brand-700": "#173BA0", "brand-soft": "#E8EEFD",
+    "ink":        "#1A1A1A", "ink-muted":  "#666666", "ink-subtle": "#999999",
+    "line":       "#E5E7EB", "line-strong": "#D1D5DB", "line-soft": "#EEF0F3",
+    "surface":    "#FFFFFF", "surface-alt": "#F9F9F9", "surface-sunken": "#F2F4F7",
+    "ok":         "#10B981", "ok-soft":     "#E7F8F1",
+    "err":        "#EF4444", "err-soft":    "#FDECEC",
+    "warn":       "#F59E0B", "warn-soft":   "#FEF3DC",
+    "white":      "#FFFFFF", "transparent": "transparent",
+  },
+  // spacing tokens (px). Match tailwind.config.js's spacing extension.
+  space: { xs: 4, sm: 8, md: 16, lg: 24, xl: 32, "2xl": 48, "3xl": 64 },
+  // numeric ramp Tailwind already gives (rem*4). Used by p-3, mt-7 etc.
+  num: { 0:0, 0.5:2, 1:4, 1.5:6, 2:8, 2.5:10, 3:12, 3.5:14, 4:16, 5:20, 6:24, 7:28, 8:32, 9:36, 10:40, 11:44, 12:48, 14:56, 16:64, 18:72, 20:80, 24:96, 32:128 },
+  radius: { none: 0, sm: 8, md: 12, lg: 16, xl: 20, "2xl": 16, "3xl": 24, full: 9999 },
+  fontSize: {
+    "[10px]": 10, "[11px]": 11, "[8px]": 8,
+    xs: 12, sm: 14, base: 16, lg: 18, xl: 20, "2xl": 24, "3xl": 30,
+  },
+  fontWeight: { normal: 400, medium: 500, semibold: 600, bold: 700 },
+  shadow: {
+    card: "0 1px 2px 0 rgba(17,24,39,.05), 0 1px 3px 0 rgba(17,24,39,.04)",
+    cta:  "0 4px 12px -2px rgba(36,86,229,0.25)",
+  },
+  tracking: { tight: "-0.015em", tighter: "-0.025em", wide: "0.025em", wider: "0.05em", widest: "0.1em" },
+};
+
+// Parse a NativeWind-style className string into a flat React style object.
+// Only handles the subset actually used by our LoginScreen .tsx files.
+function nvyParseClasses(classNames) {
+  if (!classNames) return {};
+  const style = {};
+  const tokens = String(classNames).split(/\s+/).filter(Boolean);
+  for (const t of tokens) applyToken(t, style);
+  return style;
+}
+
+function applyToken(t, s) {
+  // ---- layout ----
+  if (t === "flex-1") { s.flex = 1; return; }
+  if (t === "flex-row") { s.display = "flex"; s.flexDirection = "row"; return; }
+  if (t === "flex-col") { s.display = "flex"; s.flexDirection = "column"; return; }
+  if (t === "flex-wrap") { s.flexWrap = "wrap"; return; }
+  if (t === "items-start") { s.alignItems = "flex-start"; return; }
+  if (t === "items-center") { s.alignItems = "center"; return; }
+  if (t === "items-end") { s.alignItems = "flex-end"; return; }
+  if (t === "justify-start") { s.justifyContent = "flex-start"; return; }
+  if (t === "justify-center") { s.justifyContent = "center"; return; }
+  if (t === "justify-between") { s.justifyContent = "space-between"; return; }
+  if (t === "justify-end") { s.justifyContent = "flex-end"; return; }
+  if (t === "self-center") { s.alignSelf = "center"; return; }
+  if (t === "relative") { s.position = "relative"; return; }
+  if (t === "absolute") { s.position = "absolute"; return; }
+  if (t === "overflow-hidden") { s.overflow = "hidden"; return; }
+  if (t === "leading-none") { s.lineHeight = 1; return; }
+  if (t === "leading-snug") { s.lineHeight = 1.4; return; }
+  if (t === "leading-relaxed") { s.lineHeight = 1.6; return; }
+  if (t === "tracking-tight") { s.letterSpacing = "-0.015em"; return; }
+  if (t === "tracking-wide") { s.letterSpacing = "0.025em"; return; }
+  if (t === "tracking-wider") { s.letterSpacing = "0.05em"; return; }
+  if (t === "tracking-widest") { s.letterSpacing = "0.1em"; return; }
+  if (t === "text-center") { s.textAlign = "center"; return; }
+  if (t === "drop-shadow-sm") { s.filter = "drop-shadow(0 1px 1px rgba(0,0,0,.05))"; return; }
+
+  // ---- gap ----
+  let m;
+  if ((m = t.match(/^gap-(\S+)$/))) { const v = sizeFor(m[1]); if (v != null) s.gap = v; return; }
+  if ((m = t.match(/^gap-x-(\S+)$/))) { const v = sizeFor(m[1]); if (v != null) s.columnGap = v; return; }
+  if ((m = t.match(/^gap-y-(\S+)$/))) { const v = sizeFor(m[1]); if (v != null) s.rowGap = v; return; }
+
+  // ---- padding / margin ----
+  if ((m = t.match(/^p-(\S+)$/)))  { const v = sizeFor(m[1]); if (v != null) s.padding = v; return; }
+  if ((m = t.match(/^px-(\S+)$/))) { const v = sizeFor(m[1]); if (v != null) { s.paddingLeft = v; s.paddingRight = v; } return; }
+  if ((m = t.match(/^py-(\S+)$/))) { const v = sizeFor(m[1]); if (v != null) { s.paddingTop = v; s.paddingBottom = v; } return; }
+  if ((m = t.match(/^pt-(\S+)$/))) { const v = sizeFor(m[1]); if (v != null) s.paddingTop = v; return; }
+  if ((m = t.match(/^pb-(\S+)$/))) { const v = sizeFor(m[1]); if (v != null) s.paddingBottom = v; return; }
+  if ((m = t.match(/^pl-(\S+)$/))) { const v = sizeFor(m[1]); if (v != null) s.paddingLeft = v; return; }
+  if ((m = t.match(/^pr-(\S+)$/))) { const v = sizeFor(m[1]); if (v != null) s.paddingRight = v; return; }
+  if ((m = t.match(/^m-(\S+)$/)))  { const v = sizeFor(m[1]); if (v != null) s.margin = v; return; }
+  if ((m = t.match(/^mx-(\S+)$/))) { const v = sizeFor(m[1]); if (v != null) { s.marginLeft = v; s.marginRight = v; } return; }
+  if ((m = t.match(/^my-(\S+)$/))) { const v = sizeFor(m[1]); if (v != null) { s.marginTop = v; s.marginBottom = v; } return; }
+  if ((m = t.match(/^mt-(\S+)$/))) { const v = sizeFor(m[1]); if (v != null) s.marginTop = v; return; }
+  if ((m = t.match(/^mb-(\S+)$/))) { const v = sizeFor(m[1]); if (v != null) s.marginBottom = v; return; }
+  if ((m = t.match(/^ml-(\S+)$/))) { const v = sizeFor(m[1]); if (v != null) s.marginLeft = v; return; }
+  if ((m = t.match(/^mr-(\S+)$/))) { const v = sizeFor(m[1]); if (v != null) s.marginRight = v; return; }
+
+  // ---- width / height ----
+  if ((m = t.match(/^w-(\S+)$/))) { const v = wOrH(m[1], "w"); if (v != null) s.width = v; return; }
+  if ((m = t.match(/^h-(\S+)$/))) { const v = wOrH(m[1], "h"); if (v != null) s.height = v; return; }
+  if ((m = t.match(/^max-w-(\S+)$/))) { const v = maxW(m[1]); if (v != null) s.maxWidth = v; return; }
+  if (t === "h-px") { s.height = 1; return; }
+  if (t === "w-px") { s.width = 1; return; }
+
+  // ---- positioning ----
+  if ((m = t.match(/^top-(\S+)$/)))    { const v = sizeFor(m[1]); if (v != null) s.top = v; return; }
+  if ((m = t.match(/^bottom-(\S+)$/))) { const v = sizeFor(m[1]); if (v != null) s.bottom = v; return; }
+  if ((m = t.match(/^left-(\S+)$/)))   { const v = sizeFor(m[1]); if (v != null) s.left = v; return; }
+  if ((m = t.match(/^right-(\S+)$/)))  { const v = sizeFor(m[1]); if (v != null) s.right = v; return; }
+  if ((m = t.match(/^-top-(\S+)$/)))    { const v = sizeFor(m[1]); if (v != null) s.top = -v; return; }
+  if ((m = t.match(/^-bottom-(\S+)$/))) { const v = sizeFor(m[1]); if (v != null) s.bottom = -v; return; }
+  if ((m = t.match(/^-translate-x-1\/2$/))) { s.transform = (s.transform || "") + " translateX(-50%)"; return; }
+  if ((m = t.match(/^left-1\/2$/))) { s.left = "50%"; return; }
+
+  // ---- background / text colors ----
+  if ((m = t.match(/^bg-(.+)$/))) {
+    const c = colorOrAlpha(m[1]);
+    if (c) s.backgroundColor = c;
+    return;
+  }
+  if ((m = t.match(/^text-(.+)$/))) {
+    // text- can be size, weight, or color
+    if (NVY_TOKENS.fontSize[m[1]] != null) { s.fontSize = NVY_TOKENS.fontSize[m[1]]; return; }
+    if (m[1] === "white") { s.color = "#fff"; return; }
+    const c = colorOrAlpha(m[1]);
+    if (c) s.color = c;
+    return;
+  }
+  if ((m = t.match(/^font-(\S+)$/))) {
+    if (m[1] === "sans") { s.fontFamily = 'Inter, "Noto Sans SC", -apple-system, sans-serif'; return; }
+    if (m[1] === "mono") { s.fontFamily = '"JetBrains Mono", "SF Mono", Menlo, monospace'; return; }
+    if (NVY_TOKENS.fontWeight[m[1]]) { s.fontWeight = NVY_TOKENS.fontWeight[m[1]]; return; }
+    return;
+  }
+
+  // ---- border ----
+  if (t === "border")    { s.borderWidth = 1; s.borderStyle = "solid"; if (!s.borderColor) s.borderColor = NVY_TOKENS.color.line; return; }
+  if (t === "border-b")  { s.borderBottomWidth = 1; s.borderStyle = "solid"; if (!s.borderColor) s.borderColor = NVY_TOKENS.color.line; return; }
+  if (t === "border-t")  { s.borderTopWidth = 1; s.borderStyle = "solid"; if (!s.borderColor) s.borderColor = NVY_TOKENS.color.line; return; }
+  if ((m = t.match(/^border-\[([\d.]+)px\]$/))) { s.borderWidth = parseFloat(m[1]); s.borderStyle = "solid"; return; }
+  if ((m = t.match(/^border-(.+)$/))) {
+    const c = colorOrAlpha(m[1]);
+    if (c) s.borderColor = c;
+    return;
+  }
+
+  // ---- radius ----
+  if (t === "rounded-full")   { s.borderRadius = 9999; return; }
+  if (t === "rounded-sm")     { s.borderRadius = 4; return; }
+  if (t === "rounded")        { s.borderRadius = 6; return; }
+  if (t === "rounded-md")     { s.borderRadius = 12; return; }
+  if (t === "rounded-lg")     { s.borderRadius = 16; return; }
+  if (t === "rounded-xl")     { s.borderRadius = 12; return; }
+  if (t === "rounded-2xl")    { s.borderRadius = 16; return; }
+  if (t === "rounded-3xl")    { s.borderRadius = 24; return; }
+  if ((m = t.match(/^rounded-\[(\d+)px\]$/))) { s.borderRadius = parseFloat(m[1]); return; }
+
+  // ---- shadow ----
+  if (t === "shadow-sm")   { s.boxShadow = NVY_TOKENS.shadow.card; return; }
+  if (t === "shadow-card") { s.boxShadow = NVY_TOKENS.shadow.card; return; }
+  if (t === "shadow-cta")  { s.boxShadow = NVY_TOKENS.shadow.cta; return; }
+
+  // ---- opacity ----
+  if ((m = t.match(/^opacity-(\d+)$/))) { s.opacity = parseInt(m[1], 10) / 100; return; }
+
+  // fractions
+  if (t === "w-1/3") { s.width = "33.333%"; return; }
+  if (t === "w-1/2") { s.width = "50%"; return; }
+  if (t === "w-2/3") { s.width = "66.666%"; return; }
+  if (t === "w-3/4") { s.width = "75%"; return; }
+
+  // active: / focus: / disabled: variants are best-effort no-ops in preview
+  if (/^(active|focus|disabled|md|hover):/.test(t)) return;
+}
+
+function sizeFor(token) {
+  // ink/brand etc. won't reach here — sizeFor is for spacing-like tokens.
+  if (NVY_TOKENS.space[token] != null) return NVY_TOKENS.space[token];
+  if (token in NVY_TOKENS.num) return NVY_TOKENS.num[token];
+  const m = String(token).match(/^\[(\d+)px\]$/);
+  if (m) return parseInt(m[1], 10);
+  return null;
+}
+
+function wOrH(token, axis) {
+  if (token === "full") return "100%";
+  if (token === "auto") return "auto";
+  return sizeFor(token);
+}
+function maxW(token) {
+  const map = { xs: 320, sm: 384, md: 448, lg: 512, xl: 576, "2xl": 672, "[1700px]": 1700 };
+  if (map[token] != null) return map[token];
+  const m = token.match(/^\[(\d+)px\]$/);
+  if (m) return parseInt(m[1], 10);
+  return null;
+}
+
+function colorOrAlpha(token) {
+  // alpha syntax: white/30, ink-subtle/30, brand-200/40
+  const m = token.match(/^(.+)\/(\d+)$/);
+  if (m) {
+    const base = NVY_TOKENS.color[m[1]] || (m[1] === "white" ? "#FFFFFF" : null);
+    if (!base) return null;
+    return hexToRgba(base, parseInt(m[2], 10) / 100);
+  }
+  if (NVY_TOKENS.color[token]) return NVY_TOKENS.color[token];
+  return null;
+}
+
+function hexToRgba(hex, a) {
+  const c = hex.replace("#", "");
+  const v = c.length === 3 ? c.split("").map(x => x + x).join("") : c;
+  const r = parseInt(v.slice(0,2), 16), g = parseInt(v.slice(2,4), 16), b = parseInt(v.slice(4,6), 16);
+  return `rgba(${r},${g},${b},${a})`;
+}
+
+window.nvyParseClasses = nvyParseClasses;
+window.NVY_TOKENS = NVY_TOKENS;
+
+// preview/rn-shim.jsx
+// Minimal browser shim for react-native primitives. Translates className
+// (NativeWind utility strings) to inline CSS via nvyParseClasses, and renders
+// equivalent DOM nodes so the .tsx source can be loaded by Babel-standalone
+// without a real RN bundler. Used ONLY by the design preview.
+
+const RN_View = React.forwardRef(function View({ className, style, children, ...rest }, ref) {
+  const s = { display: "flex", flexDirection: "column", boxSizing: "border-box", ...nvyParseClasses(className), ...(style || {}) };
+  return <div ref={ref} style={s} {...rest}>{children}</div>;
+});
+
+const RN_Text = React.forwardRef(function Text({ className, style, children, onPress, ...rest }, ref) {
+  const s = {
+    fontFamily: 'Inter, "Noto Sans SC", -apple-system, sans-serif',
+    color: "#1A1A1A", fontSize: 14, margin: 0, padding: 0,
+    ...nvyParseClasses(className), ...(style || {}),
+  };
+  return <span ref={ref} style={s} onClick={onPress} {...rest}>{children}</span>;
+});
+
+const RN_Pressable = React.forwardRef(function Pressable({ className, style, children, onPress, disabled, hitSlop, ...rest }, ref) {
+  const s = {
+    display: "flex", flexDirection: "column", boxSizing: "border-box",
+    cursor: disabled ? "not-allowed" : "pointer", userSelect: "none",
+    background: "transparent", border: 0, padding: 0, font: "inherit",
+    color: "inherit", textAlign: "left",
+    ...nvyParseClasses(className), ...(style || {}),
+  };
+  return <button ref={ref} type="button" style={s} onClick={disabled ? undefined : onPress} disabled={disabled} {...rest}>{children}</button>;
+});
+
+const RN_TextInput = React.forwardRef(function TextInput({
+  className, style, value, onChangeText, onFocus, onBlur,
+  placeholder, placeholderTextColor, editable = true,
+  secureTextEntry, keyboardType, maxLength, ...rest
+}, ref) {
+  const s = {
+    border: 0, outline: 0, background: "transparent",
+    fontFamily: 'Inter, "Noto Sans SC", -apple-system, sans-serif',
+    color: "#1A1A1A", fontSize: 14, padding: 0,
+    ...nvyParseClasses(className), ...(style || {}),
+  };
+  // placeholderTextColor via CSS variable + ::placeholder
+  const ph = placeholderTextColor || "#999";
+  const phStyleId = "nvy-input-ph";
+  if (!document.getElementById(phStyleId)) {
+    const el = document.createElement("style");
+    el.id = phStyleId;
+    el.textContent = `input.nvy-rn-input::placeholder { color: var(--nvy-ph, #999); }`;
+    document.head.appendChild(el);
+  }
+  return (
+    <input
+      ref={ref}
+      className="nvy-rn-input"
+      style={{ ...s, "--nvy-ph": ph }}
+      value={value ?? ""}
+      onChange={e => onChangeText?.(e.target.value)}
+      onFocus={onFocus}
+      onBlur={onBlur}
+      placeholder={placeholder}
+      readOnly={!editable}
+      type={secureTextEntry ? "password" : "text"}
+      maxLength={maxLength}
+      inputMode={keyboardType === "phone-pad" ? "tel" : keyboardType === "number-pad" ? "numeric" : undefined}
+      {...rest}
+    />
+  );
+});
+
+const RN_Image = React.forwardRef(function RNImage({ className, style, source, resizeMode = "cover", ...rest }, ref) {
+  const uri = typeof source === "object" && source ? source.uri : source;
+  const s = {
+    objectFit: resizeMode === "contain" ? "contain" : resizeMode === "cover" ? "cover" : "fill",
+    display: "block",
+    ...nvyParseClasses(className), ...(style || {}),
+  };
+  return <img ref={ref} src={uri} style={s} {...rest}/>;
+});
+
+const RN_ScrollView = React.forwardRef(function ScrollView({ className, style, children, contentContainerStyle, ...rest }, ref) {
+  const s = { display: "flex", flexDirection: "column", overflow: "auto", boxSizing: "border-box", ...nvyParseClasses(className), ...(style || {}) };
+  return <div ref={ref} style={s} {...rest}><div style={contentContainerStyle}>{children}</div></div>;
+});
+
+window.RN = {
+  View: RN_View, Text: RN_Text, Pressable: RN_Pressable,
+  TextInput: RN_TextInput, Image: RN_Image, ScrollView: RN_ScrollView,
+};
+window.View = RN_View;
+window.Text = RN_Text;
+window.Pressable = RN_Pressable;
+window.TextInput = RN_TextInput;
+window.Image = RN_Image;
+window.ScrollView = RN_ScrollView;
+
+// preview/reanimated-shim.jsx
+// Tiny browser stand-in for react-native-reanimated v3 — only what
+// LoginScreen.tsx actually uses (useSharedValue, withTiming, withRepeat,
+// withSequence, useAnimatedStyle, Easing, cancelAnimation, Animated.View).
+
+const Reanimated = (() => {
+  let _id = 0;
+  const watchers = new Map(); // id -> set of listeners
+
+  function makeShared(initial) {
+    const node = { _v: initial, _animations: [], _id: ++_id };
+    Object.defineProperty(node, "value", {
+      get() { return node._v; },
+      set(v) {
+        node._v = v;
+        const set = watchers.get(node._id);
+        if (set) set.forEach(fn => fn());
+      },
+    });
+    return node;
+  }
+
+  function useSharedValue(initial) {
+    const ref = React.useRef(null);
+    if (!ref.current) ref.current = makeShared(initial);
+    return ref.current;
+  }
+
+  // animation descriptors are just functions that drive the shared value.
+  function withTiming(toValue, opts = {}) {
+    return function run(node, onDone) {
+      const dur = opts.duration ?? 300;
+      const easing = opts.easing || (t => t);
+      const from = node._v;
+      const t0 = performance.now();
+      let raf;
+      const tick = (now) => {
+        const t = Math.min(1, (now - t0) / dur);
+        node.value = from + (toValue - from) * easing(t);
+        if (t < 1) raf = requestAnimationFrame(tick);
+        else onDone && onDone(true);
+      };
+      raf = requestAnimationFrame(tick);
+      return () => cancelAnimationFrame(raf);
+    };
+  }
+
+  function withRepeat(animFactory, count = -1, reverse = false) {
+    return function run(node, onDone) {
+      let cancelled = false;
+      let cancelInner = null;
+      let i = 0;
+      const orig = node._v;
+      const step = () => {
+        if (cancelled) return;
+        cancelInner = animFactory(node, () => {
+          i++;
+          if (count > 0 && i >= count) { onDone && onDone(true); return; }
+          // reset to original each loop so withTiming(360) keeps spinning
+          node._v = orig;
+          step();
+        });
+      };
+      step();
+      return () => { cancelled = true; cancelInner && cancelInner(); };
+    };
+  }
+
+  function withSequence(...steps) {
+    return function run(node, onDone) {
+      let cancelled = false;
+      let cancelInner = null;
+      const next = (i) => {
+        if (cancelled || i >= steps.length) { onDone && onDone(true); return; }
+        cancelInner = steps[i](node, () => next(i + 1));
+      };
+      next(0);
+      return () => { cancelled = true; cancelInner && cancelInner(); };
+    };
+  }
+
+  function startAnimation(node, anim) {
+    const cancel = anim(node);
+    node._cancel = cancel;
+  }
+  function cancelAnimation(node) {
+    if (node && node._cancel) { node._cancel(); node._cancel = null; }
+  }
+
+  function useAnimatedStyle(builder) {
+    const [, force] = React.useReducer(x => x + 1, 0);
+    const ids = React.useRef(new Set());
+    const builderRef = React.useRef(builder);
+    builderRef.current = builder;
+
+    // Re-render whenever any shared value referenced inside `builder` changes.
+    // We accomplish this with a wrapped builder that tracks accesses.
+    const result = (() => {
+      const tracked = new Set();
+      const proxy = new Proxy({}, {});
+      // Naive: just rebuild and subscribe to all shared values that we can find
+      // by re-running builder. Since builder closes over them, we attach
+      // listeners on every render (and clean up old ones).
+      return builderRef.current();
+    })();
+
+    React.useEffect(() => {
+      // subscribe to every shared value that's been created so far — over-broad
+      // but cheap, and the preview only spins one or two animations at once.
+      const fn = () => force();
+      const unsubs = [];
+      watchers.forEach((set, id) => {
+        set.add(fn);
+        unsubs.push(() => set.delete(fn));
+      });
+      // Also ensure new shared values created later get our listener
+      const origAdd = watchers.set.bind(watchers);
+      watchers.set = function (id, set) {
+        set.add(fn);
+        unsubs.push(() => set.delete(fn));
+        return origAdd(id, set);
+      };
+      return () => { unsubs.forEach(u => u()); watchers.set = origAdd; };
+    }, []);
+
+    return result;
+  }
+
+  // Make sure every shared value has a watchers entry to attach listeners to.
+  const _origMake = makeShared;
+
+  // Patch makeShared to register a watcher set
+  const _patched = (initial) => {
+    const node = _origMake(initial);
+    watchers.set(node._id, new Set());
+    return node;
+  };
+
+  // Override outer reference
+  function useSharedValueWatched(initial) {
+    const ref = React.useRef(null);
+    if (!ref.current) ref.current = _patched(initial);
+    return ref.current;
+  }
+
+  const Easing = {
+    linear: t => t,
+    out: (fn) => (t => 1 - fn(1 - t)),
+    cubic: t => t * t * t,
+  };
+
+  // Animated.View interprets `style` (which may be an array) and applies
+  // any computed transforms/opacity onto a plain RN View.
+  const Animated = {
+    View: React.forwardRef(function AnimatedView({ style, className, children, ...rest }, ref) {
+      const flat = Array.isArray(style)
+        ? style.reduce((acc, s) => Object.assign(acc, s || {}), {})
+        : (style || {});
+      const transform = Array.isArray(flat.transform)
+        ? flat.transform.map(t => {
+            const [k, v] = Object.entries(t)[0];
+            return `${k}(${typeof v === "number" ? v : v})`;
+          }).join(" ")
+        : flat.transform;
+      const merged = { ...flat };
+      if (transform) merged.transform = transform;
+      return <RN.View ref={ref} className={className} style={merged} {...rest}>{children}</RN.View>;
+    }),
+  };
+
+  // we need useSharedValue to call our patched factory
+  const useSharedValueExported = useSharedValueWatched;
+
+  // Wrap startAnimation invocation: when assigning a withTiming/etc. result
+  // to .value, run it. Reanimated's real API does this automatically; we
+  // monkey-patch by overriding `value` setter behavior — easier: provide a
+  // helper `runAnimation` AND have withTiming/etc. return descriptors that
+  // are recognized when assigned to `.value`. We accomplish this by
+  // wrapping setter detection: if assigned value is a function with a
+  // special tag, treat it as an animation. To keep things simple, the
+  // .tsx source uses pattern `r.value = withTiming(360, ...)` so we
+  // intercept by re-defining .value setter:
+  const _origMakeBase = _patched;
+  const makeRunnable = (initial) => {
+    const node = { _v: initial, _id: ++_id };
+    watchers.set(node._id, new Set());
+    Object.defineProperty(node, "value", {
+      get() { return node._v; },
+      set(v) {
+        if (typeof v === "function" && v.length >= 1) {
+          // treat as animation runner
+          if (node._cancel) node._cancel();
+          node._cancel = v(node);
+          return;
+        }
+        node._v = v;
+        const set = watchers.get(node._id);
+        if (set) set.forEach(fn => fn());
+      },
+    });
+    return node;
+  };
+
+  function useSharedValueFinal(initial) {
+    const ref = React.useRef(null);
+    if (!ref.current) ref.current = makeRunnable(initial);
+    return ref.current;
+  }
+
+  return {
+    useSharedValue: useSharedValueFinal,
+    useAnimatedStyle,
+    withTiming, withRepeat, withSequence,
+    Easing, cancelAnimation,
+    Animated,
+  };
+})();
+
+window.useSharedValue = Reanimated.useSharedValue;
+window.useAnimatedStyle = Reanimated.useAnimatedStyle;
+window.withTiming = Reanimated.withTiming;
+window.withRepeat = Reanimated.withRepeat;
+window.withSequence = Reanimated.withSequence;
+window.Easing = Reanimated.Easing;
+window.cancelAnimation = Reanimated.cancelAnimation;
+window.Animated = Reanimated.Animated;
+
+// preview/IOSFrame.preview.jsx — browser-loadable copy of IOSFrame.tsx
+// (mirrors the RN source; imports are stripped because the shim provides them globally.)
+
+function IOSFrame({ width = 360, height = 780, children }) {
+  return (
+    <View
+      className="rounded-[44px] bg-ink p-2 shadow-card"
+      style={{ width: width + 16, alignSelf: "flex-start" }}
+    >
+      <View
+        className="rounded-[36px] bg-surface overflow-hidden relative"
+        style={{ width, height }}
+      >
+        {/* status bar */}
+        <View className="flex-row items-center justify-between px-7 pt-3 pb-1.5 bg-surface" style={{ zIndex: 2 }}>
+          <Text className="text-xs font-semibold text-ink font-mono">9:41</Text>
+          <View className="flex-row items-center gap-1">
+            <Text className="text-[10px] text-ink">●●●●</Text>
+            <Text className="text-[10px] text-ink">100%</Text>
+          </View>
+        </View>
+        {/* dynamic island */}
+        <View
+          className="absolute rounded-full bg-ink"
+          style={{ top: 8, left: "50%", transform: "translateX(-50%)", width: 96, height: 28, zIndex: 3 }}
+        />
+        {/* content slot */}
+        <View className="flex-1">{children}</View>
+        {/* home indicator */}
+        <View className="items-center pb-2 pt-1 bg-surface">
+          <View className="rounded-full bg-ink" style={{ width: 128, height: 4 }}/>
+        </View>
+      </View>
+    </View>
+  );
+}
+
+window.IOSFrame = IOSFrame;
+
+// preview/LoginScreen.preview.jsx — browser-loadable mirror of LoginScreen.tsx (v2)
+// Unified phone-SMS auth, no tabs, no password, no register.
+// 5-state: idle / requesting_sms / sms_sent / submitting / success / error.
+
+function Spinner({ size = 16, tone = "white" }) {
+  const r = useSharedValue(0);
+  React.useEffect(() => {
+    r.value = withRepeat(withTiming(360, { duration: 700, easing: Easing.linear }), -1, false);
+    return () => cancelAnimation(r);
+  }, []);
+  const style = useAnimatedStyle(() => ({ transform: [{ rotate: `${r.value}deg` }] }));
+  const ringTone =
+    tone === "white" ? "border-white/30 border-t-white" :
+    tone === "brand" ? "border-brand-200 border-t-brand-500" :
+                       "border-line border-t-ink-subtle";
+  return (
+    <Animated.View
+      style={[{ width: size, height: size }, style]}
+      className={`rounded-full border-[2px] ${ringTone}`}
+    />
+  );
+}
+
+function SuccessCheck() {
+  const s = useSharedValue(0);
+  React.useEffect(() => {
+    s.value = withSequence(
+      withTiming(1.1, { duration: 240, easing: Easing.out(Easing.cubic) }),
+      withTiming(1.0, { duration: 140, easing: Easing.out(Easing.cubic) }),
+    );
+  }, []);
+  const style = useAnimatedStyle(() => ({
+    transform: [{ scale: s.value }],
+    opacity: s.value === 0 ? 0 : 1,
+  }));
+  return (
+    <Animated.View style={style} className="rounded-full bg-ok-soft items-center justify-center" >
+      <View className="rounded-full bg-ok items-center justify-center" style={{ width: 56, height: 56 }}>
+        <Text className="text-white text-2xl font-bold">✓</Text>
+      </View>
+    </Animated.View>
+  );
+}
+
+function useCountdown(seconds, active) {
+  const [n, setN] = React.useState(seconds);
+  React.useEffect(() => {
+    if (!active) { setN(seconds); return; }
+    setN(seconds);
+    const id = setInterval(() => { setN(v => v <= 1 ? 0 : v - 1); }, 1000);
+    return () => clearInterval(id);
+  }, [active, seconds]);
+  return n;
+}
+
+function PhoneInput({ value, onChangeText, disabled, errored }) {
+  const [focused, setFocused] = React.useState(false);
+  const tone = errored ? "border-err" : focused ? "border-brand-500" : "border-line";
+  return (
+    <View
+      className={`flex-row items-center border-b ${tone} ${disabled ? "opacity-60" : ""}`}
+      style={{ height: 48 }}
+    >
+      <View className="flex-row items-center gap-1 pr-2">
+        <Text className="text-base font-medium text-ink">+86</Text>
+        <Text className="text-xs text-ink-subtle">▾</Text>
+      </View>
+      <View className="bg-line mr-3" style={{ width: 1, height: 16 }}/>
+      <TextInput
+        value={value} onChangeText={onChangeText}
+        onFocus={() => setFocused(true)} onBlur={() => setFocused(false)}
+        editable={!disabled}
+        placeholder="请输入手机号"
+        placeholderTextColor="#999999"
+        keyboardType="phone-pad"
+        className="flex-1 text-base text-ink font-sans tracking-wide"
+      />
+    </View>
+  );
+}
+
+function SmsInput({ value, onChangeText, errored, requesting, ticking, countdown, onSend, disabled }) {
+  const [focused, setFocused] = React.useState(false);
+  const tone = errored ? "border-err" : focused ? "border-brand-500" : "border-line";
+  return (
+    <View className={`flex-row items-center border-b ${tone}`} style={{ height: 48 }}>
+      <TextInput
+        value={value} onChangeText={onChangeText}
+        onFocus={() => setFocused(true)} onBlur={() => setFocused(false)}
+        editable={!disabled}
+        placeholder="请输入 6 位验证码"
+        placeholderTextColor="#999999"
+        maxLength={6} keyboardType="number-pad"
+        className="flex-1 text-base text-ink font-sans tracking-widest"
+      />
+      <Pressable disabled={requesting || ticking} onPress={onSend} className="flex-row items-center gap-2 pl-2">
+        {requesting ? (
+          <React.Fragment>
+            <Spinner size={11} tone="muted"/>
+            <Text className="text-sm text-ink-subtle font-medium">发送中…</Text>
+          </React.Fragment>
+        ) : ticking ? (
+          <Text className="text-sm text-ink-subtle font-medium font-mono">{countdown}s 后重发</Text>
+        ) : (
+          <Text className="text-sm text-brand-500 font-medium">获取验证码</Text>
+        )}
+      </Pressable>
+    </View>
+  );
+}
+
+function ErrorRow({ text }) {
+  return (
+    <View className="flex-row items-center gap-1.5 mt-1.5">
+      <View className="rounded-full bg-err items-center justify-center" style={{ width: 14, height: 14 }}>
+        <Text className="text-white text-[10px] font-bold leading-none">!</Text>
+      </View>
+      <Text className="text-xs text-err">{text}</Text>
+    </View>
+  );
+}
+
+function PrimaryButton({ label, loading, disabled, onPress }) {
+  const bg = disabled ? "bg-brand-200" : loading ? "bg-brand-300" : "bg-brand-500";
+  return (
+    <Pressable
+      disabled={disabled || loading} onPress={onPress}
+      className={`rounded-full items-center justify-center flex-row gap-2 shadow-cta ${bg}`}
+      style={{ height: 48 }}
+    >
+      {loading ? <Spinner size={15} tone="white"/> : null}
+      <Text className="text-base font-medium text-white">{label}</Text>
+    </Pressable>
+  );
+}
+
+function OAuthCircle({ bg, label, children, onPress, disabled }) {
+  return (
+    <View className="items-center gap-1.5">
+      <Pressable
+        onPress={onPress} disabled={disabled}
+        className={`rounded-full items-center justify-center ${bg} ${disabled ? "opacity-50" : ""}`}
+        style={{ width: 48, height: 48 }}
+      >
+        {children}
+      </Pressable>
+      <Text className="text-[11px] text-ink-subtle">{label}</Text>
+    </View>
+  );
+}
+
+function WeChatGlyph() {
+  // Two overlapping speech bubbles, classic WeChat
+  return (
+    <svg width="26" height="26" viewBox="0 0 28 28" fill="none">
+      {/* Big bubble (back) */}
+      <path
+        d="M11 5C5.9 5 2 8.5 2 12.7c0 2.4 1.4 4.5 3.5 5.9l-.6 2.6 3.1-1.6c.94.18 1.93.28 2.95.28.32 0 .64-.01.95-.04C11.7 19.55 11.5 18.7 11.5 17.8c0-3.7 3.6-6.7 8-6.7.45 0 .9.03 1.34.09C20.05 7.45 16 5 11 5Z"
+        fill="#fff"
+      />
+      {/* Eyes on big bubble */}
+      <circle cx="8.2" cy="11.2" r="1.05" fill="#07C160"/>
+      <circle cx="13.8" cy="11.2" r="1.05" fill="#07C160"/>
+      {/* Small bubble (front) */}
+      <path
+        d="M27 18.5c0-3.05-3.13-5.5-7-5.5s-7 2.45-7 5.5c0 3.05 3.13 5.5 7 5.5.7 0 1.36-.08 2-.23l2.5 1.4-.55-2.1c1.85-1 3.05-2.55 3.05-4.57Z"
+        fill="#fff"
+      />
+      <circle cx="17.5" cy="18.2" r="0.9" fill="#07C160"/>
+      <circle cx="22.5" cy="18.2" r="0.9" fill="#07C160"/>
+    </svg>
+  );
+}
+
+function GoogleGlyph() {
+  return (
+    <svg width="22" height="22" viewBox="0 0 48 48">
+      <path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3c-1.6 4.6-6 8-11.3 8-6.6 0-12-5.4-12-12s5.4-12 12-12c3 0 5.8 1.1 7.9 3l5.7-5.7C34 6.1 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.4-.4-3.5z"/>
+      <path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.7 15.1 19 12 24 12c3 0 5.8 1.1 7.9 3l5.7-5.7C34 6.1 29.3 4 24 4 16.3 4 9.7 8.4 6.3 14.7z"/>
+      <path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2C29.2 35 26.7 36 24 36c-5.3 0-9.7-3.4-11.3-8l-6.5 5C9.5 39.6 16.2 44 24 44z"/>
+      <path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.2-2.1 4.1-3.9 5.6l6.2 5.2C41.6 35.6 44 30.2 44 24c0-1.3-.1-2.4-.4-3.5z"/>
+    </svg>
+  );
+}
+
+function AppleGlyph() {
+  return (
+    <svg width="20" height="22" viewBox="0 0 24 24" fill="#fff">
+      <path d="M16.5 1.5c0 1.1-.45 2.18-1.18 2.96-.78.83-2.05 1.47-3.1 1.39-.13-1.06.4-2.18 1.07-2.92.76-.83 2.07-1.45 3.21-1.43ZM20 17.27c-.55 1.27-.81 1.84-1.52 2.97-.99 1.57-2.39 3.53-4.12 3.55-1.54.01-1.94-1.01-4.04-1-2.1.01-2.54 1.02-4.08 1-1.73-.02-3.06-1.78-4.05-3.36-2.78-4.4-3.07-9.55-1.36-12.3.6-.96 1.46-1.78 2.46-2.36 1.1-.65 2.42-.96 3.7-.92 1.51.05 2.46 1.07 3.71 1.07 1.21 0 1.95-1.07 3.7-1.07 1.32-.01 2.71.42 3.69 1.16-3.24 1.78-2.71 6.41.91 7.26Z"/>
+    </svg>
+  );
+}
+
+function LogoMark() {
+  // Mirrors assets/logo-mark.svg (64×64 → rendered at 56)
+  return (
+    <View style={{ width: 56, height: 56 }}>
+      <svg width="56" height="56" viewBox="0 0 64 64" fill="none">
+        <rect width="64" height="64" rx="14" fill="#2456E5"/>
+        <circle cx="32" cy="32" r="22" fill="#FF8C00" opacity="0.18"/>
+        <g stroke="#FFFFFF" strokeWidth="2.5" strokeLinecap="round">
+          <path d="M32 18 L32 8"/>
+          <path d="M39 19.88 L44 11.22"/>
+          <path d="M44.12 25 L52.78 20"/>
+          <path d="M46 32 L56 32"/>
+          <path d="M44.12 39 L52.78 44"/>
+          <path d="M39 44.12 L44 52.78"/>
+          <path d="M32 46 L32 56"/>
+          <path d="M25 44.12 L20 52.78"/>
+          <path d="M19.88 39 L11.22 44"/>
+          <path d="M18 32 L8 32"/>
+          <path d="M19.88 25 L11.22 20"/>
+          <path d="M25 19.88 L20 11.22"/>
+        </g>
+        <circle cx="32" cy="32" r="9.5" fill="#FF8C00"/>
+        <circle cx="29.5" cy="29.5" r="2.5" fill="#FFFFFF" opacity="0.3"/>
+      </svg>
+    </View>
+  );
+}
+
+function TopBar({ onClose }) {
+  return (
+    <View className="flex-row items-center px-1" style={{ height: 44 }}>
+      <Pressable onPress={onClose}>
+        <Text className="text-2xl text-ink leading-none">×</Text>
+      </Pressable>
+    </View>
+  );
+}
+
+function SuccessOverlay() {
+  return (
+    <View className="flex-1 bg-surface px-lg pb-lg relative">
+      <TopBar/>
+      <View className="flex-1 items-center justify-center gap-4 pb-20">
+        <SuccessCheck/>
+        <Text className="text-xl font-semibold text-ink mt-2">登录成功</Text>
+        <View className="flex-row items-center gap-2">
+          <Spinner size={12} tone="muted"/>
+          <Text className="text-sm text-ink-muted">正在进入今日时间线…</Text>
+        </View>
+      </View>
+      <View className="absolute rounded-2xl bg-surface-alt p-3.5 opacity-60" style={{ left: 16, right: 16, bottom: 8, height: 96 }}>
+        <View className="rounded-sm bg-line mb-2.5" style={{ height: 10, width: "33%" }}/>
+        <View className="rounded-sm bg-line mb-2.5" style={{ height: 10, width: "70%" }}/>
+        <View className="rounded-sm bg-line" style={{ height: 10, width: "55%" }}/>
+      </View>
+    </View>
+  );
+}
+
+function LoginScreen({
+  state = "idle", errorScope = "sms",
+  onSendCode, onSubmit, onWeChat, onGoogle, onApple, onHelp, onClose,
+  platform = "ios",
+}) {
+  const [phone, setPhone] = React.useState("138 0013 8000");
+  const [sms, setSms] = React.useState(
+    state === "error" && errorScope === "submit" ? "381042"
+    : state === "submitting" ? "284917"
+    : ""
+  );
+
+  const requesting = state === "requesting_sms";
+  const submitting = state === "submitting";
+  const ticking = state === "sms_sent" || state === "submitting"
+    || (state === "error" && errorScope === "submit");
+  const remaining = useCountdown(60, ticking);
+
+  const errorText =
+    state !== "error" ? null
+    : errorScope === "sms" ? "获取验证码失败，请稍后重试"
+    : "验证码不正确，请重新输入";
+
+  if (state === "success") return <SuccessOverlay/>;
+
+  const canSubmit =
+    (state === "sms_sent" || state === "submitting"
+     || (state === "error" && errorScope === "submit"))
+    && sms.replace(/\s/g, "").length >= 6;
+  const ctaDisabled = !canSubmit && !submitting;
+
+  return (
+    <View className="flex-1 bg-surface px-lg pb-lg">
+      <TopBar onClose={onClose}/>
+
+      {/* Header */}
+      <View className="mt-3 items-center gap-2">
+        <LogoMark/>
+        <Text className="text-3xl font-bold text-ink mt-3.5 tracking-tight text-center" style={{ fontSize: 28 }}>欢迎回来</Text>
+        <Text className="text-sm text-ink-muted text-center">把这一段日子，过得不虚此生。</Text>
+      </View>
+
+      {/* Form */}
+      <View className="mt-9 gap-3">
+        <PhoneInput value={phone} onChangeText={setPhone} disabled={requesting || submitting}
+                    errored={state === "error" && errorScope === "sms"}/>
+        <SmsInput
+          value={sms} onChangeText={setSms}
+          requesting={requesting}
+          ticking={ticking && remaining > 0}
+          countdown={remaining}
+          onSend={onSendCode}
+          disabled={submitting}
+          errored={state === "error" && errorScope === "submit"}
+        />
+        {errorText ? <ErrorRow text={errorText}/> : null}
+      </View>
+
+      {/* CTA */}
+      <View className="mt-7">
+        <PrimaryButton
+          label={submitting ? "登录中…" : "登录 / 注册"}
+          loading={submitting}
+          disabled={ctaDisabled}
+          onPress={onSubmit}
+        />
+      </View>
+
+      <View className="flex-1"/>
+
+      {/* OAuth */}
+      <View className="mt-6 flex-row items-center gap-3">
+        <View className="flex-1 bg-line-soft" style={{ height: 1 }}/>
+        <Text className="text-[11px] text-ink-subtle">其他登录方式</Text>
+        <View className="flex-1 bg-line-soft" style={{ height: 1 }}/>
+      </View>
+
+      <View className="mt-4 flex-row justify-center gap-10">
+        <OAuthCircle bg="bg-[#07C160]" label="微信" onPress={onWeChat}>
+          <WeChatGlyph/>
+        </OAuthCircle>
+        <OAuthCircle bg="bg-surface border border-line" label="Google" onPress={onGoogle}>
+          <GoogleGlyph/>
+        </OAuthCircle>
+        {platform !== "android" ? (
+          <OAuthCircle bg="bg-ink" label="Apple" onPress={onApple}>
+            <AppleGlyph/>
+          </OAuthCircle>
+        ) : null}
+      </View>
+
+      {/* Help link */}
+      <View className="items-center mt-5">
+        <Pressable onPress={onHelp}>
+          <Text className="text-xs text-ink-muted">登录遇到问题</Text>
+        </Pressable>
+      </View>
+
+      {/* Implicit agreement */}
+      <Text className="text-center text-[11px] text-ink-subtle mt-3">
+        登录即表示同意 <Text className="text-brand-500">《服务条款》</Text>
+        <Text className="text-brand-500">《隐私政策》</Text>
+      </Text>
+    </View>
+  );
+}
+
+window.LoginScreen = LoginScreen;
+
+// preview/LoginScreenPreview.preview.jsx — 4 v2 frames side-by-side
+
+const FRAMES = [
+  { key: "idle", scope: "sms", num: "01", name: "IDLE", zh: "待输入",
+    desc: "进入页面。手机号已记忆，等待用户点「获取验证码」。",
+    pillBg: "bg-surface-sunken", pillFg: "text-ink-muted", dot: "bg-ink-muted" },
+  { key: "sms_sent", scope: "sms", num: "02", name: "SMS_SENT", zh: "验证码已发",
+    desc: "短信已发，60s 倒计时进行中。等待用户输入 6 位码。",
+    pillBg: "bg-brand-soft", pillFg: "text-brand-500", dot: "bg-brand-500" },
+  { key: "submitting", scope: "sms", num: "03", name: "SUBMITTING", zh: "登录中",
+    desc: "码已填，CTA 提交中。后端判 login 还是 auto-create。",
+    pillBg: "bg-warn-soft", pillFg: "text-warn", dot: "bg-warn" },
+  { key: "error", scope: "submit", num: "04", name: "ERROR", zh: "校验失败",
+    desc: "验证码不正确。SMS 框转红，错误信息出现在下方。",
+    pillBg: "bg-err-soft", pillFg: "text-err", dot: "bg-err" },
+];
+
+function StateFrame({ spec }) {
+  return (
+    <View className="gap-3" data-screen-label={`${spec.num} ${spec.name}`}>
+      <IOSFrame>
+        <LoginScreen state={spec.key} errorScope={spec.scope}/>
+      </IOSFrame>
+      <View className="gap-1" style={{ maxWidth: 360 }}>
+        <View className="flex-row items-center gap-2 flex-wrap">
+          <View className={`flex-row items-center gap-1.5 px-2 rounded-full ${spec.pillBg}`} style={{ paddingTop: 2, paddingBottom: 2 }}>
+            <View className={`rounded-full ${spec.dot}`} style={{ width: 6, height: 6 }}/>
+            <Text className={`text-[10px] font-semibold font-mono tracking-wider ${spec.pillFg}`}>{spec.name}</Text>
+          </View>
+          <Text className="text-[11px] font-medium font-mono text-ink-subtle">{spec.num}</Text>
+          <Text className="text-sm font-semibold text-ink">· {spec.zh}</Text>
+        </View>
+        <Text className="text-xs text-ink-muted leading-snug">{spec.desc}</Text>
+      </View>
+    </View>
+  );
+}
+
+function LoginScreenPreview() {
+  return (
+    <ScrollView className="flex-1 bg-surface-sunken">
+      <View className="px-8 py-10 gap-8 items-center">
+        <View className="flex-row flex-wrap justify-between items-end gap-6" style={{ width: "100%", maxWidth: 1700 }}>
+          <View className="gap-1.5">
+            <Text className="text-2xl font-bold text-ink tracking-tight" style={{ fontSize: 26 }}>
+              登录页 · Unified Phone-SMS Auth{"  "}
+              <Text className="font-medium text-ink-muted" style={{ fontSize: 18 }}>· account-center · v2</Text>
+            </Text>
+            <Text className="text-sm text-ink-muted leading-relaxed" style={{ maxWidth: 660 }}>
+              单 form，无 tab、无注册概念。后端按 phone 自动判 login / 自动创建。三方登录：微信 / Google / Apple（iOS-only）。
+              四个状态：待输入 → 验证码已发 → 登录中 → 校验失败。
+            </Text>
+          </View>
+          <View className="flex-row gap-4">
+            <Text className="text-[11px] font-mono text-ink-subtle">
+              <Text className="text-ink-muted font-medium">Frame</Text>{" "}iPhone · 360×780
+            </Text>
+            <Text className="text-[11px] font-mono text-ink-subtle">
+              <Text className="text-ink-muted font-medium">States</Text>{" "}5 (idle/req/sent/submit/success) +error
+            </Text>
+          </View>
+        </View>
+
+        <View className="flex-row flex-wrap justify-center gap-7">
+          {FRAMES.map(s => <StateFrame key={s.key} spec={s}/>)}
+        </View>
+
+        <Text className="text-xs text-ink-muted text-center leading-relaxed" style={{ maxWidth: 760, marginTop: 8 }}>
+          源码：<Text className="font-mono text-[11px]">LoginScreen.tsx · IOSFrame.tsx · LoginScreenPreview.tsx</Text>。
+          浏览器预览把 RN 原语跑在轻量 Web 影子里。第 5 状态 <Text className="font-mono">success</Text> 与
+          <Text className="font-mono"> requesting_sms</Text> 由 caller 触发，未在此横排展示（success 占满整屏）。
+        </Text>
+      </View>
+    </ScrollView>
+  );
+}
+
+window.LoginScreenPreview = LoginScreenPreview;
+
+ReactDOM.createRoot(document.getElementById("root")).render(<LoginScreenPreview/>);
+</script>
+</body>
+</html>
