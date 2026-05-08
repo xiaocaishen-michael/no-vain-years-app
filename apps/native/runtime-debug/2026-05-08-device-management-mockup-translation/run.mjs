@@ -244,6 +244,7 @@ try {
   // ──────────────────────────────────────────────────────────────────────────
   step(`state 04 — tap current device row → detail page (session ${SESSION_CURRENT_ID})`);
   // Scroll back to top first
+  // eslint-disable-next-line no-undef
   await page.evaluate(() => window.scrollTo(0, 0));
   await page.waitForTimeout(300);
 
