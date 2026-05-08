@@ -195,7 +195,7 @@ export function useDevicesQuery(page: number, size: number) {
 
 ---
 
-### T8 [Wiring] root `_layout.tsx` boot device-store hydrate
+### T8 ✅ [Wiring] root `_layout.tsx` boot device-store hydrate
 
 **File**: `apps/native/app/_layout.tsx`（**改** — 加 useDeviceStore.initialize 调用 + 等 hasHydrated）
 
