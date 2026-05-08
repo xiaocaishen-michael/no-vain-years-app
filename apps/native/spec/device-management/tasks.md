@@ -16,7 +16,7 @@
 
 ## Critical Path（按依赖顺序）
 
-### T0 [Contract] OpenAPI 重生客户端
+### T0 ✅ [Contract] OpenAPI 重生客户端
 
 **Files**:
 
@@ -108,7 +108,7 @@ export function registerAuthInterceptor(): void {
 
 ---
 
-### T4 [Pkg] `listDevices` + `revokeDevice` wrapper in `packages/auth/src/usecases.ts`
+### T4 ✅ [Pkg] `listDevices` + `revokeDevice` wrapper in `packages/auth/src/usecases.ts`
 
 **File**: `packages/auth/src/usecases.ts`（**改** — 加 2 wrapper + DeviceItem / DeviceListResult interface re-export）
 

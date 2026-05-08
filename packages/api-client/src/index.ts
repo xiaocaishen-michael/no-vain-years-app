@@ -11,6 +11,7 @@ export {
   getAccountSmsCodeApi,
   getAuthApi,
   getCancelDeletionApi,
+  getDeviceManagementApi,
   resetClientForTests,
   setDeviceGetter,
   setDeviceNameGetter,

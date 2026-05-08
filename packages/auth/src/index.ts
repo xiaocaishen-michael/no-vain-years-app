@@ -6,11 +6,12 @@ export { useAuthStore } from './store';
 export type { DeviceState, DeviceType } from './device-store';
 export { useDeviceStore } from './device-store';
 
-export type { LoginResult } from './usecases';
+export type { DeviceItem, DeviceListResult, LoginResult } from './usecases';
 export {
   ApiClientError,
   cancelDeletion,
   deleteAccount,
+  listDevices,
   loadProfile,
   logoutAll,
   logoutLocal,
@@ -20,5 +21,6 @@ export {
   requestCancelDeletionSmsCode,
   requestDeleteAccountSmsCode,
   ResponseError,
+  revokeDevice,
   updateDisplayName,
 } from './usecases';

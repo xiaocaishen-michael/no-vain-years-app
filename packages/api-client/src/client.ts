@@ -20,6 +20,7 @@ import { AccountProfileControllerApi } from './generated/apis/AccountProfileCont
 import { AccountSmsCodeControllerApi } from './generated/apis/AccountSmsCodeControllerApi';
 import { AuthControllerApi } from './generated/apis/AuthControllerApi';
 import { CancelDeletionControllerApi } from './generated/apis/CancelDeletionControllerApi';
+import { DeviceManagementControllerApi } from './generated/apis/DeviceManagementControllerApi';
 import { Configuration, type Middleware, type ResponseContext } from './generated/runtime';
 
 export const DEFAULT_BASE_URL = 'https://api.xiaocaishen.me';
@@ -203,6 +204,10 @@ export function getAccountDeletionApi(): AccountDeletionControllerApi {
 
 export function getCancelDeletionApi(): CancelDeletionControllerApi {
   return new CancelDeletionControllerApi(getConfig());
+}
+
+export function getDeviceManagementApi(): DeviceManagementControllerApi {
+  return new DeviceManagementControllerApi(getConfig());
 }
 
 export function resetClientForTests(): void {
