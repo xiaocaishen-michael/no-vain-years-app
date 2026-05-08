@@ -78,12 +78,12 @@ describe('AccountSecurityIndex (spec account-settings-shell T6 / FR-007 + FR-018
     expect(thirdParty.disabled).toBe(true);
   });
 
-  it('renders Card 2 — 登录设备与授权管理 disabled', () => {
+  it('renders Card 2 — 登录管理 enabled (T14)', () => {
     render(<AccountSecurityIndex />);
     const btn = screen.getByRole('button', {
-      name: '登录设备与授权管理',
+      name: '登录管理',
     }) as HTMLButtonElement;
-    expect(btn.disabled).toBe(true);
+    expect(btn.disabled).toBe(false);
   });
 
   it('renders Card 3 — 注销账号 entry + 安全小知识 disabled', () => {

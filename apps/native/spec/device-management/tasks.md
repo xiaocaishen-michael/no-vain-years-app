@@ -16,7 +16,7 @@
 
 ## Critical Path（按依赖顺序）
 
-### T0 [Contract] OpenAPI 重生客户端
+### T0 ✅ [Contract] OpenAPI 重生客户端
 
 **Files**:
 
@@ -36,7 +36,7 @@ pnpm api:gen     # 拉 prod / staging spec
 
 ---
 
-### T1 [Pkg] `packages/auth/src/device-store.ts`
+### T1 ✅ [Pkg] `packages/auth/src/device-store.ts`
 
 **Files**:
 
@@ -59,7 +59,7 @@ pnpm api:gen     # 拉 prod / staging spec
 
 ---
 
-### T2 [Pkg] `packages/api-client/src/client.ts` 加 `deviceMiddleware`
+### T2 ✅ [Pkg] `packages/api-client/src/client.ts` 加 `deviceMiddleware`
 
 **Files**:
 
@@ -80,7 +80,7 @@ pnpm api:gen     # 拉 prod / staging spec
 
 ---
 
-### T3 [Pkg] `packages/auth` wiring — `registerAuthInterceptor` 接入 device getters
+### T3 ✅ [Pkg] `packages/auth` wiring — `registerAuthInterceptor` 接入 device getters
 
 **File**: `packages/auth/src/usecases.ts`（**改** — `registerAuthInterceptor()` 函数末尾加 setDeviceGetter 三调用）
 
@@ -108,7 +108,7 @@ export function registerAuthInterceptor(): void {
 
 ---
 
-### T4 [Pkg] `listDevices` + `revokeDevice` wrapper in `packages/auth/src/usecases.ts`
+### T4 ✅ [Pkg] `listDevices` + `revokeDevice` wrapper in `packages/auth/src/usecases.ts`
 
 **File**: `packages/auth/src/usecases.ts`（**改** — 加 2 wrapper + DeviceItem / DeviceListResult interface re-export）
 
@@ -131,7 +131,7 @@ export function registerAuthInterceptor(): void {
 
 ---
 
-### T5 [Lib] `formatLastActive` helper
+### T5 ✅ [Lib] `formatLastActive` helper
 
 **File**: `apps/native/lib/format/datetime.ts`（**改**，加 formatLastActive）
 
@@ -148,7 +148,7 @@ export function registerAuthInterceptor(): void {
 
 ---
 
-### T6 [Lib] `mapDeviceError` + `deviceErrorCopy`
+### T6 ✅ [Lib] `mapDeviceError` + `deviceErrorCopy`
 
 **File**: `apps/native/lib/error/device-errors.ts`（**新建**）
 
@@ -164,7 +164,7 @@ export function registerAuthInterceptor(): void {
 
 ---
 
-### T7 [Lib] `useDevicesQuery` hook
+### T7 ✅ [Lib] `useDevicesQuery` hook
 
 **File**: `apps/native/lib/hooks/useDevicesQuery.ts`（**新建**）
 
@@ -195,7 +195,7 @@ export function useDevicesQuery(page: number, size: number) {
 
 ---
 
-### T8 [Wiring] root `_layout.tsx` boot device-store hydrate
+### T8 ✅ [Wiring] root `_layout.tsx` boot device-store hydrate
 
 **File**: `apps/native/app/_layout.tsx`（**改** — 加 useDeviceStore.initialize 调用 + 等 hasHydrated）
 
@@ -232,7 +232,7 @@ function AuthGate({ children }: { children: React.ReactNode }) {
 
 ---
 
-### T9 [Component] `DeviceIcon.tsx` copy from mockup
+### T9 ✅ [Component] `DeviceIcon.tsx` copy from mockup
 
 **File**: `apps/native/app/(app)/settings/account-security/login-management/DeviceIcon.tsx`（**新建**）
 
@@ -244,7 +244,7 @@ function AuthGate({ children }: { children: React.ReactNode }) {
 
 ---
 
-### T10 [Page] `login-management/_layout.tsx`
+### T10 ✅ [Page] `login-management/_layout.tsx`
 
 **File**: `apps/native/app/(app)/settings/account-security/login-management/_layout.tsx`（**新建**）
 
@@ -269,7 +269,7 @@ export default function LoginManagementLayout() {
 
 ---
 
-### T11 [Page] `login-management/index.tsx` (list page)
+### T11 ✅ [Page] `login-management/index.tsx` (list page)
 
 **File**: `apps/native/app/(app)/settings/account-security/login-management/index.tsx`（**新建**）
 
@@ -288,7 +288,7 @@ export default function LoginManagementLayout() {
 
 ---
 
-### T12 [Page] `login-management/[id].tsx` (detail page)
+### T12 ✅ [Page] `login-management/[id].tsx` (detail page)
 
 **File**: `apps/native/app/(app)/settings/account-security/login-management/[id].tsx`（**新建**）
 
@@ -307,7 +307,7 @@ export default function LoginManagementLayout() {
 
 ---
 
-### T13 [Component] `RemoveDeviceSheet.tsx`
+### T13 ✅ [Component] `RemoveDeviceSheet.tsx`
 
 **File**: `apps/native/app/(app)/settings/account-security/login-management/RemoveDeviceSheet.tsx`（**新建**）
 
@@ -330,7 +330,7 @@ export default function LoginManagementLayout() {
 
 ---
 
-### T14 [Wiring] `account-security/index.tsx` row 改名 + 启用
+### T14 ✅ [Wiring] `account-security/index.tsx` row 改名 + 启用
 
 **File**: `apps/native/app/(app)/settings/account-security/index.tsx`（**改**）
 
@@ -385,7 +385,7 @@ const COPY = {
 
 ---
 
-### T16 [Wiring] tailwind.config.ts 加 2 新 boxShadow
+### T16 ✅ [Wiring] tailwind.config.ts 加 2 新 boxShadow
 
 **File**: `apps/native/tailwind.config.ts`（**改**，加 `boxShadow.cta-err` + `boxShadow.sheet`）
 

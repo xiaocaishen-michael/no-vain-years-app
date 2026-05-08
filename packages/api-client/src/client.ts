@@ -12,12 +12,15 @@
 // deliberately don't import @nvy/auth here — auth already imports api-client
 // (for typed APIs in usecases.ts), so the dependency must flow one way.
 
+import { Platform } from 'react-native';
+
 import { AccountAuthControllerApi } from './generated/apis/AccountAuthControllerApi';
 import { AccountDeletionControllerApi } from './generated/apis/AccountDeletionControllerApi';
 import { AccountProfileControllerApi } from './generated/apis/AccountProfileControllerApi';
 import { AccountSmsCodeControllerApi } from './generated/apis/AccountSmsCodeControllerApi';
 import { AuthControllerApi } from './generated/apis/AuthControllerApi';
 import { CancelDeletionControllerApi } from './generated/apis/CancelDeletionControllerApi';
+import { DeviceManagementControllerApi } from './generated/apis/DeviceManagementControllerApi';
 import { Configuration, type Middleware, type ResponseContext } from './generated/runtime';
 
 export const DEFAULT_BASE_URL = 'https://api.xiaocaishen.me';
@@ -57,10 +60,29 @@ function getBaseUrl(): string {
 
 type TokenGetter = () => string | null;
 type TokenRefresher = () => Promise<void>;
+type StringGetter = () => string | null;
 
 let tokenGetter: TokenGetter = () => null;
 let tokenRefresher: TokenRefresher | null = null;
 let inflightRefresh: Promise<void> | null = null;
+
+// -----------------------------------------------------------------------------
+// Device plumbing — registered by @nvy/auth via registerAuthInterceptor
+// -----------------------------------------------------------------------------
+
+let deviceGetter: StringGetter = () => null;
+let deviceNameGetter: StringGetter = () => null;
+let deviceTypeGetter: StringGetter = () => null;
+
+export function setDeviceGetter(fn: StringGetter): void {
+  deviceGetter = fn;
+}
+export function setDeviceNameGetter(fn: StringGetter): void {
+  deviceNameGetter = fn;
+}
+export function setDeviceTypeGetter(fn: StringGetter): void {
+  deviceTypeGetter = fn;
+}
 
 export function setTokenGetter(fn: TokenGetter): void {
   tokenGetter = fn;
@@ -127,6 +149,24 @@ const authMiddleware: Middleware = {
 };
 
 // -----------------------------------------------------------------------------
+// Device header middleware — runs after authMiddleware
+// -----------------------------------------------------------------------------
+
+const deviceMiddleware: Middleware = {
+  async pre(context) {
+    const headers = new Headers(context.init.headers);
+    const deviceId = deviceGetter();
+    if (deviceId !== null) headers.set('X-Device-Id', deviceId);
+    if (Platform.OS !== 'web') {
+      const deviceName = deviceNameGetter();
+      const deviceType = deviceTypeGetter();
+      if (deviceName !== null) headers.set('X-Device-Name', deviceName);
+      if (deviceType !== null) headers.set('X-Device-Type', deviceType);
+    }
+    return { url: context.url, init: { ...context.init, headers } };
+  },
+};
+
 // Typed API factories
 // -----------------------------------------------------------------------------
 
@@ -136,7 +176,7 @@ function getConfig(): Configuration {
   if (cachedConfig === null) {
     cachedConfig = new Configuration({
       basePath: getBaseUrl(),
-      middleware: [authMiddleware],
+      middleware: [authMiddleware, deviceMiddleware],
     });
   }
   return cachedConfig;
@@ -166,11 +206,18 @@ export function getCancelDeletionApi(): CancelDeletionControllerApi {
   return new CancelDeletionControllerApi(getConfig());
 }
 
+export function getDeviceManagementApi(): DeviceManagementControllerApi {
+  return new DeviceManagementControllerApi(getConfig());
+}
+
 export function resetClientForTests(): void {
   cachedConfig = null;
   tokenGetter = () => null;
   tokenRefresher = null;
   inflightRefresh = null;
+  deviceGetter = () => null;
+  deviceNameGetter = () => null;
+  deviceTypeGetter = () => null;
 }
 
 // -----------------------------------------------------------------------------

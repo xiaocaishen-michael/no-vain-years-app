@@ -7,6 +7,11 @@ vi.mock('expo-secure-store', () => ({
   setItemAsync: vi.fn(),
   deleteItemAsync: vi.fn(),
 }));
+vi.mock('expo-device', () => ({
+  deviceName: null,
+  DeviceType: { PHONE: 1, TABLET: 2, DESKTOP: 3, TV: 4 },
+  deviceType: null,
+}));
 
 const mocks = vi.hoisted(() => ({
   updateDisplayName: vi.fn(),

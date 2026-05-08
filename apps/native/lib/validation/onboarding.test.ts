@@ -1,5 +1,8 @@
+import { vi, describe, expect, it } from 'vitest';
+
+vi.mock('react-native', () => ({ Platform: { OS: 'web' } }));
+
 import { FetchError, ResponseError } from '@nvy/api-client';
-import { describe, expect, it } from 'vitest';
 
 import { displayNameSchema, mapOnboardingApiError } from './onboarding';
 

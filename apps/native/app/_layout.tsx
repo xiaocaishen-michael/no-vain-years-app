@@ -1,6 +1,6 @@
 import '../global.css';
 
-import { registerAuthInterceptor, useAuthStore } from '@nvy/auth';
+import { registerAuthInterceptor, useAuthStore, useDeviceStore } from '@nvy/auth';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Stack, useNavigationContainerRef, useRouter, useSegments } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
@@ -41,6 +41,7 @@ function AuthGate({ children }: { children: React.ReactNode }) {
   const navRef = useNavigationContainerRef();
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
   const displayName = useAuthStore((s) => s.displayName);
+  const deviceHydrated = useDeviceStore((s) => s.hasHydrated);
   const [navReady, setNavReady] = useState(false);
   const [hasHydrated, setHasHydrated] = useState(() => useAuthStore.persist.hasHydrated());
 
@@ -70,6 +71,10 @@ function AuthGate({ children }: { children: React.ReactNode }) {
   }, []);
 
   useEffect(() => {
+    void useDeviceStore.getState().initialize();
+  }, []);
+
+  useEffect(() => {
     if (!navReady || !hasHydrated) return;
     const decision = decideAuthRoute({
       isAuthenticated,
@@ -82,7 +87,7 @@ function AuthGate({ children }: { children: React.ReactNode }) {
     }
   }, [navReady, hasHydrated, isAuthenticated, displayName, segments, router]);
 
-  if (!hasHydrated) return <SplashPlaceholder />;
+  if (!hasHydrated || !deviceHydrated) return <SplashPlaceholder />;
   return <>{children}</>;
 }
 

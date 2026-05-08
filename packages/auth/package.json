@@ -17,6 +17,7 @@
   "dependencies": {
     "@nvy/api-client": "workspace:*",
     "@nvy/types": "workspace:*",
+    "expo-device": "~8.0.10",
     "expo-secure-store": "~15.0.8",
     "zustand": "^5.0.12"
   },

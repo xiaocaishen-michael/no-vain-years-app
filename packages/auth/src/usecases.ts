@@ -11,11 +11,16 @@ import {
   getAccountProfileApi,
   getAuthApi,
   getCancelDeletionApi,
+  getDeviceManagementApi,
   ResponseError,
+  setDeviceGetter,
+  setDeviceNameGetter,
+  setDeviceTypeGetter,
   setTokenGetter,
   setTokenRefresher,
 } from '@nvy/api-client';
 
+import { useDeviceStore } from './device-store';
 import { useAuthStore } from './store';
 
 export interface LoginResult {
@@ -196,6 +201,56 @@ export function registerAuthInterceptor(): void {
   setTokenRefresher(async () => {
     await refreshTokenFlow();
   });
+  setDeviceGetter(() => useDeviceStore.getState().deviceId);
+  setDeviceNameGetter(() => useDeviceStore.getState().deviceName);
+  setDeviceTypeGetter(() => useDeviceStore.getState().deviceType);
+}
+
+// -----------------------------------------------------------------------------
+// Device management wrappers (spec M1.X — device-management UI)
+// -----------------------------------------------------------------------------
+
+export interface DeviceItem {
+  id: number;
+  deviceId: string | null;
+  deviceName: string | null;
+  deviceType: 'PHONE' | 'TABLET' | 'DESKTOP' | 'WEB' | 'UNKNOWN';
+  location: string | null;
+  loginMethod: 'PHONE_SMS' | 'GOOGLE' | 'APPLE' | 'WECHAT';
+  lastActiveAt: string; // ISO-8601
+  isCurrent: boolean;
+}
+
+export interface DeviceListResult {
+  page: number;
+  size: number;
+  totalElements: number;
+  totalPages: number;
+  items: DeviceItem[];
+}
+
+export async function listDevices(page: number, size: number): Promise<DeviceListResult> {
+  const response = await getDeviceManagementApi().list({ page, size });
+  return {
+    page: response.page ?? page,
+    size: response.size ?? size,
+    totalElements: response.totalElements ?? 0,
+    totalPages: response.totalPages ?? 0,
+    items: (response.items ?? []).map((item) => ({
+      id: item.id!,
+      deviceId: item.deviceId ?? null,
+      deviceName: item.deviceName ?? null,
+      deviceType: (item.deviceType as DeviceItem['deviceType']) ?? 'UNKNOWN',
+      location: item.location ?? null,
+      loginMethod: (item.loginMethod as DeviceItem['loginMethod']) ?? 'PHONE_SMS',
+      lastActiveAt: item.lastActiveAt?.toISOString() ?? '',
+      isCurrent: item.isCurrent ?? false,
+    })),
+  };
+}
+
+export async function revokeDevice(recordId: number): Promise<void> {
+  await getDeviceManagementApi().revoke({ recordId });
 }
 
 export { ApiClientError, ResponseError };

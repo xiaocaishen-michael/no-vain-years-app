@@ -11,7 +11,11 @@ export {
   getAccountSmsCodeApi,
   getAuthApi,
   getCancelDeletionApi,
+  getDeviceManagementApi,
   resetClientForTests,
+  setDeviceGetter,
+  setDeviceNameGetter,
+  setDeviceTypeGetter,
   setTokenGetter,
   setTokenRefresher,
 } from './client';
