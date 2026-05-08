@@ -12,10 +12,14 @@ import {
   getAuthApi,
   getCancelDeletionApi,
   ResponseError,
+  setDeviceGetter,
+  setDeviceNameGetter,
+  setDeviceTypeGetter,
   setTokenGetter,
   setTokenRefresher,
 } from '@nvy/api-client';
 
+import { useDeviceStore } from './device-store';
 import { useAuthStore } from './store';
 
 export interface LoginResult {
@@ -196,6 +200,9 @@ export function registerAuthInterceptor(): void {
   setTokenRefresher(async () => {
     await refreshTokenFlow();
   });
+  setDeviceGetter(() => useDeviceStore.getState().deviceId);
+  setDeviceNameGetter(() => useDeviceStore.getState().deviceName);
+  setDeviceTypeGetter(() => useDeviceStore.getState().deviceType);
 }
 
 export { ApiClientError, ResponseError };

@@ -80,7 +80,7 @@ pnpm api:gen     # 拉 prod / staging spec
 
 ---
 
-### T3 [Pkg] `packages/auth` wiring — `registerAuthInterceptor` 接入 device getters
+### T3 ✅ [Pkg] `packages/auth` wiring — `registerAuthInterceptor` 接入 device getters
 
 **File**: `packages/auth/src/usecases.ts`（**改** — `registerAuthInterceptor()` 函数末尾加 setDeviceGetter 三调用）
 

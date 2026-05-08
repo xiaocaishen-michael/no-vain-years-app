@@ -1,4 +1,7 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
+
+vi.mock('react-native', () => ({ Platform: { OS: 'web' } }));
+
 import { ApiClientError, ResponseError } from '@nvy/api-client';
 
 import { deviceErrorCopy, mapDeviceError } from './device-errors';

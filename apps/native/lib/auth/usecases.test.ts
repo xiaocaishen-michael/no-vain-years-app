@@ -6,6 +6,11 @@ vi.mock('expo-secure-store', () => ({
   setItemAsync: vi.fn(),
   deleteItemAsync: vi.fn(),
 }));
+vi.mock('expo-device', () => ({
+  deviceName: null,
+  DeviceType: { PHONE: 1, TABLET: 2, DESKTOP: 3, TV: 4 },
+  deviceType: null,
+}));
 
 const mocks = vi.hoisted(() => ({
   getMe: vi.fn(),
@@ -15,6 +20,9 @@ const mocks = vi.hoisted(() => ({
   deleteAccountApi: vi.fn(),
   sendCancelDeletionCode: vi.fn(),
   cancelDeletionApi: vi.fn(),
+  setDeviceGetter: vi.fn(),
+  setDeviceNameGetter: vi.fn(),
+  setDeviceTypeGetter: vi.fn(),
 }));
 
 vi.mock('@nvy/api-client', () => {
@@ -58,6 +66,9 @@ vi.mock('@nvy/api-client', () => {
     }),
     setTokenGetter: vi.fn(),
     setTokenRefresher: vi.fn(),
+    setDeviceGetter: mocks.setDeviceGetter,
+    setDeviceNameGetter: mocks.setDeviceNameGetter,
+    setDeviceTypeGetter: mocks.setDeviceTypeGetter,
     ResponseError,
     FetchError,
     ApiClientError,
@@ -70,10 +81,12 @@ import {
   deleteAccount,
   loadProfile,
   phoneSmsAuth,
+  registerAuthInterceptor,
   requestCancelDeletionSmsCode,
   requestDeleteAccountSmsCode,
   updateDisplayName,
   useAuthStore,
+  useDeviceStore,
 } from '@nvy/auth';
 
 describe('auth usecases — loadProfile / updateDisplayName / phoneSmsAuth chaining (T2 / FR-003 / FR-004)', () => {
@@ -331,6 +344,37 @@ describe('auth usecases — loadProfile / updateDisplayName / phoneSmsAuth chain
         ResponseError,
       );
       expect(useAuthStore.getState().isAuthenticated).toBe(false);
+    });
+  });
+
+  describe('registerAuthInterceptor — device getters wiring (T3)', () => {
+    beforeEach(() => {
+      mocks.setDeviceGetter.mockReset();
+      mocks.setDeviceNameGetter.mockReset();
+      mocks.setDeviceTypeGetter.mockReset();
+      useDeviceStore.setState({
+        deviceId: null,
+        deviceName: null,
+        deviceType: null,
+        hasHydrated: false,
+      });
+    });
+
+    it('should_register_device_getters_alongside_token_getters', () => {
+      registerAuthInterceptor();
+      expect(mocks.setDeviceGetter).toHaveBeenCalledOnce();
+      expect(mocks.setDeviceNameGetter).toHaveBeenCalledOnce();
+      expect(mocks.setDeviceTypeGetter).toHaveBeenCalledOnce();
+    });
+
+    it('should_propagate_deviceStore_changes_through_getter', () => {
+      registerAuthInterceptor();
+      const deviceIdGetter = mocks.setDeviceGetter.mock.calls[0]?.[0] as () => string | null;
+
+      expect(deviceIdGetter()).toBeNull();
+
+      useDeviceStore.setState({ deviceId: 'test-uuid-abcd-1234' });
+      expect(deviceIdGetter()).toBe('test-uuid-abcd-1234');
     });
   });
 
