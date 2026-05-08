@@ -359,7 +359,7 @@ const COPY = {
 
 ---
 
-### T15 [Smoke] visual smoke 6 状态截图
+### T15 ✅ [Smoke] visual smoke 6 状态截图
 
 **Files**:
 
