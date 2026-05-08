@@ -226,7 +226,7 @@ describe('auth usecases — loadProfile / updateDisplayName / phoneSmsAuth chain
       expect(state.isAuthenticated).toBe(false);
     });
 
-    it('error path: SDK rejects → clearSession STILL called (per plan finally block)', async () => {
+    it('error path: SDK rejects → session RETAINED so page can show errorMsg + retry', async () => {
       useAuthStore.setState({
         accountId: 1,
         accessToken: 'a',
@@ -241,20 +241,28 @@ describe('auth usecases — loadProfile / updateDisplayName / phoneSmsAuth chain
 
       await expect(deleteAccount('123456')).rejects.toBeInstanceOf(ResponseError);
 
-      // finally block guarantees clearSession runs even on error.
+      // Session preserved on error so handleSubmit's catch can render
+      // mapDeletionError(...) → setErrorMsg('验证码错误') without AuthGate
+      // routing the user away. Token expiry refresh is handled by api-client
+      // 401 middleware separately.
       const state = useAuthStore.getState();
-      expect(state.accountId).toBeNull();
-      expect(state.accessToken).toBeNull();
-      expect(state.isAuthenticated).toBe(false);
+      expect(state.accountId).toBe(1);
+      expect(state.accessToken).toBe('a');
+      expect(state.isAuthenticated).toBe(true);
     });
 
-    it('429 also clears session (server has not yet anonymized — but UI loses confidence)', async () => {
-      useAuthStore.setState({ accessToken: 'a', isAuthenticated: true });
+    it('429 also retains session — user can retry after cooldown', async () => {
+      useAuthStore.setState({
+        accountId: 1,
+        accessToken: 'a',
+        refreshToken: 'r',
+        isAuthenticated: true,
+      });
       mocks.deleteAccountApi.mockRejectedValue(
         new ResponseError(new Response(null, { status: 429 })),
       );
       await expect(deleteAccount('123456')).rejects.toBeInstanceOf(ResponseError);
-      expect(useAuthStore.getState().isAuthenticated).toBe(false);
+      expect(useAuthStore.getState().isAuthenticated).toBe(true);
     });
   });
 
