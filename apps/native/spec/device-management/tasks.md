@@ -36,7 +36,7 @@ pnpm api:gen     # 拉 prod / staging spec
 
 ---
 
-### T1 [Pkg] `packages/auth/src/device-store.ts`
+### T1 ✅ [Pkg] `packages/auth/src/device-store.ts`
 
 **Files**:
 
@@ -59,7 +59,7 @@ pnpm api:gen     # 拉 prod / staging spec
 
 ---
 
-### T2 [Pkg] `packages/api-client/src/client.ts` 加 `deviceMiddleware`
+### T2 ✅ [Pkg] `packages/api-client/src/client.ts` 加 `deviceMiddleware`
 
 **Files**:
 

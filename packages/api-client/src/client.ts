@@ -12,6 +12,8 @@
 // deliberately don't import @nvy/auth here — auth already imports api-client
 // (for typed APIs in usecases.ts), so the dependency must flow one way.
 
+import { Platform } from 'react-native';
+
 import { AccountAuthControllerApi } from './generated/apis/AccountAuthControllerApi';
 import { AccountDeletionControllerApi } from './generated/apis/AccountDeletionControllerApi';
 import { AccountProfileControllerApi } from './generated/apis/AccountProfileControllerApi';
@@ -57,10 +59,29 @@ function getBaseUrl(): string {
 
 type TokenGetter = () => string | null;
 type TokenRefresher = () => Promise<void>;
+type StringGetter = () => string | null;
 
 let tokenGetter: TokenGetter = () => null;
 let tokenRefresher: TokenRefresher | null = null;
 let inflightRefresh: Promise<void> | null = null;
+
+// -----------------------------------------------------------------------------
+// Device plumbing — registered by @nvy/auth via registerAuthInterceptor
+// -----------------------------------------------------------------------------
+
+let deviceGetter: StringGetter = () => null;
+let deviceNameGetter: StringGetter = () => null;
+let deviceTypeGetter: StringGetter = () => null;
+
+export function setDeviceGetter(fn: StringGetter): void {
+  deviceGetter = fn;
+}
+export function setDeviceNameGetter(fn: StringGetter): void {
+  deviceNameGetter = fn;
+}
+export function setDeviceTypeGetter(fn: StringGetter): void {
+  deviceTypeGetter = fn;
+}
 
 export function setTokenGetter(fn: TokenGetter): void {
   tokenGetter = fn;
@@ -127,6 +148,24 @@ const authMiddleware: Middleware = {
 };
 
 // -----------------------------------------------------------------------------
+// Device header middleware — runs after authMiddleware
+// -----------------------------------------------------------------------------
+
+const deviceMiddleware: Middleware = {
+  async pre(context) {
+    const headers = new Headers(context.init.headers);
+    const deviceId = deviceGetter();
+    if (deviceId !== null) headers.set('X-Device-Id', deviceId);
+    if (Platform.OS !== 'web') {
+      const deviceName = deviceNameGetter();
+      const deviceType = deviceTypeGetter();
+      if (deviceName !== null) headers.set('X-Device-Name', deviceName);
+      if (deviceType !== null) headers.set('X-Device-Type', deviceType);
+    }
+    return { url: context.url, init: { ...context.init, headers } };
+  },
+};
+
 // Typed API factories
 // -----------------------------------------------------------------------------
 
@@ -136,7 +175,7 @@ function getConfig(): Configuration {
   if (cachedConfig === null) {
     cachedConfig = new Configuration({
       basePath: getBaseUrl(),
-      middleware: [authMiddleware],
+      middleware: [authMiddleware, deviceMiddleware],
     });
   }
   return cachedConfig;
@@ -171,6 +210,9 @@ export function resetClientForTests(): void {
   tokenGetter = () => null;
   tokenRefresher = null;
   inflightRefresh = null;
+  deviceGetter = () => null;
+  deviceNameGetter = () => null;
+  deviceTypeGetter = () => null;
 }
 
 // -----------------------------------------------------------------------------

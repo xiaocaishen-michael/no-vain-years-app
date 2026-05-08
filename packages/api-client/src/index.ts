@@ -12,6 +12,9 @@ export {
   getAuthApi,
   getCancelDeletionApi,
   resetClientForTests,
+  setDeviceGetter,
+  setDeviceNameGetter,
+  setDeviceTypeGetter,
   setTokenGetter,
   setTokenRefresher,
 } from './client';
