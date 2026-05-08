@@ -164,7 +164,7 @@ export function registerAuthInterceptor(): void {
 
 ---
 
-### T7 [Lib] `useDevicesQuery` hook
+### T7 ✅ [Lib] `useDevicesQuery` hook
 
 **File**: `apps/native/lib/hooks/useDevicesQuery.ts`（**新建**）
 
