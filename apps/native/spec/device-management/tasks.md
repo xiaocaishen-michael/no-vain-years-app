@@ -288,7 +288,7 @@ export default function LoginManagementLayout() {
 
 ---
 
-### T12 [Page] `login-management/[id].tsx` (detail page)
+### T12 ✅ [Page] `login-management/[id].tsx` (detail page)
 
 **File**: `apps/native/app/(app)/settings/account-security/login-management/[id].tsx`（**新建**）
 
@@ -307,7 +307,7 @@ export default function LoginManagementLayout() {
 
 ---
 
-### T13 [Component] `RemoveDeviceSheet.tsx`
+### T13 ✅ [Component] `RemoveDeviceSheet.tsx`
 
 **File**: `apps/native/app/(app)/settings/account-security/login-management/RemoveDeviceSheet.tsx`（**新建**）
 
