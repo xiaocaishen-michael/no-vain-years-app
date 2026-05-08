@@ -8,11 +8,13 @@ export default {
     'scope-enum': [0],
     'header-max-length': [2, 'always', 100],
     'subject-case': [0],
-    // Disable body / footer line length — Dependabot generates auto-bodies
-    // with long release-note URLs / dep tables that exceed 100 chars and the
-    // bot's commit-message format can't be reconfigured. Header (PR title)
-    // length is still enforced; that's the part developers actually write.
-    'body-max-line-length': [0],
+    // Body 150 chars (default 100 too tight for Chinese; mirrors meta + server
+    // commitlint). Footer remains disabled — Dependabot generates auto-footers
+    // with long release-note URLs / dep tables that we cannot reflow; bot's
+    // commit-message format can't be reconfigured. Body 150 may still trip
+    // Dependabot bot commits — TODO follow-up: add `ignores` filter mirror
+    // server commitlint.config.mjs line 19 if dependabot PR commitlint fail.
+    'body-max-line-length': [2, 'always', 150],
     'footer-max-line-length': [0],
   },
 };
