@@ -269,7 +269,7 @@ export default function LoginManagementLayout() {
 
 ---
 
-### T11 [Page] `login-management/index.tsx` (list page)
+### T11 ✅ [Page] `login-management/index.tsx` (list page)
 
 **File**: `apps/native/app/(app)/settings/account-security/login-management/index.tsx`（**新建**）
 
