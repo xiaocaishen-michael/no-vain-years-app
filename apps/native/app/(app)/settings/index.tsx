@@ -1,6 +1,6 @@
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
-import { Alert, Pressable, ScrollView, Text, View } from 'react-native';
+import { Alert, Platform, Pressable, ScrollView, Text, View } from 'react-native';
 
 import { logoutAll } from '@nvy/auth';
 
@@ -41,6 +41,15 @@ export default function SettingsIndex() {
   }
 
   function confirmLogout() {
+    // react-native-web Alert.alert fallback 到 window.alert(单按钮信息提示),
+    // buttons 数组完全 ignored → onPress 永远不 fire,用户点"退出登录"看着"没反应"。
+    // Web 显式走 window.confirm 拿 yes/no;Native (iOS/Android) 走 Alert.alert.
+    if (Platform.OS === 'web') {
+      if (typeof window !== 'undefined' && window.confirm(COPY.logoutConfirm)) {
+        void handleLogout();
+      }
+      return;
+    }
     Alert.alert(COPY.logoutConfirm, undefined, [
       { text: COPY.logoutCancel, style: 'cancel' },
       { text: COPY.logoutOk, style: 'destructive', onPress: handleLogout },

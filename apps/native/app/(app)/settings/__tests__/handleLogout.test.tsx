@@ -66,8 +66,17 @@ vi.mock('react-native', async () => {
     );
   };
   const Alert = { alert: mockAlertAlert };
-  return { Text, View, ScrollView, Pressable, Alert };
+  const Platform = { OS: 'ios' as 'ios' | 'android' | 'web' };
+  return { Text, View, ScrollView, Pressable, Alert, Platform };
 });
+
+// Helper: switch the mocked Platform.OS for tests that want web-specific behavior.
+async function setPlatformOS(os: 'ios' | 'android' | 'web') {
+  const RN = (await import('react-native')) as unknown as {
+    Platform: { OS: 'ios' | 'android' | 'web' };
+  };
+  RN.Platform.OS = os;
+}
 
 import SettingsIndex from '../index';
 
@@ -117,6 +126,49 @@ describe('handleLogout flow (spec account-settings-shell T5 / FR-005 + FR-019 + 
 
     expect(mockLogoutAll).not.toHaveBeenCalled();
     expect(mockRouterReplace).not.toHaveBeenCalled();
+  });
+
+  it('web: window.confirm true → logoutAll + router.replace login (Alert.alert 不 fire)', async () => {
+    await setPlatformOS('web');
+    const originalConfirm = (window as Window & { confirm?: (msg?: string) => boolean }).confirm;
+    const confirmFn = vi.fn(() => true);
+    (window as Window & { confirm: (msg?: string) => boolean }).confirm = confirmFn;
+    mockLogoutAll.mockResolvedValue(undefined);
+
+    try {
+      render(<SettingsIndex />);
+      fireEvent.click(screen.getByRole('button', { name: '退出登录' }));
+
+      await Promise.resolve();
+      await Promise.resolve();
+
+      expect(confirmFn).toHaveBeenCalledWith('确定要退出登录?');
+      expect(mockAlertAlert).not.toHaveBeenCalled();
+      expect(mockLogoutAll).toHaveBeenCalledOnce();
+      expect(mockRouterReplace).toHaveBeenCalledWith('/(auth)/login');
+    } finally {
+      await setPlatformOS('ios');
+      (window as Window & { confirm?: (msg?: string) => boolean }).confirm = originalConfirm;
+    }
+  });
+
+  it('web: window.confirm false → 不触发 logoutAll', async () => {
+    await setPlatformOS('web');
+    const originalConfirm = (window as Window & { confirm?: (msg?: string) => boolean }).confirm;
+    const confirmFn = vi.fn(() => false);
+    (window as Window & { confirm: (msg?: string) => boolean }).confirm = confirmFn;
+
+    try {
+      render(<SettingsIndex />);
+      fireEvent.click(screen.getByRole('button', { name: '退出登录' }));
+
+      expect(confirmFn).toHaveBeenCalledOnce();
+      expect(mockLogoutAll).not.toHaveBeenCalled();
+      expect(mockRouterReplace).not.toHaveBeenCalled();
+    } finally {
+      await setPlatformOS('ios');
+      (window as Window & { confirm?: (msg?: string) => boolean }).confirm = originalConfirm;
+    }
   });
 
   it('server fail (logoutAll throws) → best-effort: console.warn + router.replace 仍调用', async () => {

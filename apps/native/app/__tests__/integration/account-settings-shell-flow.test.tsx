@@ -87,7 +87,9 @@ vi.mock('react-native', async () => {
     );
   };
   const Alert = { alert: mockAlertAlert };
-  return { Text, View, ScrollView, Pressable, Alert };
+  // Default ios so native Alert path runs; web tests can flip to 'web'.
+  const Platform = { OS: 'ios' as 'ios' | 'android' | 'web' };
+  return { Text, View, ScrollView, Pressable, Alert, Platform };
 });
 
 import SettingsIndex from '../../(app)/settings/index';

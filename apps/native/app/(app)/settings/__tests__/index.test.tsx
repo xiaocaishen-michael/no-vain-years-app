@@ -62,8 +62,9 @@ vi.mock('react-native', async () => {
   };
 
   const Alert = { alert: mockAlertAlert };
+  const Platform = { OS: 'ios' as 'ios' | 'android' | 'web' };
 
-  return { Text, View, ScrollView, Pressable, Alert };
+  return { Text, View, ScrollView, Pressable, Alert, Platform };
 });
 
 import SettingsIndex from '../index';
