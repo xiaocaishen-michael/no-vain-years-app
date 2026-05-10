@@ -12,6 +12,7 @@
   "scripts": {
     "dev": "pnpm --filter native dev",
     "web": "pnpm --filter native web",
+    "build:web": "pnpm --filter native build:web",
     "ios": "pnpm --filter native ios",
     "android": "pnpm --filter native android",
     "typecheck": "pnpm -r typecheck",
