@@ -157,9 +157,14 @@ const deviceMiddleware: Middleware = {
     const headers = new Headers(context.init.headers);
     const deviceId = deviceGetter();
     if (deviceId !== null) headers.set('X-Device-Id', deviceId);
+    // Always invoke deviceNameGetter / deviceTypeGetter so Metro retains the
+    // module-level `let` declarations even when its web dead-code-elim removes
+    // the non-web header branch below — otherwise the exported setters write
+    // to an undeclared identifier and prod web bundle throws ReferenceError
+    // (撞过 2026-05-10 CF Pages 部署 deploy:1).
+    const deviceName = deviceNameGetter();
+    const deviceType = deviceTypeGetter();
     if (Platform.OS !== 'web') {
-      const deviceName = deviceNameGetter();
-      const deviceType = deviceTypeGetter();
       if (deviceName !== null) headers.set('X-Device-Name', deviceName);
       if (deviceType !== null) headers.set('X-Device-Type', deviceType);
     }
