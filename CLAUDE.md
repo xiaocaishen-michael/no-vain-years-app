@@ -113,7 +113,7 @@ pnpm api:gen          # 拉 prod spec
 pnpm api:gen:dev      # 拉 localhost:8080 spec
 ```
 
-详见 [meta `/sync-api-types` 命令文档](https://github.com/xiaocaishen-michael/no-vain-years/blob/main/.claude/commands/sync-api-types.md)。
+详见本仓 [`/sync-api-types` 命令文档](.claude/commands/sync-api-types.md)（从 app cwd 起 claude 时自动加载）。
 
 - 生成产物落到 `packages/api-client/src/generated/`
 - **禁止**手改产物
