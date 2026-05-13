@@ -11,10 +11,11 @@ export default {
     // Body 150 chars (default 100 too tight for Chinese; mirrors meta + server
     // commitlint). Footer remains disabled — Dependabot generates auto-footers
     // with long release-note URLs / dep tables that we cannot reflow; bot's
-    // commit-message format can't be reconfigured. Body 150 may still trip
-    // Dependabot bot commits — TODO follow-up: add `ignores` filter mirror
-    // server commitlint.config.mjs line 19 if dependabot PR commitlint fail.
+    // commit-message format can't be reconfigured.
     'body-max-line-length': [2, 'always', 150],
     'footer-max-line-length': [0],
   },
+  // Skip body line-length check for dependabot — its auto-generated body
+  // includes long URLs from upstream release notes that we cannot reflow.
+  ignores: [(message) => /Signed-off-by: dependabot\[bot\]/.test(message)],
 };
