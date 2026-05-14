@@ -48,6 +48,12 @@ updates:
         update-types: ['version-update:semver-minor', 'version-update:semver-major']
       - dependency-name: 'react-native-*'
         update-types: ['version-update:semver-major']
+      # react-native-screens 4.25.0 tightened its peer to
+      # react-native >= 0.82.0 (i.e. Expo SDK 55+). PR #58 group-bumped it
+      # past that line while we still ship SDK 54 / RN 0.81.x — restored
+      # to 4.24.x. Block 4.25.0+ minor bumps until the SDK 55 session.
+      - dependency-name: 'react-native-screens'
+        versions: ['>=4.25.0']
       # Tailwind v4 incompatible with NativeWind v4 (per ADR-0014).
       # Pinned at ~3.4.x until NativeWind ships Tailwind v4 support.
       # NativeWind major bumps must coordinate with the Tailwind line.
