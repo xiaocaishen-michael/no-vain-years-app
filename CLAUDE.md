@@ -86,30 +86,7 @@ pnpm workspace（`apps/*` + `packages/*`），具体清单以 `pnpm-workspace.ya
 - API mock：**msw**
 - E2E（M2+）：候选 playwright（web）+ detox（native）
 
-## 五、Lint / 格式化 / 类型检查
-
-| 工具           | 用途                                              | 配置文件                           |
-| -------------- | ------------------------------------------------- | ---------------------------------- |
-| **TypeScript** | `strict: true` + `noUncheckedIndexedAccess: true` | `tsconfig.json`                    |
-| **ESLint**     | 代码静态检查                                      | `eslint.config.mjs`（flat config） |
-| **Prettier**   | 自动格式化                                        | `.prettierrc.json`                 |
-| **lefthook**   | pre-commit 阻止 lint 错误                         | `lefthook.yml`                     |
-
-CI 拦截：lint / type 错误必须修才能合并。
-
-## 六、git / commit
-
-| 项             | 约定                                                                                                                                                                 |
-| -------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 分支命名       | 见 [meta docs/conventions/git-workflow.md](https://github.com/xiaocaishen-michael/no-vain-years/blob/main/docs/conventions/git-workflow.md)                          |
-| Commit 消息    | Conventional Commits                                                                                                                                                 |
-| Commit scope   | 业务模块名（`feat(account): ...`），跨模块用 `core`，全局用 `repo`                                                                                                   |
-| PR 合入        | Squash merge，删 feature 分支                                                                                                                                        |
-| Release 自动化 | release-please（M1.2 接入），见 [meta docs/conventions/versioning.md](https://github.com/xiaocaishen-michael/no-vain-years/blob/main/docs/conventions/versioning.md) |
-
-**禁止**提交：`package-lock.json` / `yarn.lock` / `bun.lockb`、`.expo/`、`node_modules/`、`.env*`（除 `.env.example`）。
-
-## 七、AI 协作（Claude Code）
+## 五、AI 协作（Claude Code）
 
 1. **禁止越过 OpenAPI 客户端**：不要手写 fetch 调用业务接口；通过 `@nvy/api-client` 走
 2. **跨包依赖纪律**：`apps/*` 可依赖 `packages/*`；`packages/*` 之间允许（按 ui ↔ api-client ↔ auth 三角依赖图）；`packages/*` **不可**反向依赖 `apps/*`
