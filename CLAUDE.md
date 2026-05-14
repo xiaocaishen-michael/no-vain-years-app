@@ -29,10 +29,10 @@ pnpm workspace（`apps/*` + `packages/*`），具体清单以 `pnpm-workspace.ya
 
 ### 决策树
 
-1. **优先**：写到 `packages/ui`，NativeWind className 跨栈共用（native 现在 + web M2）
+1. **优先**：写到 `packages/ui`，NativeWind className 跨栈共用
 2. **样式必须**：用 NativeWind className（如 `bg-brand-500 px-md py-sm rounded-md`），**禁止** 直接 `StyleSheet.create` 含平台特定值；**禁止** inline hex / px 字面量
 3. **小幅 paradigm 差异**：`apps/native` 内用文件后缀（见下表）
-4. **大幅 paradigm 差异**（M2 PKM 大屏画布 / 知识图谱）：在 `apps/web` 重写，**不**勉强共享 — 此时 packages/api-client + packages/auth 仍跨享，仅 UI 层各写各的
+4. **大幅 paradigm 差异**（如 PKM 大屏画布 / 知识图谱）：在 `apps/web` 重写，**不**勉强共享 — 此时 packages/api-client + packages/auth 仍跨享，仅 UI 层各写各的
 
 ### 文件后缀约定（apps/native 内）
 
@@ -46,7 +46,7 @@ pnpm workspace（`apps/*` + `packages/*`），具体清单以 `pnpm-workspace.ya
 
 加载优先级由 Metro / Expo Router 决定：平台特定 > native > 通用。
 
-`apps/web`（M2+）由 Next.js 管理，不走 Metro 后缀分发；大屏页面直接独立文件实现。
+`apps/web` 由 Next.js 管理，不走 Metro 后缀分发；大屏页面直接独立文件实现。
 
 ## 三、UI/UX 工作流
 
@@ -62,14 +62,14 @@ pnpm workspace（`apps/*` + `packages/*`），具体清单以 `pnpm-workspace.ya
 
 ### 测试范围（**不与 backend 同等强度的 TDD**）
 
-| 类型                           | 强度                                                              | 工具                       |
-| ------------------------------ | ----------------------------------------------------------------- | -------------------------- |
-| 关键 hook（自定义业务 hook）   | 🟢 **必须测**（先测后实现）                                       | vitest                     |
-| 工具函数（lib/utils 等纯函数） | 🟢 **必须测**                                                     | vitest                     |
-| store（Zustand）的复杂状态机   | 🟢 **必须测**（关键流转）                                         | vitest                     |
-| API 调用层（含错误映射）       | 🟡 推荐测                                                         | vitest + msw               |
-| UI 组件（视觉 + 交互）         | ⏸ **不强制 TDD**（业内争议大），但鼓励 visual regression（M2 后） | 视情况：playwright / detox |
-| Expo Router 页面               | ⏸ 不强制                                                          | E2E 覆盖即可               |
+| 类型                           | 强度                                                     | 工具                       |
+| ------------------------------ | -------------------------------------------------------- | -------------------------- |
+| 关键 hook（自定义业务 hook）   | 🟢 **必须测**（先测后实现）                              | vitest                     |
+| 工具函数（lib/utils 等纯函数） | 🟢 **必须测**                                            | vitest                     |
+| store（Zustand）的复杂状态机   | 🟢 **必须测**（关键流转）                                | vitest                     |
+| API 调用层（含错误映射）       | 🟡 推荐测                                                | vitest + msw               |
+| UI 组件（视觉 + 交互）         | ⏸ **不强制 TDD**（业内争议大），但鼓励 visual regression | 视情况：playwright / detox |
+| Expo Router 页面               | ⏸ 不强制                                                 | E2E 覆盖即可               |
 
 **核心原则**：**有明确输入输出 / 业务规则的代码必须 TDD；纯展示型组件可不 TDD**。
 
@@ -78,13 +78,7 @@ pnpm workspace（`apps/*` + `packages/*`），具体清单以 `pnpm-workspace.ya
 | 类型       | 文件命名                             |
 | ---------- | ------------------------------------ |
 | 单元测试   | `<name>.test.ts(x)` 与被测文件同目录 |
-| 集成 / E2E | `e2e/<feature>.spec.ts`（M2 之后）   |
-
-### 工具链（M1.1 第一周敲定具体配置）
-
-- 单元测试：**vitest**（与 NativeWind / Expo 生态兼容性最好）
-- API mock：**msw**
-- E2E（M2+）：候选 playwright（web）+ detox（native）
+| 集成 / E2E | `e2e/<feature>.spec.ts`              |
 
 ## 五、AI 协作（Claude Code）
 
