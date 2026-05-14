@@ -8,7 +8,7 @@
 
 本文件 = **写代码时必须遵守的规约**。系统级规则（Git workflow、业务命名、API 契约、版本号策略、模块化）见 [meta CLAUDE.md](https://github.com/xiaocaishen-michael/no-vain-years/blob/main/CLAUDE.md)；UI/UX 工作流详见 [docs/ui-ux-workflow.md](https://github.com/xiaocaishen-michael/no-vain-years/blob/main/docs/ui-ux-workflow.md)。
 
-读入顺序：先读 [meta CLAUDE.md](https://github.com/xiaocaishen-michael/no-vain-years/blob/main/CLAUDE.md) → 读 [docs/ui-ux-workflow.md](https://github.com/xiaocaishen-michael/no-vain-years/blob/main/docs/ui-ux-workflow.md) → 读本文件。
+读入顺序：先读 [meta CLAUDE.md](https://github.com/xiaocaishen-michael/no-vain-years/blob/main/CLAUDE.md) → 按需读 [docs/ui-ux-workflow.md](https://github.com/xiaocaishen-michael/no-vain-years/blob/main/docs/ui-ux-workflow.md) → 读本文件。
 
 ---
 
@@ -119,16 +119,16 @@ pnpm api:gen:dev      # 拉 localhost:8080 spec
 - **禁止**手改产物
 - consumer（apps/native / apps/web / 其他 packages）通过 `@nvy/api-client` 入口 import，**禁止**直接 deep-import `@nvy/api-client/src/generated/...`
 - 后端 spec 变更后必须重新生成 + 适配调用方
-- 详见 [meta CLAUDE.md § API 契约](https://github.com/xiaocaishen-michael/no-vain-years/blob/main/CLAUDE.md#api-契约)
+- 详见 [meta docs/conventions/api-contract.md](https://github.com/xiaocaishen-michael/no-vain-years/blob/main/docs/conventions/api-contract.md)
 
 ## 七、Lint / 格式化 / 类型检查
 
-| 工具                    | 用途                                              | 配置文件                                     |
-| ----------------------- | ------------------------------------------------- | -------------------------------------------- |
-| **TypeScript**          | `strict: true` + `noUncheckedIndexedAccess: true` | `tsconfig.json`                              |
-| **ESLint**              | 代码静态检查                                      | `.eslintrc.cjs`（M1.1 第一周敲定具体规则集） |
-| **Prettier**            | 自动格式化                                        | `.prettierrc`                                |
-| **husky + lint-staged** | pre-commit 阻止 lint 错误                         | `.husky/`                                    |
+| 工具           | 用途                                              | 配置文件                           |
+| -------------- | ------------------------------------------------- | ---------------------------------- |
+| **TypeScript** | `strict: true` + `noUncheckedIndexedAccess: true` | `tsconfig.json`                    |
+| **ESLint**     | 代码静态检查                                      | `eslint.config.mjs`（flat config） |
+| **Prettier**   | 自动格式化                                        | `.prettierrc.json`                 |
+| **lefthook**   | pre-commit 阻止 lint 错误                         | `lefthook.yml`                     |
 
 CI 拦截：lint / type 错误必须修才能合并。
 
@@ -151,13 +151,13 @@ pnpm --filter native exec expo export -p web   # 输出到 apps/native/dist/
 
 ## 九、git / commit
 
-| 项             | 约定                                                                                                                                                    |
-| -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 分支命名       | 见 [meta CLAUDE.md § Git 工作流](https://github.com/xiaocaishen-michael/no-vain-years/blob/main/CLAUDE.md#git-工作流)                                   |
-| Commit 消息    | Conventional Commits                                                                                                                                    |
-| Commit scope   | 业务模块名（`feat(account): ...`），跨模块用 `core`，全局用 `repo`                                                                                      |
-| PR 合入        | Squash merge，删 feature 分支                                                                                                                           |
-| Release 自动化 | release-please（M1.2 接入），见 [meta CLAUDE.md § 版本号 / 发版](https://github.com/xiaocaishen-michael/no-vain-years/blob/main/CLAUDE.md#版本号--发版) |
+| 项             | 约定                                                                                                                                                                 |
+| -------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 分支命名       | 见 [meta docs/conventions/git-workflow.md](https://github.com/xiaocaishen-michael/no-vain-years/blob/main/docs/conventions/git-workflow.md)                          |
+| Commit 消息    | Conventional Commits                                                                                                                                                 |
+| Commit scope   | 业务模块名（`feat(account): ...`），跨模块用 `core`，全局用 `repo`                                                                                                   |
+| PR 合入        | Squash merge，删 feature 分支                                                                                                                                        |
+| Release 自动化 | release-please（M1.2 接入），见 [meta docs/conventions/versioning.md](https://github.com/xiaocaishen-michael/no-vain-years/blob/main/docs/conventions/versioning.md) |
 
 **禁止**提交：`package-lock.json` / `yarn.lock` / `bun.lockb`、`.expo/`、`node_modules/`、`.env*`（除 `.env.example`）。
 

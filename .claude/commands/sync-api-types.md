@@ -7,14 +7,9 @@ model: sonnet
 
 执行以下步骤：
 
-1. 确认后端运行中，且 `http://localhost:8080/v3/api-docs` 可访问
-2. 进入 `no-vain-years-app/`，运行 `pnpm run gen:api` 从 `/v3/api-docs` 生成 TS 客户端到 `lib/api/`
-3. 在前端运行 `pnpm tsc --noEmit` 验证类型正确
-4. 如有 breaking change，更新相关调用方
-5. **首次接入**（脚手架未就绪）：先在 `package.json#scripts` 加入 `gen:api` 脚本：
-
-   ```json
-   "gen:api": "openapi-typescript http://localhost:8080/v3/api-docs -o lib/api/schema.ts"
-   ```
-
-   此命令为 M1.1 占位，第一周脚手架完成时按实际工具链最终敲定（候选：openapi-typescript / openapi-generator-cli）。
+1. 选 spec 来源：
+   - 拉本地 `localhost:8080/v3/api-docs` → `pnpm api:gen:dev`（需后端在跑）
+   - 拉 prod spec → `pnpm api:gen`
+2. 生成产物落到 `packages/api-client/src/generated/`，**禁止手改**
+3. 在仓根运行 `pnpm typecheck` 验证类型正确（递归跑所有 workspace）
+4. 如有 breaking change，更新相关调用方（apps/native 与其他 packages 中通过 `@nvy/api-client` 入口 import）

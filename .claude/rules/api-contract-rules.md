@@ -2,7 +2,7 @@
 paths:
   - '**/openapi*.yaml'
   - '**/openapi*.yml'
-  - '**/lib/api/**'
+  - '**/packages/api-client/**'
   - '**/*ApiClient*.ts'
 ---
 
@@ -13,7 +13,7 @@ paths:
 ## 单一真相源
 
 - OpenAPI spec = my-beloved-server Springdoc 自动生成（入口：`/v3/api-docs`）
-- 前端 `lib/api/` 由 OpenAPI Generator **自动生成**，**禁止手写**
+- 前端 `packages/api-client/src/generated/` 由 OpenAPI Generator **自动生成**，**禁止手写**
 - 后端改实现 → 确认 spec 已更新 → merge；前端跑 `/sync-api-types` 重新生成 client
 
 ## 版本规则
