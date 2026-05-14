@@ -86,25 +86,7 @@ pnpm workspace（`apps/*` + `packages/*`），具体清单以 `pnpm-workspace.ya
 - API mock：**msw**
 - E2E（M2+）：候选 playwright（web）+ detox（native）
 
-## 五、API 客户端
-
-后端 OpenAPI spec → 前端 TS 客户端**自动生成**，不手写：
-
-```bash
-# 重新生成 API 客户端（root 命令委托给 @nvy/api-client）
-pnpm api:gen          # 拉 prod spec
-pnpm api:gen:dev      # 拉 localhost:8080 spec
-```
-
-详见本仓 [`/sync-api-types` 命令文档](.claude/commands/sync-api-types.md)（从 app cwd 起 claude 时自动加载）。
-
-- 生成产物落到 `packages/api-client/src/generated/`
-- **禁止**手改产物
-- consumer（apps/native / apps/web / 其他 packages）通过 `@nvy/api-client` 入口 import，**禁止**直接 deep-import `@nvy/api-client/src/generated/...`
-- 后端 spec 变更后必须重新生成 + 适配调用方
-- 详见 [meta docs/conventions/api-contract.md](https://github.com/xiaocaishen-michael/no-vain-years/blob/main/docs/conventions/api-contract.md)
-
-## 六、Lint / 格式化 / 类型检查
+## 五、Lint / 格式化 / 类型检查
 
 | 工具           | 用途                                              | 配置文件                           |
 | -------------- | ------------------------------------------------- | ---------------------------------- |
@@ -115,24 +97,7 @@ pnpm api:gen:dev      # 拉 localhost:8080 spec
 
 CI 拦截：lint / type 错误必须修才能合并。
 
-## 七、构建 / 测试 / 启动命令
-
-标准命令（install / dev / ios / android / typecheck / lint / test）见 root `package.json#scripts`。非显而易见的命令：
-
-```bash
-# 重新生成 API client（不可手写，必须走这里）
-pnpm api:gen          # 拉 prod spec（localhost:8080 关）
-pnpm api:gen:dev      # 拉 localhost:8080 spec（本地 server 开着时）
-
-# EAS 构建（M2 接入后）
-pnpm --filter native exec eas build --platform ios
-pnpm --filter native exec eas build --platform android
-
-# Web export（Cloudflare Pages 部署用）
-pnpm --filter native exec expo export -p web   # 输出到 apps/native/dist/
-```
-
-## 八、git / commit
+## 六、git / commit
 
 | 项             | 约定                                                                                                                                                                 |
 | -------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -144,7 +109,7 @@ pnpm --filter native exec expo export -p web   # 输出到 apps/native/dist/
 
 **禁止**提交：`package-lock.json` / `yarn.lock` / `bun.lockb`、`.expo/`、`node_modules/`、`.env*`（除 `.env.example`）。
 
-## 九、AI 协作（Claude Code）
+## 七、AI 协作（Claude Code）
 
 1. **禁止越过 OpenAPI 客户端**：不要手写 fetch 调用业务接口；通过 `@nvy/api-client` 走
 2. **跨包依赖纪律**：`apps/*` 可依赖 `packages/*`；`packages/*` 之间允许（按 ui ↔ api-client ↔ auth 三角依赖图）；`packages/*` **不可**反向依赖 `apps/*`
