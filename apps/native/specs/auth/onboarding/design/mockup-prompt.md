@@ -8,15 +8,15 @@
 
 ## 设计上下文（仅给 user 看，不放进 Claude Design prompt）
 
-| 项       | 值                                                                                                                   |
-| -------- | -------------------------------------------------------------------------------------------------------------------- |
-| 页面     | onboarding gate（phoneSmsAuth auto-create 后的"完善昵称"卡点）                                                       |
-| 路由     | `/(app)/onboarding`（已落地，PHASE 1 占位 UI）                                                                       |
-| 业务流   | 单 form / 单字段（displayName）/ 不可跳过（per FR-011）                                                              |
-| 视觉前置 | 复用 login v2 design-tokens（期望 0 token 改动）                                                                     |
-| 状态机   | 4 态（idle / submitting / success / error）                                                                          |
-| 校验     | [1,32] Unicode codepoints, trim, 禁控制字符 / 零宽 / 行分隔（per FR-005）                                            |
-| 反例参考 | login v2 mockup（同模式：单 form + 4 状态 + className 1:1 paste）—— `apps/native/specs/auth/login/design/source-v2/` |
+| 项       | 值                                                                                                                            |
+| -------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| 页面     | onboarding gate（phoneSmsAuth auto-create 后的"完善昵称"卡点）                                                                |
+| 路由     | `/(app)/onboarding`（已落地，PHASE 1 占位 UI）                                                                                |
+| 业务流   | 单 form / 单字段（displayName）/ 不可跳过（per FR-011）                                                                       |
+| 视觉前置 | 复用 login v2 design-tokens（期望 0 token 改动）                                                                              |
+| 状态机   | 4 态（idle / submitting / success / error）                                                                                   |
+| 校验     | [1,32] Unicode codepoints, trim, 禁控制字符 / 零宽 / 行分隔（per FR-005）                                                     |
+| 反例参考 | login v2 mockup（同模式：单 form + 4 状态 + className 1:1 paste）—— `apps/native/specs/auth/phone-sms-auth/design/source-v2/` |
 
 ---
 

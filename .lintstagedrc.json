@@ -1,5 +1,0 @@
-{
-  "*.{ts,tsx}": ["prettier --write"],
-  "*.{json,yaml,yml}": ["prettier --write"],
-  "*.md": ["prettier --write", "npx -y markdownlint-cli2"]
-}

@@ -238,5 +238,5 @@ PHASE 1 占位仅基础 `accessibilityLabel`；PHASE 2 mockup 后扩展 `accessi
 - [server spec/account/realname-verification/plan.md](https://github.com/xiaocaishen-michael/my-beloved-server/blob/main/spec/account/realname-verification/plan.md) — 后端 plan 对照
 - [ADR-0017](../../../../docs/adr/0017-sdd-business-flow-first-then-mockup.md) 类 1 标准 UI 流程
 - [`apps/native/specs/auth/onboarding/plan.md`](../onboarding/plan.md) — 类 1 plan PHASE 2 完整版参考
-- [`apps/native/specs/auth/login/plan.md`](../login/plan.md) — 类 1 form plan 参考
+- [`apps/native/specs/auth/phone-sms-auth/plan.md`](../login/plan.md) — 类 1 form plan 参考
 - 既有 `account-security/_layout.tsx` — 嵌套路由 stack

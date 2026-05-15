@@ -6,7 +6,7 @@ export interface WechatButtonProps {
   disabled?: boolean;
 }
 
-// WeChat OAuth circle button (per mockup v2 specs/auth/login/design/source-v2/LoginScreen.tsx ~L237).
+// WeChat OAuth circle button (per mockup v2 specs/auth/phone-sms-auth/design/source-v2/LoginScreen.tsx ~L237).
 // 微信品牌绿 #07C160 是 ad-hoc 任意值（per design/handoff.md § 4），仅本组件使用。
 // M1.2 仅 placeholder（caller 端 onPress 弹 toast "Coming in M1.3"）；M1.3 接真实 OAuth 时替换 onPress。
 //

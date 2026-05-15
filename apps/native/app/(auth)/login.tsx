@@ -1,6 +1,6 @@
 // Login page (M1.3 phase 2 — UI 完成 per ADR-0017 + mockup v2 落地).
-// Source: apps/native/specs/auth/login/design/source-v2/LoginScreen.tsx
-//         apps/native/specs/auth/login/design/handoff.md (翻译期决策)
+// Source: apps/native/specs/auth/phone-sms-auth/design/source-v2/LoginScreen.tsx
+//         apps/native/specs/auth/phone-sms-auth/design/handoff.md (翻译期决策)
 //
 // State machine: idle → requesting_sms → sms_sent → submitting → success | error
 // (errorScope: 'sms' | 'submit' | null — drives which input shows red border + ErrorRow)

@@ -24,4 +24,4 @@ v1 mockup 的以下视觉 / 结构决策在 v2 合一页**不再适用**：
 
 ## 翻译记录
 
-`apps/native/specs/auth/login/spec.md` + `plan.md` + `tasks.md` 在 2026-05-04 PR `docs/login-spec-rewrite-adr-0016` 已整体重写为 unified 版本；`packages/ui` 中的 PasswordField / TabSwitcher 在 M1.3 impl PR 删除，新增 WechatButton + AppleButton（per ADR-0016 决策 4）。
+`apps/native/specs/auth/phone-sms-auth/spec.md` + `plan.md` + `tasks.md` 在 2026-05-04 PR `docs/login-spec-rewrite-adr-0016` 已整体重写为 unified 版本；`packages/ui` 中的 PasswordField / TabSwitcher 在 M1.3 impl PR 删除，新增 WechatButton + AppleButton（per ADR-0016 决策 4）。

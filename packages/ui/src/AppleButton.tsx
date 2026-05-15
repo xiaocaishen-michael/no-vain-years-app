@@ -5,7 +5,7 @@ export interface AppleButtonProps {
   disabled?: boolean;
 }
 
-// Apple OAuth circle button (per mockup v2 specs/auth/login/design/source-v2/LoginScreen.tsx ~L260).
+// Apple OAuth circle button (per mockup v2 specs/auth/phone-sms-auth/design/source-v2/LoginScreen.tsx ~L260).
 // **iOS-only** conditional render 在 caller 层（login.tsx）用 Platform.OS === 'ios' 判;
 // 本组件本身跨端可渲染 (per ADR-0016 决策 4 + plan.md 反模式).
 //

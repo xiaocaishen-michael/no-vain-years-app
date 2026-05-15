@@ -13,3 +13,8 @@ packages/api-client/src/generated
 CHANGELOG.md
 **/CHANGELOG.md
 LICENSE
+
+# Spec.md / user-journey.md 在 impl 仓是 symlink → meta canonical;
+# prettier 不跟随 symlink 会报错. per docs/plans/26-05-14-witty-churning-tome.md § 2.5
+**/specs/**/spec.md
+**/specs/**/user-journey.md

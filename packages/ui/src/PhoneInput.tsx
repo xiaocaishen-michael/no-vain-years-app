@@ -9,7 +9,7 @@ export interface PhoneInputProps {
   errored?: boolean;
 }
 
-// Per mockup v2 specs/auth/login/design/source-v2/LoginScreen.tsx ~L135:
+// Per mockup v2 specs/auth/phone-sms-auth/design/source-v2/LoginScreen.tsx ~L135:
 // +86 prefix + ▾ chevron (静态，不绑定下拉行为；M1.2 大陆唯一，留扩展位).
 export function PhoneInput({ value, onChangeText, disabled, errored }: PhoneInputProps) {
   const [focused, setFocused] = useState(false);
