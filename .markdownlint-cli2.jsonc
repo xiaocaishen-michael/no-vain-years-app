@@ -27,6 +27,12 @@
     // OpenAPI generator output (auto-generated, may have non-ideal MD)
     "packages/api-client/src/generated/**",
     // Working plans are high-churn scratch docs (overwritten each task)
-    "docs/plans/**"
+    "docs/plans/**",
+    // spec-kit vendored skill SKILL.md files (upstream, not ours to lint)
+    ".claude/skills/speckit-*/**",
+    // spec-kit vendored templates / extensions / scripts (upstream)
+    ".specify/templates/**",
+    ".specify/extensions/**",
+    ".specify/scripts/**"
   ]
 }
