@@ -92,3 +92,10 @@ pnpm workspace（`apps/*` + `packages/*`），具体清单以 `pnpm-workspace.ya
    - 不确定包属哪类时，停下来问
 5. **样式规范**：`@nvy/design-tokens` 的 token + NativeWind className（`bg-brand-500` / `p-md` 等）优先，避免 inline style / hex / px 字面量
 6. **token 安全**：refresh token 等敏感凭证只走 `expo-secure-store` (native) / localStorage (web 测试期)；**禁止** 写进 MMKV / AsyncStorage
+
+<!-- SPECKIT START -->
+
+For additional context about technologies to be used, project structure,
+shell commands, and other important information, read the current plan
+
+<!-- SPECKIT END -->
