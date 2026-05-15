@@ -25,9 +25,10 @@ export default tseslint.config(
       'packages/api-client/src/generated/**',
       // SDD mockup bundles are frozen Claude Design exports — read-only,
       // not project-authored code. Lint rules don't apply.
-      'apps/native/spec/*/design/source/**',
-      'apps/native/spec/*/design/source-v2/**',
-      'apps/native/spec/*/design/source-v*/**',
+      // Note: extra `*` for module layer (specs/<module>/<usecase>/design/...)
+      'apps/native/specs/*/*/design/source/**',
+      'apps/native/specs/*/*/design/source-v2/**',
+      'apps/native/specs/*/*/design/source-v*/**',
       'pnpm-lock.yaml',
       'eslint.config.mjs',
     ],
