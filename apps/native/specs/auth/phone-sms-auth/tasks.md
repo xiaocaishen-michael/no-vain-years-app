@@ -23,24 +23,24 @@
 | ✅T_old0 | [Schema]        | 旧 zod schema (loginPasswordSchema + loginSmsSchema) + mapApiError v1（昨日 PR #48 修复加 FetchError） | `apps/native/lib/validation/login.ts`                        | ✅                 |
 | ✅T_old1 | [Hook]          | 旧 useLoginForm 双 tab 状态机 hook                                                                     | `apps/native/lib/hooks/use-login-form.ts`                    | ✅                 |
 | ✅T_old2 | [App]           | login.tsx 双 tab UI + 12 个 packages/ui 组件                                                           | `apps/native/app/(auth)/login.tsx` + `packages/ui/src/*.tsx` | ✅                 |
-| ✅T_old3 | [Mockup]        | v1 mockup bundle（双 tab 设计）                                                                        | `apps/native/specs/auth/login/design/source/`                | ✅ → 标 SUPERSEDED |
+| ✅T_old3 | [Mockup]        | v1 mockup bundle（双 tab 设计）                                                                        | `apps/native/specs/auth/phone-sms-auth/design/source/`       | ✅ → 标 SUPERSEDED |
 | ✅T_old4 | [AuthGate]      | 全局 auth guard + AuthGate state listener                                                              | `apps/native/app/_layout.tsx`                                | ✅                 |
 | ✅T_old5 | [B2 真后端冒烟] | Playwright 4 状态截图（happy / 401 / 429 / network）                                                   | `apps/native/tools/runtime-debug.mjs`                        | ✅                 |
 
 ### 本次（5-04 docs-only）
 
-| #        | 层级     | 任务                                                  | 文件                                                | 状态        |
-| -------- | -------- | ----------------------------------------------------- | --------------------------------------------------- | ----------- |
-| ✅T_doc1 | [Spec]   | 改写 spec.md 为 unified phone-SMS auth                | `apps/native/specs/auth/login/spec.md`              | ✅（本 PR） |
-| ✅T_doc2 | [Plan]   | 改写 plan.md 数据流 / 状态机 / 错误映射 / UI 结构 TBD | `apps/native/specs/auth/login/plan.md`              | ✅（本 PR） |
-| ✅T_doc3 | [Tasks]  | 改写本文件 — 重排任务 + 引入 T0-T6 实施步骤           | `apps/native/specs/auth/login/tasks.md`             | ✅（本 PR） |
-| ✅T_doc4 | [Design] | 旧 v1 mockup 加 SUPERSEDED.md 指针指向 v2             | `apps/native/specs/auth/login/design/SUPERSEDED.md` | ✅（本 PR） |
+| #        | 层级     | 任务                                                  | 文件                                                         | 状态        |
+| -------- | -------- | ----------------------------------------------------- | ------------------------------------------------------------ | ----------- |
+| ✅T_doc1 | [Spec]   | 改写 spec.md 为 unified phone-SMS auth                | `apps/native/specs/auth/phone-sms-auth/spec.md`              | ✅（本 PR） |
+| ✅T_doc2 | [Plan]   | 改写 plan.md 数据流 / 状态机 / 错误映射 / UI 结构 TBD | `apps/native/specs/auth/phone-sms-auth/plan.md`              | ✅（本 PR） |
+| ✅T_doc3 | [Tasks]  | 改写本文件 — 重排任务 + 引入 T0-T6 实施步骤           | `apps/native/specs/auth/phone-sms-auth/tasks.md`             | ✅（本 PR） |
+| ✅T_doc4 | [Design] | 旧 v1 mockup 加 SUPERSEDED.md 指针指向 v2             | `apps/native/specs/auth/phone-sms-auth/design/SUPERSEDED.md` | ✅（本 PR） |
 
 ### Mockup 阶段（PR #51）
 
-| #         | 层级        | 任务                                                                                                                                                          | 文件                                                                   | 状态         |
-| --------- | ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------- | ------------ |
-| ✅ T_mock | [Mockup v2] | Claude Design 出新版合一页 mockup（按 [`docs/experience/claude-design-handoff.md`](../../../../docs/experience/claude-design-handoff.md) § 2.1b prompt 模板） | `apps/native/specs/auth/login/design/source-v2/` + `design/handoff.md` | ✅（PR #51） |
+| #         | 层级        | 任务                                                                                                                                                          | 文件                                                                            | 状态         |
+| --------- | ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------- | ------------ |
+| ✅ T_mock | [Mockup v2] | Claude Design 出新版合一页 mockup（按 [`docs/experience/claude-design-handoff.md`](../../../../docs/experience/claude-design-handoff.md) § 2.1b prompt 模板） | `apps/native/specs/auth/phone-sms-auth/design/source-v2/` + `design/handoff.md` | ✅（PR #51） |
 
 ### Impl 阶段（PR #50-54）
 

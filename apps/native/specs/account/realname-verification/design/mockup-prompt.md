@@ -1,6 +1,6 @@
 # Realname Verification UI mockup — Claude Design prompt
 
-> 拿下文 prompt 全文（从 `## Prompt(拷贝)` 段以下的 ` ```text ... ``` ` 块内）粘到 [claude.ai/design](https://claude.ai/design)。运行后，把 mockup bundle 落到 `apps/native/specs/auth/realname/design/source/`，下次 session 进入翻译期（PHASE 2 PR — T_mock / T9 / T10 / T11）。
+> 拿下文 prompt 全文（从 `## Prompt(拷贝)` 段以下的 ` ```text ... ``` ` 块内）粘到 [claude.ai/design](https://claude.ai/design)。运行后，把 mockup bundle 落到 `apps/native/specs/account/realname-verification/design/source/`，下次 session 进入翻译期（PHASE 2 PR — T_mock / T9 / T10 / T11）。
 >
 > 模板基于 `<meta>/docs/experience/claude-design-handoff.md` § 2.1 + § 2.1b，沿用 [`../../device-management/design/mockup-prompt.md`](../../device-management/design/mockup-prompt.md) 的结构，针对 realname 的项目特定约束（per ADR-0017 类 1 标准 UI + spec.md FR-001..FR-016 + 用户提供 3 张截图作 IA 锚）定制。
 
@@ -326,8 +326,8 @@ Stack header 标题 = `'实名认证'`（同上）。
 
 ## 拿到 bundle 后（下次 session 翻译期 — PHASE 2 PR）
 
-1. 解压到 `apps/native/specs/auth/realname/design/source/`（遵循 onboarding / my-profile / account-settings-shell / delete-cancel / device-management 同款结构）
-2. 写 `apps/native/specs/auth/realname/design/handoff.md`（7 段，per `<meta>/docs/experience/claude-design-handoff.md` § 5）：
+1. 解压到 `apps/native/specs/account/realname-verification/design/source/`（遵循 onboarding / my-profile / account-settings-shell / delete-cancel / device-management 同款结构）
+2. 写 `apps/native/specs/account/realname-verification/design/handoff.md`（7 段，per `<meta>/docs/experience/claude-design-handoff.md` § 5）：
    - Bundle 内容速览
    - 组件 breakdown（`<RealnameInputForm>` / `<RealnameReadonlyView>` / `<RealnamePendingView>` / `<RealnameFrozenView>` / `<AvatarPlaceholder>` / `<MaskCard>` 抽 packages/ui 还是 inline — 跨 spec 复用度评估；参考 onboarding / device-management 0 抽 packages/ui 先例，倾向 inline 单文件多态）
    - 状态机覆盖（mockup 7 状态 ↔ spec FR / SC 对齐）

@@ -20,14 +20,36 @@ pre-commit:
       # commit 含 impl 代码 (.ts/.tsx/.js/.jsx) 但 tasks.md 未 staged → 拒
       # per memory feedback_implement_owns_tasks_md_sync + plan § 2.5
       # 出口: --no-verify (仅限格式化 / typo / 紧急 hotfix)
+      # Regex 用 `( |$)` 边界 — {staged_files} 是 space-separated 一行,
+      # 用 `$` 只检查末尾文件后缀, 会漏检 (e.g. tasks.md 在中间但末尾是
+      # packages/*.tsx 时 false negative — 实证 #119 后 server 一直侥幸 pass).
       run: |
-        if echo "{staged_files}" | grep -qE '\.(tsx?|jsx?)$'; then
-          if ! echo "{staged_files}" | grep -qE 'specs/.+/tasks\.md$'; then
+        if echo "{staged_files}" | grep -qE '\.(tsx?|jsx?)( |$)'; then
+          if ! echo "{staged_files}" | grep -qE 'specs/.+/tasks\.md( |$)'; then
             echo "❌ 本次 commit 含 .ts/.tsx impl 代码但 tasks.md 未 staged"
             echo "   per docs/conventions/sdd.md § /implement 闭环 6 步"
             echo "   出口: --no-verify (仅限格式化 / typo / 紧急 hotfix)"
             exit 1
           fi
+        fi
+      tags:
+        - sdd
+    spec-must-be-symlink:
+      # impl 仓 spec.md / user-journey.md 必须 symlink → meta canonical
+      # per docs/plans/26-05-14-witty-churning-tome.md § 2.5
+      glob: '**/specs/**/{spec,user-journey}.md'
+      run: |
+        violations=""
+        for f in {staged_files}; do
+          if [ -f "$f" ] && [ ! -L "$f" ]; then
+            violations="$violations\n     · $f"
+          fi
+        done
+        if [ -n "$violations" ]; then
+          echo "❌ impl 仓 spec.md / user-journey.md 必须是 symlink → meta canonical"
+          echo -e "   违规:$violations"
+          echo "   修复: cd <meta-root> && ./scripts/link-spec.sh <module>/<usecase> --target app"
+          exit 1
         fi
       tags:
         - sdd

@@ -258,7 +258,7 @@ useEffect(() => {
 
 > **由 user 跑**（per ADR-0017 + 既有 onboarding / login / delete-cancel-deletion 模式）。
 
-新建 `apps/native/specs/auth/realname/design/mockup-prompt.md`：
+新建 `apps/native/specs/account/realname-verification/design/mockup-prompt.md`：
 
 - 描述图 1 录入页 + 图 3 readonly 视图（图 2 SDK 接管不画）
 - 引用现有 token 系统（`packages/design-tokens`）；约束：byte-identical token 集，0 新增
@@ -302,5 +302,5 @@ useEffect(() => {
 - [`./spec.md`](./spec.md) / [`./plan.md`](./plan.md)
 - [server spec/account/realname-verification/tasks.md](https://github.com/xiaocaishen-michael/my-beloved-server/blob/main/spec/account/realname-verification/tasks.md) — 后端 tasks 对照
 - 既有参考：[`apps/native/specs/auth/onboarding/tasks.md`](../onboarding/tasks.md) — 类 1 PHASE 1 / PHASE 2 拆分参照
-- 既有参考：[`apps/native/specs/auth/login/tasks.md`](../login/tasks.md) — form 类 1 tasks 拆分参照
+- 既有参考：[`apps/native/specs/auth/phone-sms-auth/tasks.md`](../login/tasks.md) — form 类 1 tasks 拆分参照
 - 既有参考：[`apps/native/specs/account/delete-account/tasks.md`](../delete-account-cancel-deletion-ui/tasks.md) — 含 PHASE 2 mockup 落地的 tasks 参照
