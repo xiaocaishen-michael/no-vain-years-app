@@ -43,7 +43,7 @@
 ### Terminal 1 — 起 metro 指 prod
 
 ```bash
-cd /Users/butterfly/Documents/projects/no-vain-years/no-vain-years-app/apps/native
+cd $HOME/Documents/projects/no-vain-years/no-vain-years-app/apps/native
 EXPO_PUBLIC_API_BASE_URL=https://api.xiaocaishen.me pnpm web
 ```
 
@@ -58,7 +58,7 @@ Web is waiting on http://localhost:8081
 ### Terminal 2 — 跑 Playwright
 
 ```bash
-cd /Users/butterfly/Documents/projects/no-vain-years/no-vain-years-app
+cd $HOME/Documents/projects/no-vain-years/no-vain-years-app
 node apps/native/runtime-debug/2026-05-07-account-settings-shell-business-flow/run.mjs
 ```
 
