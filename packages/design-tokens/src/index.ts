@@ -6,7 +6,7 @@
 // - packages/ui/src/index.ts (re-export to consumers)
 //
 // Naming convention: semantic / domain (ink / line / surface / ok / warn / err / accent / brand),
-// mirrored from Claude Design handoff at apps/native/spec/login/design/source/tailwind.config.js
+// mirrored from Claude Design handoff at apps/native/specs/auth/login/design/source/tailwind.config.js
 // (per ADR-0015 + handoff.md § Token decisions, 2026-05-03).
 //
 // Tokens are typed loosely (no `as const`) so Tailwind v3's mutable

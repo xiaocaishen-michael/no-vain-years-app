@@ -6,7 +6,7 @@ export interface LogoMarkProps {
 }
 
 // Brand logo mark — blue rounded tile + 12 white rays + orange halo + sun.
-// SVG glyph paste 1:1 from apps/native/spec/login/design/source-v2/LoginScreen.tsx ~L93.
+// SVG glyph paste 1:1 from apps/native/specs/auth/login/design/source-v2/LoginScreen.tsx ~L93.
 // Hex literals (#2456E5 / #FF8C00 / #FFFFFF) align with design-tokens
 // (brand-500 / accent / pure white) but kept inline since SVG fills don't accept className.
 export function LogoMark({ size = 56 }: LogoMarkProps) {

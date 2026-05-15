@@ -53,7 +53,7 @@ pnpm workspace（`apps/*` + `packages/*`），具体清单以 `pnpm-workspace.ya
 详见 [docs/ui-ux-workflow.md](https://github.com/xiaocaishen-michael/no-vain-years/blob/main/docs/ui-ux-workflow.md)。要点：
 
 - UI 类别分支（类 1 标准 / 类 2 自由画布 / 类 3 数据可视化）见 [meta sdd.md § 前端 UI 工作流变体](https://github.com/xiaocaishen-michael/no-vain-years/blob/main/docs/conventions/sdd.md)（per ADR-0017）
-- **Mockup 留迹位置**：`apps/native/spec/<page>/design/`（与 spec.md / plan.md / tasks.md 同位）；存 PNG / handoff bundle / 设计 notes。**代码是真相源**，mockup drift 不算 bug
+- **Mockup 留迹位置**：`apps/native/specs/<page>/design/`（与 spec.md / plan.md / tasks.md 同位）；存 PNG / handoff bundle / 设计 notes。**代码是真相源**，mockup drift 不算 bug
 - **SDD 工作流嵌入 mockup**：spec → mockup（design/）→ /plan（吸收 mockup 决策出 UI 结构段）→ /tasks → /implement，不增步骤数
 - **Token 优先**：`packages/design-tokens/src/index.ts` 是单源，apps/native/tailwind.config.ts 引用；hex / px 字面量禁入业务代码
 - `.claude/nativewind-mapping.md` 写下至少 5 条翻译规则（间距走 className / 颜色走 design-tokens / className ≤ 4 原子 / 复用既有组件优先 / RN-Web 兼容写法）

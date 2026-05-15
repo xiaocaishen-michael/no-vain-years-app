@@ -90,7 +90,7 @@ SELECT id, phone, status, display_name, freeze_until, created_at FROM account.ac
 
 ## 关联
 
-- spec/delete-account-cancel-deletion-ui/tasks.md T11(本 task closure)
+- specs/account/delete-account/tasks.md T11(本 task closure)
 - server PR #143 `feat(account): expose-frozen-account-status (spec D, spec C 前置)` — `ACCOUNT_IN_FREEZE_PERIOD` 错误码暴露
 - server release v0.2.0(commit `6c32323`)— prod 部署后 spec D 生效
 - spec C dev visual smoke PR #81 + impl PR #78 + mockup translation PR #79

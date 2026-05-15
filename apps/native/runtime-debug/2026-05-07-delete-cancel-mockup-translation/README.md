@@ -89,8 +89,8 @@ node apps/native/runtime-debug/2026-05-07-delete-cancel-mockup-translation/run.m
 
 ## References
 
-- [`apps/native/spec/delete-account-cancel-deletion-ui/tasks.md`](../../spec/delete-account-cancel-deletion-ui/tasks.md) — T16 拆 doc + smoke
-- [`apps/native/spec/delete-account-cancel-deletion-ui/design/handoff.md`](../../spec/delete-account-cancel-deletion-ui/design/handoff.md) § 3 — 6 状态 ↔ FR/SC 对齐表
+- [`apps/native/specs/account/delete-account/tasks.md`](../../specs/account/delete-account/tasks.md) — T16 拆 doc + smoke
+- [`apps/native/specs/account/delete-account/design/handoff.md`](../../specs/account/delete-account/design/handoff.md) § 3 — 6 状态 ↔ FR/SC 对齐表
 - [`apps/native/runtime-debug/2026-05-06-onboarding-mockup-translation/`](../2026-05-06-onboarding-mockup-translation/) — onboarding T_smoke run.mjs 套路参考
 - [`apps/native/runtime-debug/2026-05-07-my-profile-mockup-translation/`](../2026-05-07-my-profile-mockup-translation/) — my-profile T13 run.mjs 套路参考
 - [`apps/native/app/(app)/settings/account-security/__tests__/delete-account-errors.test.ts`](<../../app/(app)/settings/account-security/__tests__/delete-account-errors.test.ts>) — submit error path component-level 单测覆盖(替代 state 03 spec 路径)
