@@ -9,11 +9,13 @@ export default {
     'header-max-length': [2, 'always', 100],
     'subject-case': [0],
     // Body 150 chars (default 100 too tight for Chinese; mirrors meta + server
-    // commitlint). Footer remains disabled — Dependabot generates auto-footers
-    // with long release-note URLs / dep tables that we cannot reflow; bot's
-    // commit-message format can't be reconfigured.
+    // commitlint).
     'body-max-line-length': [2, 'always', 150],
-    'footer-max-line-length': [0],
+    // Align footer to body limit (150). Default 100 caught body lines when
+    // commit contains a trailer (e.g. Co-Authored-By:) — commitlint footer
+    // algorithm pulls trailing body content into footer scope. server PR
+    // #191 实证 2026-05-15. Dependabot exempt via `ignores` filter below.
+    'footer-max-line-length': [2, 'always', 150],
   },
   // Skip body line-length check for dependabot — its auto-generated body
   // includes long URLs from upstream release notes that we cannot reflow.
