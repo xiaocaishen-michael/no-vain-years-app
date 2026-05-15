@@ -55,7 +55,7 @@ open -a OrbStack && sleep 8
 docker info | head -3   # verify daemon up
 
 # 1.2 起 docker-compose dev 的 PG + Redis（不起 minio/grafana 等可选服务）
-docker compose -f /Users/butterfly/Documents/projects/no-vain-years/my-beloved-server/docker-compose.dev.yml up -d postgres redis
+docker compose -f $HOME/Documents/projects/no-vain-years/my-beloved-server/docker-compose.dev.yml up -d postgres redis
 sleep 5
 
 # 1.3 verify
@@ -71,7 +71,7 @@ nc -z localhost 5432 && nc -z localhost 6379 && echo "PG + Redis ready"
 
 ```bash
 DOCKER_HOST=unix:///Users/butterfly/.orbstack/run/docker.sock \
-  ./mvnw -pl mbw-app -am -f /Users/butterfly/Documents/projects/no-vain-years/my-beloved-server/pom.xml \
+  ./mvnw -pl mbw-app -am -f $HOME/Documents/projects/no-vain-years/my-beloved-server/pom.xml \
   spring-boot:run -Dspring-boot.run.profiles=dev 2>&1 | tee /tmp/mbw-app.log
 # Bash run_in_background: true
 ```
@@ -118,7 +118,7 @@ curl -s -X POST http://localhost:8080/api/v1/account/register/by-phone-sms \
 ```bash
 # 4.1 设 .env（gitignored）
 echo 'EXPO_PUBLIC_API_BASE_URL=http://localhost:8080' \
-  > /Users/butterfly/Documents/projects/no-vain-years/no-vain-years-app/apps/native/.env
+  > $HOME/Documents/projects/no-vain-years/no-vain-years-app/apps/native/.env
 
 # 4.2 杀旧 metro
 lsof -ti :8081 -sTCP:LISTEN | xargs -r kill 2>/dev/null
@@ -126,7 +126,7 @@ sleep 2
 
 # 4.3 启新 metro with --clear
 : > /tmp/metro.log
-pnpm -C /Users/butterfly/Documents/projects/no-vain-years/no-vain-years-app \
+pnpm -C $HOME/Documents/projects/no-vain-years/no-vain-years-app \
   --filter native exec expo start --web --clear --port 8081 2>&1 | tee /tmp/metro.log
 # Bash run_in_background: true
 
@@ -145,7 +145,7 @@ pnpm -C /Users/butterfly/Documents/projects/no-vain-years/no-vain-years-app \
 #### 5.1 Happy path
 
 ```bash
-node /Users/butterfly/Documents/projects/no-vain-years/no-vain-years-app/tools/runtime-debug.mjs \
+node $HOME/Documents/projects/no-vain-years/no-vain-years-app/tools/runtime-debug.mjs \
   http://localhost:8081 \
   --shot /tmp/b2-01-default.png \
   --fill '[aria-label="手机号"]' '13800138000' \
