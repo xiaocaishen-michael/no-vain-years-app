@@ -123,7 +123,7 @@ SELECT id, phone, status, display_name FROM account.account WHERE phone = '+8613
 
 - ✅ **PHASE 2 T_smoke**：4 状态截图归档完整 + run.mjs exit 0 + 视觉与 PR #66 mockup translation 1:1 对齐
 - ✅ **不污染 DB**：display_name 保持 null（PHASE 1 已覆盖业务流的 DB 写入路径）
-- ✅ **mockup ↔ implementation 一致性**：所有 className / token / 文案与 [`design/handoff.md`](../../spec/onboarding/design/handoff.md) 7 段约定一致
+- ✅ **mockup ↔ implementation 一致性**：所有 className / token / 文案与 [`design/handoff.md`](../../specs/auth/onboarding/design/handoff.md) 7 段约定一致
 
 ## 结论
 
@@ -133,4 +133,4 @@ SELECT id, phone, status, display_name FROM account.account WHERE phone = '+8613
 - 状态切换由 hook + UI 双驱动（status state + AuthGate 不 redirect），稳定可截图
 - DB 零污染，mock 严密（hold + abort + waitDone 三段式锁住 PATCH `/me`）
 
-后续若引入 visual regression 工具（per [`tasks.md`](../../spec/onboarding/tasks.md) T11，M2+），本批 4 张 PNG 可直接作为基线。
+后续若引入 visual regression 工具（per [`tasks.md`](../../specs/auth/onboarding/tasks.md) T11，M2+），本批 4 张 PNG 可直接作为基线。

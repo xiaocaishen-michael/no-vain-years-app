@@ -150,7 +150,7 @@ SELECT id, phone, status, display_name FROM account.account WHERE phone = '+8613
 
 ## 关联
 
-- spec/account-settings-shell/spec.md SC-006 + tasks.md T10
+- specs/account/settings-shell/spec.md SC-006 + tasks.md T10
 - server PR #139 `feat(account): expose phone in /me response`(account-settings-shell prereq)
 - server release v0.2.0(GitHub Release tag,changelog 含 #136-#143)
 - ADR follow-up:M3 内测前必须分 staging,destructive case 永远在 staging 跑(本任务 PR description 留 follow-up 备忘)

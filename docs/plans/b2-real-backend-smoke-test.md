@@ -218,13 +218,13 @@ node tools/runtime-debug.mjs http://localhost:8081 \
 
 ## 成功标准
 
-| #        | Standard                                                                                                                                            |
-| -------- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
-| SC-B2-01 | 4 场景截图全部生成（5.3 可降级到单测覆盖说明）                                                                                                      |
-| SC-B2-02 | errorToast 文案与 [`spec.md`](../../apps/native/spec/login/spec.md) FR-006 + [`plan.md`](../../apps/native/spec/login/plan.md) § 错误映射表精确一致 |
-| SC-B2-03 | Happy path 后 finalUrl 离开 `/login`                                                                                                                |
-| SC-B2-04 | consoleErrors 全空（除 redirect 警告）                                                                                                              |
-| SC-B2-05 | networkFails 仅出现在 5.4 场景且 url 包含 `/api/v1/account/login`                                                                                   |
+| #        | Standard                                                                                                                                                        |
+| -------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| SC-B2-01 | 4 场景截图全部生成（5.3 可降级到单测覆盖说明）                                                                                                                  |
+| SC-B2-02 | errorToast 文案与 [`spec.md`](../../apps/native/specs/auth/login/spec.md) FR-006 + [`plan.md`](../../apps/native/specs/auth/login/plan.md) § 错误映射表精确一致 |
+| SC-B2-03 | Happy path 后 finalUrl 离开 `/login`                                                                                                                            |
+| SC-B2-04 | consoleErrors 全空（除 redirect 警告）                                                                                                                          |
+| SC-B2-05 | networkFails 仅出现在 5.4 场景且 url 包含 `/api/v1/account/login`                                                                                               |
 
 ## 失败 / 兜底
 

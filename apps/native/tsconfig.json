@@ -20,5 +20,5 @@
     }
   },
   "include": ["**/*.ts", "**/*.tsx", "nativewind-env.d.ts"],
-  "exclude": ["node_modules", "dist", ".expo", "spec/**/design/**"]
+  "exclude": ["node_modules", "dist", ".expo", "specs/**/design/**"]
 }

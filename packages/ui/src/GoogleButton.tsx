@@ -5,7 +5,7 @@ export interface GoogleButtonProps {
   disabled?: boolean;
 }
 
-// Google OAuth circle button (per mockup v2 spec/login/design/source-v2/LoginScreen.tsx ~L257).
+// Google OAuth circle button (per mockup v2 specs/auth/login/design/source-v2/LoginScreen.tsx ~L257).
 // M1.2 仅 placeholder（caller 端 onPress 弹 toast "Coming in M1.3"）；M1.3 接真实 OAuth 时
 // 用 SVG asset 或 expo-auth-session 内置 icon 替换单字 "G"。
 export function GoogleButton({ onPress, disabled }: GoogleButtonProps) {

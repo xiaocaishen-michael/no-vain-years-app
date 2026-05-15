@@ -16,7 +16,7 @@ export interface SmsInputProps {
   onSend?: () => void;
 }
 
-// Per mockup v2 spec/login/design/source-v2/LoginScreen.tsx ~L163:
+// Per mockup v2 specs/auth/login/design/source-v2/LoginScreen.tsx ~L163:
 // SmsInput 自身不渲染 ErrorRow（caller 端按 errorScope 决定在 PhoneInput 旁还是 SmsInput 旁）。
 // 三态 inline send button: 发送中 / {N}s 后重发 / 获取验证码.
 export function SmsInput({
